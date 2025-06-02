@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: timestamp
+# key: ts
+# --
+** `(format-time-string "%H:%M")`
+- 

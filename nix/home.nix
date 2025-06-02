@@ -1,4 +1,3 @@
-
 { config, pkgs, ... }:
 let
   emacsConfig = "${config.home.homeDirectory}/.dotfiles/emacs/init.el";

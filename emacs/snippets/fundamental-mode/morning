@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: morning
+# key: mor
+# --
+** `(format-time-string "%H:%M")` Morning
+- /What am I grateful for today and why?/ $0
+- /What are your long-term goals for the next five years?/
+- /What are your near-term goals for the year?/
+- /What would make today a successful day?/
+- /What are your rules and constraints?/
+- /Whats on your mind?/
