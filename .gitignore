@@ -1,6 +1,10 @@
 *
-!*/
+!*/**
+!./gitignore
+!nix/**
+nix/*~
+!emacs/
+emacs/*
+!emacs/init.el
+!emacs/.emacs.custom.el
 
-!.gitignore
-
-!nix/
