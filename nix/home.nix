@@ -26,6 +26,8 @@ in
   home.stateVersion = "24.11";
   home.packages = with pkgs; [
     tex
+    aider-chat
+    claude-code
   ];
   home.shell.enableShellIntegration = true;
 

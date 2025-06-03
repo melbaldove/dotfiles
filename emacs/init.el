@@ -40,6 +40,9 @@
   (set-face-attribute 'org-modern-symbol nil :family "Inter Display")
   (setq-local line-spacing 0.2)))
 
+(use-package transient
+  :ensure t)
+
 (use-package magit
   :ensure t)
 
@@ -67,8 +70,8 @@
   (setq org-roam-dailies-capture-templates
 	'(("d" "default" entry
          "* %(format-time-string \"%H:%M\")\n- %?"
-         :target (file+head+olp "%<%Y-%m-%d>.org"
-				"#+title: %<%Y-%m-%d>" ("%<%A, %d/%m/%Y>"))
+         :target (file+head "%<%Y-%m-%d>.org"
+				"#+title: %<%A, %d/%m/%Y>")
 	 :empty-lines 1)))
   (org-roam-dailies-goto-today)
   (end-of-buffer))
@@ -97,6 +100,53 @@
 (use-package yasnippet-snippets
   :ensure t)
 
+(use-package visual-fill-column
+  :ensure t)
+
+(use-package writeroom-mode
+  :ensure t)
+
+;; Swift config
+;;; Locate sourcekit-lsp
+(defun find-sourcekit-lsp ()
+  (or (executable-find "sourcekit-lsp")
+      (and (eq system-type 'darwin)
+           (string-trim (shell-command-to-string "xcrun -f sourcekit-lsp")))
+      "/usr/local/swift/usr/bin/sourcekit-lsp"))
+
+;; .editorconfig file support
+(use-package editorconfig
+    :ensure t
+    :config (editorconfig-mode +1))
+
+;; Swift editing support
+(use-package swift-mode
+    :ensure t
+    :mode "\\.swift\\'"
+    :interpreter "swift")
+
+;; Rainbow delimiters makes nested delimiters easier to understand
+(use-package rainbow-delimiters
+    :ensure t
+    :hook ((prog-mode . rainbow-delimiters-mode)))
+
+;; Used to interface with swift-lsp.
+(use-package lsp-mode
+    :ensure t
+    :commands lsp
+    :hook ((swift-mode . lsp)))
+
+;; lsp-mode's UI modules
+(use-package lsp-ui
+    :ensure t)
+
+;; sourcekit-lsp support
+(use-package lsp-sourcekit
+    :ensure t
+    :after lsp-mode
+    :custom
+    (lsp-sourcekit-executable (find-sourcekit-lsp) "Find sourcekit-lsp"))
+
 (setq inhibit-splash-screen t)
 (tool-bar-mode 0)
 (menu-bar-mode 0)
@@ -107,6 +157,7 @@
 (ido-mode 1)
 (ido-everywhere 1)
 (ido-ubiquitous-mode 1)
+(global-visual-line-mode)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (global-set-key (kbd "M-x") 'smex)

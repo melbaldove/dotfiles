@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: bedtime
+# key: bed
+# --
+** `(format-time-string "%H:%M")` Bedtime 
+- /What successes did I experience today?/ $0
+- /What challenges did I experience today?/
+- /What could I have done better?/
+- /Who do I need to follow up with?/
+- /What do I need to do tomorrow?/
+- /Whats on your mind?/

@@ -19,12 +19,7 @@
  '(org-modern-replace-stars "")
  '(org-modern-star 'replace)
  '(org-pretty-entities t)
- '(package-selected-packages
-   '(company constant-theme direnv eink-theme envrc exec-path-from-shell
-	     expand-region f ido-completing-read+ magit
-	     monotropic-theme nix-mode nothing-theme org-journal
-	     org-mode org-modern org-roam org-superstar smex
-	     use-package yasnippet yasnippet-snippets)))
+ '(package-selected-packages nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -32,4 +27,5 @@
  ;; If there is more than one, they won't work right.
  '(org-block ((t (:extend t :foreground "#111111"))))
  '(org-default ((t (:inherit default :weight regular :family "Inter Display"))))
+ '(org-document-title ((t (:foreground "headerTextColor" :weight bold :height 1.3))))
  '(org-drawer ((t (:foreground "#d1d1d1")))))
