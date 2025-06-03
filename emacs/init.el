@@ -12,6 +12,11 @@
 ;; Core settings
 (setq custom-file "~/.config/emacs/.emacs.custom.el")
 
+;; Make sure we load our custom org version before anything else
+;; This prevents org version mismatch errors
+(add-to-list 'load-path "~/.config/emacs/elpa/org-mode/lisp/")
+(require 'org)
+
 ;; Package management setup
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -22,9 +27,6 @@
 
 ;; Load custom file
 (load custom-file)
-
-;; Install org-mode with latex preview first
-(use-package org :load-path "~/.config/emacs/elpa/org-mode/lisp/")
 ;; System integration
 (use-package exec-path-from-shell
   :ensure t
@@ -60,19 +62,17 @@
 
 (use-package org-modern
   :ensure t
-  :after org
   :config
-  (global-org-modern-mode))
+  (with-eval-after-load 'org (global-org-modern-mode)))
 
-(use-package org
-  :custom
-  (org-hide-emphasis-markers t)
-  :hook
-  (org-mode . (lambda ()
-                (org-latex-preview-auto-mode)
-                (face-remap-add-relative 'default :family "Inter Display")
-                (set-face-attribute 'org-modern-symbol nil :family "Inter Display")
-                (setq-local line-spacing 0.2))))
+;; Configure org-mode
+(setq org-hide-emphasis-markers t)
+
+(add-hook 'org-mode-hook (lambda ()
+                           (org-latex-preview-auto-mode)
+                           (face-remap-add-relative 'default :family "Inter Display")
+                           (set-face-attribute 'org-modern-symbol nil :family "Inter Display")
+                           (setq-local line-spacing 0.2)))
 
 ;; Dependencies for org-roam and other packages
 (use-package transient :ensure t)
