@@ -67,6 +67,7 @@
 
 ;; Configure org-mode
 (setq org-hide-emphasis-markers t)
+(setq org-agenda-files '("~/org/daily"))
 
 (add-hook 'org-mode-hook (lambda ()
                            (org-latex-preview-auto-mode)
