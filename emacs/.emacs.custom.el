@@ -24,8 +24,8 @@
 		   ido-completing-read+ lsp-sourcekit lsp-ui magit
 		   monotropic-theme nix-mode nothing-theme org-journal
 		   org-mode org-modern org-roam org-superstar
-		   rainbow-delimiters smex swift-mode use-package
-		   writeroom-mode yasnippet-snippets))
+		   rainbow-delimiters rust-mode smex swift-mode
+		   use-package writeroom-mode yasnippet-snippets))
  '(writeroom-fullscreen-effect 'maximized))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

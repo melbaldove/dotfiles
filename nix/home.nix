@@ -30,6 +30,7 @@ in
     claude-code
     imagemagick
     gh
+    ripgrep
   ];
   home.shell.enableShellIntegration = true;
 

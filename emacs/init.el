@@ -61,6 +61,9 @@
 (setq make-backup-files nil)
 (setq auto-save-default nil)
 
+;; Auto-revert buffers when files change on disk
+(global-auto-revert-mode 1)
+
 ;; Org-mode Configuration
 (use-package org-modern
   :ensure t
