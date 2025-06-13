@@ -28,6 +28,8 @@ in
     tex
     aider-chat
     claude-code
+    imagemagick
+    gh
   ];
   home.shell.enableShellIntegration = true;
 
@@ -35,6 +37,10 @@ in
     # Let Home Manager install and manage itself.
     bash = {
       enable = true;
+      bashrcExtra = ''
+        # Custom prompt showing username and current directory
+        export PS1="\u:\w$ "
+      '';
     };
     home-manager.enable = true;
     
@@ -56,6 +62,22 @@ in
     gpg = {
       enable = true;
     };
+
+    git = {
+      enable = true;
+      extraConfig = {
+        core = {
+          editor = "vim";
+        };
+        user = {
+          name = "Melbourne Baldove";
+          email = "melbournebaldove@gmail.com";
+        };
+        push = {
+          autosetupremote = true;
+        };
+      };
+    };
   };
   
   services = {
@@ -75,6 +97,10 @@ in
       };
       "emacs" = {
         source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs";
+        recursive = true;
+      };
+      "ghostty" = {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/ghostty";
         recursive = true;
       };
     };
