@@ -8,6 +8,9 @@
 {
   # List packages installed in system profile. To search by name, run:
   # $ nix-env -qaP | grep wget
+  environment.etc = {
+    nix-darwin.source = "/Users/melbournebaldove/.dotfiles/nix/";
+  };
   environment.systemPackages = [
     pkgs.vim
     pkgs.coreutils
@@ -51,6 +54,7 @@
     '';
 
   system = {
+    primaryUser = "melbournebaldove";
     defaults = {
       NSGlobalDomain = {
         InitialKeyRepeat = 15;

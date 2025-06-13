@@ -53,13 +53,11 @@
 (show-paren-mode 1)
 (global-visual-line-mode)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
+(global-visual-wrap-prefix-mode)
 
 ;; Org-mode Configuration
-(use-package org-latex-preview
-  :custom
-  (org-latex-preview-live t)
-  (org-latex-preview-live-debounce 0.25))
-
 (use-package org-modern
   :ensure t
   :config
@@ -143,6 +141,9 @@
   :ensure t)
 
 (use-package writeroom-mode
+  :ensure t)
+
+(use-package adaptive-wrap
   :ensure t)
 
 ;; Development tools
