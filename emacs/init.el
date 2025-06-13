@@ -57,6 +57,10 @@
 (setq split-width-threshold 0)
 (global-visual-wrap-prefix-mode)
 
+;; Disable file backups
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+
 ;; Org-mode Configuration
 (use-package org-modern
   :ensure t
@@ -186,6 +190,13 @@
        (and (eq system-type 'darwin)
             (string-trim (shell-command-to-string "xcrun -f sourcekit-lsp")))
        "/usr/local/swift/usr/bin/sourcekit-lsp")))
+
+;; Rust development configuration
+(use-package rust-mode
+  :ensure t
+  :mode "\\.rs\\'"
+  :hook 
+  (rust-mode . lsp))
 
 ;; Global keybindings
 (global-set-key "\C-ca" 'org-agenda)
