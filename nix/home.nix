@@ -31,6 +31,7 @@ in
     imagemagick
     gh
     ripgrep
+    ast-grep
   ];
   home.shell.enableShellIntegration = true;
 
@@ -41,6 +42,12 @@ in
       bashrcExtra = ''
         # Custom prompt showing username and current directory
         export PS1="\u:\w$ "
+        
+        # Alias for ast-grep
+        alias sg='ast-grep'
+        
+        # Alias for darwin-rebuild
+        alias rebuild='sudo darwin-rebuild --impure switch'
       '';
     };
     home-manager.enable = true;
@@ -69,6 +76,7 @@ in
       extraConfig = {
         core = {
           editor = "vim";
+          excludesfile = "~/.gitignore";
         };
         user = {
           name = "Melbourne Baldove";

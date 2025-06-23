@@ -51,6 +51,17 @@
     ''
       xcode-select --install || true
       softwareupdate --install-rosetta --agree-to-license
+      echo "Setting up DefaultKeyBinding.dict..."
+      mkdir -p /Users/melbournebaldove/Library/KeyBindings
+    
+      # Fetch the DefaultKeyBinding.dict from the repository
+      curl -fsSL https://raw.githubusercontent.com/fkchang/emacs-keybindings-in-osx/refs/heads/master/DefaultKeybinding.dict \
+      -o /Users/melbournebaldove/Library/KeyBindings/DefaultKeyBinding.dict
+    
+      # Set proper permissions
+      chmod 644 /Users/melbournebaldove/Library/KeyBindings/DefaultKeyBinding.dict
+      chown melbournebaldove:staff /Users/melbournebaldove/Library/KeyBindings/DefaultKeyBinding.dict
+
     '';
 
   system = {
@@ -66,7 +77,7 @@
       };
       dock = {
         persistent-apps = [
-          { app = "/Applications/Google Chrome.app"; }
+          { app = "/Applications/Dia.app"; }
           {app = "/Users/melbournebaldove/Applications/Home Manager Apps/Emacs.app"; }
           { app = "/System/Applications/Messages.app"; }
           { app = "/System/Applications/Mail.app"; }
