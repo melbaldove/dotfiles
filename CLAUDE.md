@@ -1,4 +1,3 @@
-
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -9,15 +8,26 @@ Personal dotfiles managed with Nix. Uses a flake-based, modular configuration fo
 
 ## Architecture
 
-- **`flake.nix`**: The root flake. It defines all installable outputs (hosts).
+- **`flake.nix`**: The root flake. It defines all installable outputs (hosts) and all external dependencies (inputs).
 - **`hosts/`**: Contains the entrypoints for each machine configuration.
-  - `turing/`: A macOS machine.
 - **`modules/`**: Contains reusable system-level configurations.
-  - `system/darwin/`: macOS-specific modules.
-  - `system/linux/`: Linux-specific modules.
-  - `system/shared/`: OS-agnostic modules.
 - **`users/`**: Contains composable user profiles.
-  - `melbournebaldove/`: Your user profiles (`core`, `dev`).
+
+## Configuration Guidelines
+
+When adding or changing a configuration, use the following guidelines to determine the correct location:
+
+- **`hosts/`**: Use this directory to define a new machine. A host file should not contain any real configuration logic. Its only job is to `import` the necessary modules from `modules/` and `users/` to assemble a complete system.
+
+- **`modules/`**: This is for system-level configuration that can be shared between machines.
+  - **`modules/system/shared/`**: For settings that apply to *all* systems (e.g., core packages, Nix settings).
+  - **`modules/system/darwin/`**: For settings that only apply to macOS (e.g., Homebrew, macOS defaults).
+  - **`modules/system/linux/`**: For settings that only apply to Linux (e.g., filesystem options, bootloader).
+
+- **`users/`**: This is for user-specific configuration (Home Manager settings).
+  - **`users/melbournebaldove/core.nix`**: Your base settings that you want on *every* machine (e.g., Git config, shell aliases).
+  - **`users/melbournebaldove/dev.nix`**: Settings for your development environment (e.g., Emacs, programming languages).
+  - Create new files here to define different roles (e.g., `server.nix` for headless servers).
 
 ## Development Commands
 
@@ -28,8 +38,3 @@ sudo darwin-rebuild --impure switch --flake .#Turing
 # Update dependencies
 nix flake update
 ```
-
-## Important Notes
-
-- The configuration is highly modular. When making changes, identify whether the change is for a specific host, a shared system module, or a user profile.
-- Use `ast-grep` for syntax-aware code searching.
