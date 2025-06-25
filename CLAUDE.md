@@ -1,45 +1,35 @@
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Repository Overview
 
-Personal dotfiles managed with Nix/nix-darwin and Home Manager on macOS. Uses flake-based configuration for reproducible system management.
+Personal dotfiles managed with Nix. Uses a flake-based, modular configuration for multi-machine and multi-OS system management.
 
 ## Architecture
 
-- **nix/**: Nix configuration files
-  - `flake.nix`: Main flake with system "Turing" 
-  - `configuration.nix`: System-level nix-darwin config
-  - `home.nix`: User-level Home Manager config
-
-- **emacs/**: Emacs configuration files (symlinked to `~/.config/emacs/`)
-- **ghostty/**: Terminal configuration  
-- **git/**: Git configuration files
-- **.claude-global/**: Claude Code configuration (symlinked to `~/.claude/`)
+- **`flake.nix`**: The root flake. It defines all installable outputs (hosts).
+- **`hosts/`**: Contains the entrypoints for each machine configuration.
+  - `turing/`: A macOS machine.
+- **`modules/`**: Contains reusable system-level configurations.
+  - `system/darwin/`: macOS-specific modules.
+  - `system/linux/`: Linux-specific modules.
+  - `system/shared/`: OS-agnostic modules.
+- **`users/`**: Contains composable user profiles.
+  - `melbournebaldove/`: Your user profiles (`core`, `dev`).
 
 ## Development Commands
 
 ```bash
-# Rebuild system configuration
-sudo darwin-rebuild --impure switch
-
-# Update Home Manager only
-home-manager switch
+# Rebuild the 'Turing' system configuration
+sudo darwin-rebuild --impure switch --flake .#Turing
 
 # Update dependencies
 nix flake update
 ```
 
-## Key Features
-
-- **Hybrid package management**: Nix packages + Homebrew casks + npm globals
-- **File symlinking**: Home Manager creates symlinks from dotfiles to proper locations
-- **Development tools**: ast-grep (alias: `sg`), ripgrep, gh, aider-chat, claude-code
-- **Custom setup**: Colemak keyboard, Emacs daemon, global gitignore
-
 ## Important Notes
 
-- Generated files live in their proper locations (`~/.config/emacs/`, etc.)
-- Only configuration files are tracked in this repo
-- Use `ast-grep` for syntax-aware code searching when available
+- The configuration is highly modular. When making changes, identify whether the change is for a specific host, a shared system module, or a user profile.
+- Use `ast-grep` for syntax-aware code searching.

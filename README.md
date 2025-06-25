@@ -1,38 +1,49 @@
+
 # Dotfiles
 
-Personal macOS configuration managed with Nix and Home Manager.
+My personal system configurations, managed declaratively with Nix.
 
-## Quick Start
+## Overview
 
-```bash
-# Install Nix
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+This repository uses a modular, flake-based approach to manage configurations for multiple machines and operating systems (macOS and Linux).
 
-# Apply configuration
-sudo darwin-rebuild switch --flake github:melbournebaldove/dotfiles#Turing
-```
+- **Declarative**: The entire system state is defined in code.
+- **Reproducible**: Easily bootstrap a new machine to a known state.
+- **Modular**: Configurations are broken down into reusable components for systems and users.
+
+## Installation
+
+1.  **Install Nix:**
+
+    ```bash
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+    ```
+
+2.  **Apply the Configuration:**
+
+    To provision a new machine, apply the desired host configuration from this repository.
+
+    ```bash
+    # For the 'Turing' macOS configuration
+    sudo darwin-rebuild switch --flake github:melbournebaldove/dotfiles#Turing
+    ```
 
 ## Local Development
 
 ```bash
-git clone https://github.com/melbournebaldove/dotfiles ~/.dotfiles
+# Clone the repository
 cd ~/.dotfiles
 
-# System changes
-sudo darwin-rebuild switch --flake nix#Turing
-
-# Home Manager only
-home-manager switch --flake nix#melbournebaldove@Turing
+# Rebuild the system
+sudo darwin-rebuild --impure switch --flake .#Turing
 
 # Update dependencies
-nix flake update nix/
+nix flake update
 ```
 
 ## Structure
 
-- `nix/` - Nix configuration files
-- `emacs/` - Emacs configuration
-- `git/` - Git configuration  
-- `ghostty/` - Terminal configuration
-
-Configurations are symlinked to proper locations via Home Manager.
+- **`flake.nix`**: The root flake that defines all machine configurations.
+- **`hosts/`**: Contains the entrypoint for each machine.
+- **`modules/`**: Reusable system-level configurations (for macOS, Linux, etc.).
+- **`users/`**: Composable user profiles (e.g., a base profile, a developer profile).
