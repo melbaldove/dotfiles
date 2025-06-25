@@ -124,6 +124,9 @@ in
     ".claude/shared" = {
       source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/.claude-global/shared";
     };
+    ".gitignore" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/git/.gitignore-config";
+    };
   };
 
   xdg = {
@@ -133,13 +136,18 @@ in
         source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/nix";
         recursive = true;
       };
-      "emacs" = {
-        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs";
-        recursive = true;
-      };
       "ghostty" = {
         source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/ghostty";
         recursive = true;
+      };
+      "emacs/init.el" = {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs/init.el";
+      };
+      "emacs/.emacs.custom.el" = {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs/.emacs.custom.el";
+      };
+      "emacs/snippets" = {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs/snippets";
       };
     };
   };
