@@ -201,6 +201,9 @@
   :hook 
   (rust-mode . lsp))
 
+;; Enable FFAP (Find File At Point)
+(ffap-bindings)
+
 ;; Global keybindings
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cj" (lambda ()
