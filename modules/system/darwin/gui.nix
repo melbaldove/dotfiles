@@ -1,20 +1,22 @@
 
 
-{  pkgs, inputs, ...}:
+{ pkgs, inputs, config, ... }:
+let
+  # Fixed-output derivation for DefaultKeyBinding.dict
+  defaultKeyBinding = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/fkchang/emacs-keybindings-in-osx/refs/heads/master/DefaultKeybinding.dict";
+    sha256 = "sha256-IHe7nXGeE1/4WzMDSyyrUBqIZSp6qFc6DGvp1hl9sKA=";
+  };
+in
 {
   nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
-  system.activationScripts.extraActivation.text = ''
+  # Create DefaultKeyBinding.dict symlink for all users
+  system.activationScripts.userKeyBindings.text = ''
     echo "Setting up DefaultKeyBinding.dict..."
-    mkdir -p /Users/melbournebaldove/Library/KeyBindings
-  
-    # Fetch the DefaultKeyBinding.dict from the repository
-    curl -fsSL https://raw.githubusercontent.com/fkchang/emacs-keybindings-in-osx/refs/heads/master/DefaultKeybinding.dict \
-    -o /Users/melbournebaldove/Library/KeyBindings/DefaultKeyBinding.dict
-  
-    # Set proper permissions
-    chmod 644 /Users/melbournebaldove/Library/KeyBindings/DefaultKeyBinding.dict
-    chown melbournebaldove:staff /Users/melbournebaldove/Library/KeyBindings/DefaultKeyBinding.dict
+    USER_HOME="${config.users.users.${config.system.primaryUser}.home}"
+    mkdir -p "$USER_HOME/Library/KeyBindings"
+    ln -sf ${defaultKeyBinding} "$USER_HOME/Library/KeyBindings/DefaultKeyBinding.dict"
   '';
 
   system = {
@@ -31,7 +33,7 @@
       dock = {
         persistent-apps = [
           { app = "/Applications/Dia.app"; }
-          {app = "/Users/melbournebaldove/Applications/Home Manager Apps/Emacs.app"; }
+          { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Apps/Emacs.app"; }
           { app = "/System/Applications/Messages.app"; }
           { app = "/System/Applications/Mail.app"; }
           { app = "/System/Applications/Calendar.app"; }

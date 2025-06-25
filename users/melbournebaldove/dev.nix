@@ -13,6 +13,12 @@ let
       dvisvgm dvipng # for preview and export as html
       wrapfig amsmath ulem hyperref capt-of;
   });
+  
+  # Simple shell wrapper for @google/gemini-cli
+  gemini-cli = pkgs.writeShellScriptBin "gemini" ''
+    # Use npx to run @google/gemini-cli
+    exec ${pkgs.nodejs}/bin/npx --yes @google/gemini-cli@latest "$@"
+  '';
 in
 {
   home.packages = with pkgs; [
@@ -24,20 +30,9 @@ in
     ripgrep
     ast-grep
     nodejs
+    gemini-cli
   ];
 
-  home.file.".npmrc".text = ''
-    prefix = ${config.home.homeDirectory}/.npm-global
-  '';
-  
-  home.sessionVariables = {
-    PATH = "$PATH:${config.home.homeDirectory}/.npm-global/bin";
-  };
-  
-  home.activation.installNpmPackages = config.lib.dag.entryAfter ["writeBoundary"] ''
-    $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.npm-global
-    $DRY_RUN_CMD env PATH=${pkgs.nodejs}/bin:/bin:/usr/bin ${pkgs.nodejs}/bin/npm install -g @google/gemini-cli --prefix ${config.home.homeDirectory}/.npm-global
-  '';
 
   programs = {
     emacs = {

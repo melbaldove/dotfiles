@@ -21,12 +21,9 @@
 
   users.users.melbournebaldove = {
     name = "melbournebaldove";
-    home = "/Users/melbournebaldove";
+    home = "/Users/melbournebaldove"; # This is the standard macOS home path
   };
 
-  system.activationScripts.extraActivation.text =
-    ''
-      xcode-select --install || true
-      softwareupdate --install-rosetta --agree-to-license
-    '';
+  # NOTE: These system modifications have been moved to a manual setup script
+  # Run setup.sh after initial nix-darwin installation
 }

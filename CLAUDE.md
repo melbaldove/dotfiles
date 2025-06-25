@@ -33,8 +33,11 @@ When adding or changing a configuration, use the following guidelines to determi
 
 ```bash
 # Rebuild the 'Turing' system configuration
-sudo darwin-rebuild --impure switch --flake .#Turing
+sudo darwin-rebuild switch --flake .#Turing
 
 # Update dependencies
 nix flake update
+
+# Initial system setup (run once)
+./scripts/setup-darwin.sh
 ```

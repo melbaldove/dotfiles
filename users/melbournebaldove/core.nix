@@ -20,7 +20,7 @@
         alias sg='ast-grep'
         
         # Alias for darwin-rebuild
-        alias rebuild='sudo darwin-rebuild --impure switch'
+        alias rebuild='sudo darwin-rebuild switch'
       '';
     };
     home-manager.enable = true;
@@ -44,51 +44,27 @@
   };
 
   home.file = {
-    ".claude/CLAUDE.md" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/CLAUDE.md";
-    };
-    ".claude/commands" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/commands";
-    };
-    ".claude/settings.json" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/settings.json";
-    };
-    ".claude/shared" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/shared";
-    };
-    ".gitignore" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/git/.gitignore-config";
-    };
-    ".gemini/settings.json" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/gemini/settings.json";
-    };
-    ".gemini/CLAUDE.md" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/CLAUDE.md";
-    };
-    ".gemini/commands" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/commands";
-    };
-    ".gemini/shared" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/shared";
-    };
+    ".claude/CLAUDE.md".source = ../../claude/CLAUDE.md;
+    ".claude/commands".source = ../../claude/commands;
+    ".claude/settings.json".source = ../../claude/settings.json;
+    ".claude/shared".source = ../../claude/shared;
+    ".gitignore".source = ../../git/.gitignore-config;
+    ".gemini/settings.json".source = ../../gemini/settings.json;
+    ".gemini/CLAUDE.md".source = ../../claude/CLAUDE.md;
+    ".gemini/commands".source = ../../claude/commands;
+    ".gemini/shared".source = ../../claude/shared;
   };
 
   xdg = {
     enable = true;
     configFile = {
       "ghostty" = {
-        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/ghostty";
+        source = ../../ghostty;
         recursive = true;
       };
-      "emacs/init.el" = {
-        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs/init.el";
-      };
-      "emacs/.emacs.custom.el" = {
-        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs/.emacs.custom.el";
-      };
-      "emacs/snippets" = {
-        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/emacs/snippets";
-      };
+      "emacs/init.el".source = ../../emacs/init.el;
+      "emacs/.emacs.custom.el".source = ../../emacs/.emacs.custom.el;
+      "emacs/snippets".source = ../../emacs/snippets;
     };
   };
 }
