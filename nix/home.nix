@@ -32,8 +32,22 @@ in
     gh
     ripgrep
     ast-grep
+    nodejs
   ];
   home.shell.enableShellIntegration = true;
+  
+  home.file.".npmrc".text = ''
+    prefix = ${config.home.homeDirectory}/.npm-global
+  '';
+  
+  home.sessionVariables = {
+    PATH = "$PATH:${config.home.homeDirectory}/.npm-global/bin";
+  };
+  
+  home.activation.installNpmPackages = config.lib.dag.entryAfter ["writeBoundary"] ''
+    $DRY_RUN_CMD mkdir -p ${config.home.homeDirectory}/.npm-global
+    $DRY_RUN_CMD env PATH=${pkgs.nodejs}/bin:/bin:/usr/bin ${pkgs.nodejs}/bin/npm install -g @google/gemini-cli --prefix ${config.home.homeDirectory}/.npm-global
+  '';
 
   programs = {
     # Let Home Manager install and manage itself.
@@ -94,6 +108,21 @@ in
       enable = true;
       package = pkgs.emacs-unstable;
       defaultEditor = true;
+    };
+  };
+
+  home.file = {
+    ".claude/CLAUDE.md" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/.claude-global/CLAUDE.md";
+    };
+    ".claude/commands" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/.claude-global/commands";
+    };
+    ".claude/settings.json" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/.claude-global/settings.json";
+    };
+    ".claude/shared" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/.claude-global/shared";
     };
   };
 
