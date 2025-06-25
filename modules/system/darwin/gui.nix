@@ -1,9 +1,8 @@
-{  pkgs, ...}:{
-  nixpkgs.overlays = [
-    (import (builtins.fetchTarball {
-      url = "https://github.com/nix-community/emacs-overlay/archive/master.tar.gz";
-    }))
-  ];
+
+
+{  pkgs, inputs, ...}:
+{
+  nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
   system.activationScripts.extraActivation.text = ''
     echo "Setting up DefaultKeyBinding.dict..."
