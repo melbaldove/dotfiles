@@ -34,6 +34,7 @@ in
         persistent-apps = [
           { app = "/Applications/Dia.app"; }
           { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Apps/Emacs.app"; }
+          { app = "/Applications/Ghostty.app"; }
           { app = "/System/Applications/Messages.app"; }
           { app = "/System/Applications/Mail.app"; }
           { app = "/System/Applications/Calendar.app"; }

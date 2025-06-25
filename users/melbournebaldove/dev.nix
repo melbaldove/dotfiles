@@ -43,9 +43,11 @@ in
       ];
     };
 
+
     direnv = {
       enable = true;
       enableBashIntegration = true;
+      enableNushellIntegration = true;
       silent = true;
       nix-direnv.enable = true;
     };

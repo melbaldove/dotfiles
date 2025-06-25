@@ -25,6 +25,11 @@
     };
     home-manager.enable = true;
 
+    nushell = {
+      enable = true;
+      configFile.source = ../../nushell/config.nu;
+    };
+
     git = {
       enable = true;
       extraConfig = {
