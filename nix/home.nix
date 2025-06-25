@@ -127,6 +127,18 @@ in
     ".gitignore" = {
       source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/git/.gitignore-config";
     };
+    ".gemini/settings.json" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/gemini/settings.json";
+    };
+    ".gemini/CLAUDE.md" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/CLAUDE.md";
+    };
+    ".gemini/commands" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/commands";
+    };
+    ".gemini/shared" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/shared";
+    };
   };
 
   xdg = {
