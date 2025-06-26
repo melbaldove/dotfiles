@@ -206,6 +206,9 @@
 
 ;; Global keybindings
 (global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cf" 'org-roam-node-find)
+(global-set-key "\C-ci" 'org-roam-node-insert)
+(global-set-key "\C-cy" 'org-roam-dailies-goto-yesterday)
 (global-set-key "\C-cj" (lambda ()
                           (interactive)
                           (split-window-horizontally)
