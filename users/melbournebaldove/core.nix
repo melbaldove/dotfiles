@@ -1,6 +1,6 @@
 
 {
-  config, pkgs, ...
+  config, pkgs, self, ...
 }:
 {
   home.username = "melbournebaldove";
@@ -27,7 +27,7 @@
 
     nushell = {
       enable = true;
-      configFile.source = ../../nushell/config.nu;
+      configFile.source = config.lib.file.mkOutOfStoreSymlink "${self}/nushell/config.nu";
     };
 
     git = {
@@ -49,28 +49,25 @@
   };
 
   home.file = {
-    ".claude/CLAUDE.md".source = ../../claude/CLAUDE.md;
-    ".claude/commands".source = ../../claude/commands;
-    ".claude/settings.json".source = ../../claude/settings.json;
-    ".claude/shared".source = ../../claude/shared;
-    ".gitignore".source = ../../git/.gitignore-config;
-    ".gemini/settings.json".source = ../../gemini/settings.json;
-    ".gemini/CLAUDE.md".source = ../../claude/CLAUDE.md;
-    ".gemini/commands".source = ../../claude/commands;
-    ".gemini/shared".source = ../../claude/shared;
-    ".hammerspoon/init.lua".source = ../../hammerspoon/init.lua;
+    ".claude/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/CLAUDE.md";
+    ".claude/commands".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/commands";
+    ".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/settings.json";
+    ".claude/shared".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/shared";
+    ".gitignore".source = config.lib.file.mkOutOfStoreSymlink "${self}/git/.gitignore-config";
+    ".gemini/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${self}/gemini/settings.json";
+    ".gemini/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/CLAUDE.md";
+    ".gemini/commands".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/commands";
+    ".gemini/shared".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/shared";
+    ".hammerspoon/init.lua".source = config.lib.file.mkOutOfStoreSymlink "${self}/hammerspoon/init.lua";
   };
 
   xdg = {
     enable = true;
     configFile = {
-      "ghostty" = {
-        source = ../../ghostty;
-        recursive = true;
-      };
-      "emacs/init.el".source = ../../emacs/init.el;
-      "emacs/.emacs.custom.el".source = ../../emacs/.emacs.custom.el;
-      "emacs/snippets".source = ../../emacs/snippets;
+      "ghostty".source = config.lib.file.mkOutOfStoreSymlink "${self}/ghostty";
+      "emacs/init.el".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/init.el";
+      "emacs/.emacs.custom.el".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/.emacs.custom.el";
+      "emacs/snippets".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/snippets";
     };
   };
 }

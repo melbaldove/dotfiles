@@ -13,6 +13,7 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    extraSpecialArgs = { inherit inputs; self = inputs.self; };
     users.melbournebaldove = {
       imports = [
         ../../users/melbournebaldove/core.nix

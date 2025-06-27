@@ -64,6 +64,12 @@
 ;; Auto-revert buffers when files change on disk
 (global-auto-revert-mode 1)
 
+;; Recent files
+(recentf-mode 1)
+(setq recentf-max-menu-items 25)        ; Show 25 recent files
+(setq recentf-max-saved-items 100)      ; Remember 100 files
+(setq recentf-exclude '("/tmp/" "/ssh:")) ; Exclude temporary and remote files
+
 ;; Org-mode Configuration
 (use-package org-modern
   :ensure t
@@ -116,6 +122,31 @@
   :bind
   (("M-x" . smex)
    ("C-c C-c M-x" . execute-extended-command)))
+
+(use-package expand-region
+  :ensure t
+  :bind ("C-=" . er/expand-region))
+
+(use-package ace-window
+  :ensure t
+  :bind ("M-o" . ace-window)
+  :custom
+  (aw-keys '(?a ?r ?s ?t ?g ?m ?n ?e ?i)))
+
+(use-package avy
+  :ensure t
+  :bind (("C-;" . avy-goto-char-timer)
+         ("M-g f" . avy-goto-line)
+         ("M-g w" . avy-goto-word-1)
+         ("C-'" . avy-goto-char-2)))
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :bind (:map projectile-mode-map
+              ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map)))
 
 (use-package ido-completing-read+
   :ensure t
@@ -205,6 +236,7 @@
 (ffap-bindings)
 
 ;; Global keybindings
+(global-set-key (kbd "C-x C-r") 'recentf-open-files)
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cf" 'org-roam-node-find)
 (global-set-key "\C-ci" 'org-roam-node-insert)

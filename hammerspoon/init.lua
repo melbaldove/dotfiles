@@ -27,14 +27,47 @@ for key, app in pairs(apps) do
     end)
 end
 
+-- Window management
+local windowBindings = {
+    -- Half screen
+    ["n"] = {x=0, y=0, w=0.5, h=1},         -- Left half
+    ["o"] = {x=0.5, y=0, w=0.5, h=1},       -- Right half
+    ["e"] = {x=0, y=0, w=1, h=1},           -- Maximize
+    -- Quarter screen
+    ["u"] = {x=0, y=0, w=0.5, h=0.5},       -- Upper left
+    ["y"] = {x=0.5, y=0, w=0.5, h=0.5},     -- Upper right
+    [","] = {x=0, y=0.5, w=0.5, h=0.5},     -- Lower left
+    ["."] = {x=0.5, y=0.5, w=0.5, h=0.5},   -- Lower right
+}
+
+-- Bind window management keys
+for key, unit in pairs(windowBindings) do
+    hs.hotkey.bind({"ctrl", "alt"}, key, function()
+        local win = hs.window.focusedWindow()
+        if win then
+            win:moveToUnit(unit)
+        end
+    end)
+end
+
+-- Move window to next monitor
+hs.hotkey.bind({"ctrl", "alt"}, "i", function()
+    local win = hs.window.focusedWindow()
+    if win then
+        local screen = win:screen()
+        local nextScreen = screen:next()
+        win:moveToScreen(nextScreen, true)
+    end
+end)
+
 -- Pre-compute keycode lookup
 local keycodeToString = {}
 for k, v in pairs(hs.keycodes.map) do
     keycodeToString[v] = k
 end
 
--- Transform Right Command to hyper key
-hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
+-- Transform Right Command to hyper key (global to prevent garbage collection)
+hyperKeyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
     local flags = event:rawFlags()
     if flags & hs.eventtap.event.rawFlagMasks.deviceRightCommand > 0 then
         local keyString = keycodeToString[event:getKeyCode()]
@@ -45,4 +78,5 @@ hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
         end
     end
     return false
-end):start()
+end)
+hyperKeyTap:start()

@@ -28,7 +28,9 @@ in
         "com.apple.keyboard.fnState" = true;
         NSAutomaticSpellingCorrectionEnabled = false;
         NSAutomaticCapitalizationEnabled = false;
-        NSAutomaticInlinePredictionEnabled = false;        
+        NSAutomaticInlinePredictionEnabled = false;
+        # Trackpad settings
+        "com.apple.trackpad.scaling" = 3.0;  # Maximum tracking speed
       };
       dock = {
         persistent-apps = [
