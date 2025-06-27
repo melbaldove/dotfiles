@@ -18,14 +18,7 @@
  '(org-modern-replace-stars "")
  '(org-modern-star 'replace)
  '(org-pretty-entities t)
- '(package-selected-packages
-   '(adaptive-wrap company constant-theme direnv eink-theme envrc
-		   exec-path-from-shell expand-region
-		   ido-completing-read+ lsp-sourcekit lsp-ui magit
-		   monotropic-theme nix-mode nothing-theme org-journal
-		   org-mode org-modern org-roam org-superstar
-		   rainbow-delimiters rust-mode smex swift-mode
-		   use-package writeroom-mode yasnippet-snippets))
+ '(package-selected-packages nil)
  '(writeroom-fullscreen-effect 'maximized))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

@@ -138,7 +138,9 @@
   :bind (("C-;" . avy-goto-char-timer)
          ("M-g f" . avy-goto-line)
          ("M-g w" . avy-goto-word-1)
-         ("C-'" . avy-goto-char-2)))
+         ("C-'" . avy-goto-char-2))
+  :config
+  (setq avy-timeout-seconds 0.2))
 
 (use-package projectile
   :ensure t
