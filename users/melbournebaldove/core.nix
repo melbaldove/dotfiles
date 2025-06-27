@@ -58,6 +58,7 @@
     ".gemini/CLAUDE.md".source = ../../claude/CLAUDE.md;
     ".gemini/commands".source = ../../claude/commands;
     ".gemini/shared".source = ../../claude/shared;
+    ".hammerspoon/init.lua".source = ../../hammerspoon/init.lua;
   };
 
   xdg = {

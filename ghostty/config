@@ -7,3 +7,4 @@ command = /etc/profiles/per-user/melbournebaldove/bin/bash -c "exec /etc/profile
 
 # Disable confirmation on exit
 confirm-close-surface = false
+keybind = shift+enter=text:\n

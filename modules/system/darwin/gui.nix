@@ -91,6 +91,7 @@ in
       "anki"
       "discord"
       "ghostty"
+      "hammerspoon"
     ];
   };
 }
