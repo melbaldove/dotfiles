@@ -150,6 +150,9 @@
               ("s-p" . projectile-command-map)
               ("C-c p" . projectile-command-map)))
 
+(use-package rg
+  :ensure t)
+
 (use-package ido-completing-read+
   :ensure t
   :config

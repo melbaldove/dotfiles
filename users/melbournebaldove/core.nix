@@ -65,14 +65,15 @@
     enable = true;
     configFile = {
       "ghostty".source = config.lib.file.mkOutOfStoreSymlink "${self}/ghostty";
-      "emacs/init.el".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/init.el";
-      # emacs/.emacs.custom.el handled by activation script below
+      # emacs/init.el and emacs/.emacs.custom.el handled by activation script below
       "emacs/snippets".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/snippets";
     };
   };
 
-  # Manual activation script to create writable symlink for Emacs custom file
-  home.activation.linkEmacsCustom = config.lib.dag.entryAfter ["writeBoundary"] ''
+  # Manual activation script to create writable symlinks for Emacs files
+  home.activation.linkEmacsFiles = config.lib.dag.entryAfter ["writeBoundary"] ''
+    run rm -f ${config.xdg.configHome}/emacs/init.el
+    run ln -sf ${config.home.homeDirectory}/.dotfiles/emacs/init.el ${config.xdg.configHome}/emacs/init.el
     run rm -f ${config.xdg.configHome}/emacs/.emacs.custom.el
     run ln -sf ${config.home.homeDirectory}/.dotfiles/emacs/.emacs.custom.el ${config.xdg.configHome}/emacs/.emacs.custom.el
   '';
