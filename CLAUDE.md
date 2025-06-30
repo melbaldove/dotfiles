@@ -40,8 +40,11 @@ When adding or changing a configuration, use the following guidelines to determi
 # Rebuild the 'turing' macOS system configuration
 sudo darwin-rebuild switch --flake .#turing
 
-# Rebuild the 'einstein' NixOS home server configuration
-sudo nixos-rebuild switch --flake .#einstein
+# Deploy to 'einstein' NixOS home server remotely
+deploy --remote-build --skip-checks --hostname 192.168.50.141 .#einstein
+
+# Dry run deployment (test without applying changes)
+deploy --dry-activate --remote-build --skip-checks --hostname 192.168.50.141 .#einstein
 
 # Update dependencies
 nix flake update
@@ -49,3 +52,9 @@ nix flake update
 # Initial macOS setup (run once)
 ./scripts/setup-darwin.sh
 ```
+
+## Deployment
+
+This repository uses deploy-rs for remote deployment to Linux systems:
+
+- **Remote building**: Builds happen on the target machine to avoid cross-compilation issues

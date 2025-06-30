@@ -37,6 +37,4 @@
 
   # Enable Linux emulation for cross-platform builds
   nix.settings.extra-platforms = [ "x86_64-linux" "aarch64-linux" ];
-
-  nix.enable = false;
 }

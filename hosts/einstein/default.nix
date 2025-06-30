@@ -13,6 +13,13 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Mount /dev/sda1 to /mnt/media
+  fileSystems."/mnt/media" = {
+    device = "/dev/sda1";
+    fsType = "auto";
+    options = [ "defaults" "user" "rw" ];
+  };
+
   users.users.melbournebaldove = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];

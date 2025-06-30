@@ -25,6 +25,5 @@
     git
     htop
     tmux
-    neofetch
   ];
 }
