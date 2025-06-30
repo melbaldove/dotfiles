@@ -1,30 +1,33 @@
 { config, lib, pkgs, ... }:
 
 {
-  # Emby media server
-  services.emby = {
+  # Jellyfin media server (open-source alternative to Emby/Plex)
+  services.jellyfin = {
     enable = true;
     openFirewall = true;
-    dataDir = "/var/lib/emby";
-    user = "emby";
-    group = "emby";
+    dataDir = "/var/lib/jellyfin";
+    configDir = "/var/lib/jellyfin/config";
+    cacheDir = "/var/cache/jellyfin";
+    logDir = "/var/log/jellyfin";
+    user = "jellyfin";
+    group = "jellyfin";
   };
 
-  # Create emby user and ensure media directory permissions
-  users.users.emby = {
+  # Create jellyfin user and ensure media directory permissions
+  users.users.jellyfin = {
     isSystemUser = true;
-    group = "emby";
-    extraGroups = [ "video" "audio" ];
+    group = "jellyfin";
+    extraGroups = [ "video" "audio" "users" ];
   };
-  users.groups.emby = {};
+  users.groups.jellyfin = {};
 
-  # Ensure media mount is accessible to emby
+  # Ensure media mount is accessible to jellyfin
   systemd.tmpfiles.rules = [
     "d /mnt/media 0755 root users -"
     "Z /mnt/media 0755 root users -"
   ];
 
-  # Open firewall ports for Emby
+  # Open firewall ports for Jellyfin
   networking.firewall = {
     allowedTCPPorts = [ 
       8096  # HTTP web interface
@@ -32,7 +35,7 @@
     ];
     allowedUDPPorts = [
       1900  # DLNA discovery
-      7359  # Emby autodiscovery
+      7359  # Jellyfin autodiscovery
     ];
   };
 }
