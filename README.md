@@ -25,7 +25,7 @@ This repository uses a modular, flake-based approach to manage configurations fo
 
     ```bash
     # For the 'turing' macOS configuration
-    sudo darwin-rebuild switch --flake github:melbournebaldove/dotfiles#turing
+    sudo darwin-rebuild switch --flake github:melbaldove/dotfiles#turing
     ```
 
 ## Local Development
@@ -35,7 +35,7 @@ This repository uses a modular, flake-based approach to manage configurations fo
 cd ~/.dotfiles
 
 # Rebuild the system
-sudo darwin-rebuild --impure switch --flake .#turing
+sudo darwin-rebuild switch --flake .#turing
 
 # Update dependencies
 nix flake update

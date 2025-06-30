@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/system/shared/core.nix
     ../../modules/system/linux/default.nix
+    ../../modules/system/linux/media-server.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
@@ -22,7 +23,7 @@
 
   users.users.melbournebaldove = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "users" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINvRFinX32oEn1D4pBUmAZdmk+LofsuMG9rpmv87U0at melbournebaldove@Turing.local"
     ];
