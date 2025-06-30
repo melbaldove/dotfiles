@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./hardware-configuration.nix
     ./disk-config.nix
     ../../modules/system/shared/core.nix
     inputs.home-manager.nixosModules.home-manager
