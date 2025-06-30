@@ -14,11 +14,6 @@ let
       wrapfig amsmath ulem hyperref capt-of;
   });
   
-  # Simple shell wrapper for @google/gemini-cli
-  gemini-cli = pkgs.writeShellScriptBin "gemini" ''
-    # Use npx to run @google/gemini-cli
-    exec ${pkgs.nodejs}/bin/npx --yes @google/gemini-cli@latest "$@"
-  '';
 in
 {
   home.packages = with pkgs; [
@@ -32,6 +27,7 @@ in
     nodejs
     gemini-cli
     nmap
+    deploy-rs
   ];
 
   # Development-specific bash aliases
@@ -50,6 +46,10 @@ in
       ];
     };
 
+    nushell = {
+      enable = true;
+      configFile.source = config.lib.file.mkOutOfStoreSymlink "${self}/nushell/config.nu";
+    };
 
     direnv = {
       enable = true;

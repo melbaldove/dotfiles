@@ -22,10 +22,6 @@
     };
     home-manager.enable = true;
 
-    nushell = {
-      enable = true;
-      configFile.source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/nushell/config.nu";
-    };
 
     git = {
       enable = true;
