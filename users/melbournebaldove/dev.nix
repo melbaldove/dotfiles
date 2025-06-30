@@ -1,6 +1,6 @@
 
 {
-  config, pkgs, self, ...
+  config, pkgs, inputs, ...
 }:
 let
   # tex = (pkgs.texlive.combine {
@@ -16,9 +16,12 @@ let
   
 in
 {
+  imports = [
+    ./claude.nix
+  ];
+
   home.packages = with pkgs; [
     # tex  # Temporarily disabled due to build errors
-    claude-code
     imagemagick
     gh
     ripgrep
@@ -47,7 +50,7 @@ in
 
     nushell = {
       enable = true;
-      configFile.source = config.lib.file.mkOutOfStoreSymlink "${self}/nushell/config.nu";
+      configFile.source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/nushell/config.nu";
     };
 
     direnv = {
@@ -71,21 +74,17 @@ in
     };
   };
 
-  # AI assistant configurations
+  # Gemini assistant configurations (Claude configs are now in claude.nix)
   home.file = {
-    ".claude/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/CLAUDE.md";
-    ".claude/commands".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/commands";
-    ".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/settings.json";
-    ".claude/shared".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/shared";
-    ".gemini/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${self}/gemini/settings.json";
-    ".gemini/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/CLAUDE.md";
-    ".gemini/commands".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/commands";
-    ".gemini/shared".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/shared";
+    ".gemini/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/gemini/settings.json";
+    ".gemini/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/CLAUDE.md";
+    ".gemini/commands".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/commands";
+    ".gemini/shared".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/shared";
   };
 
   # Emacs configuration
   xdg.configFile = {
-    "emacs/snippets".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/snippets";
+    "emacs/snippets".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/emacs/snippets";
   };
 
   # Manual activation script to create writable symlinks for Emacs files

@@ -30,10 +30,6 @@
   };
 
 
-  environment.systemPackages = with pkgs; [
-    claude-code
-  ];
-
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
@@ -41,6 +37,7 @@
     users.melbournebaldove = {
       imports = [
         ../../users/melbournebaldove/core.nix
+        ../../users/melbournebaldove/claude.nix
       ];
     };
   };
