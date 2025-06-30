@@ -30,6 +30,10 @@
   };
 
 
+  environment.systemPackages = with pkgs; [
+    claude-code
+  ];
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
