@@ -4,7 +4,7 @@
 }:
 {
   home.username = "melbournebaldove";
-  home.homeDirectory = "/Users/melbournebaldove";
+  home.homeDirectory = pkgs.lib.mkDefault "/Users/melbournebaldove";
   home.stateVersion = "24.11";
 
   home.shell.enableShellIntegration = true;
@@ -15,12 +15,6 @@
       bashrcExtra = ''
         # Custom prompt showing username and current directory
         export PS1="\u:\w$ "
-        
-        # Alias for ast-grep
-        alias sg='ast-grep'
-        
-        # Alias for darwin-rebuild
-        alias rebuild='sudo darwin-rebuild switch'
       '';
     };
     home-manager.enable = true;
@@ -49,32 +43,6 @@
   };
 
   home.file = {
-    ".claude/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/CLAUDE.md";
-    ".claude/commands".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/commands";
-    ".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/settings.json";
-    ".claude/shared".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/shared";
     ".gitignore".source = config.lib.file.mkOutOfStoreSymlink "${self}/git/.gitignore-config";
-    ".gemini/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${self}/gemini/settings.json";
-    ".gemini/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/CLAUDE.md";
-    ".gemini/commands".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/commands";
-    ".gemini/shared".source = config.lib.file.mkOutOfStoreSymlink "${self}/claude/shared";
-    ".hammerspoon/init.lua".source = config.lib.file.mkOutOfStoreSymlink "${self}/hammerspoon/init.lua";
   };
-
-  xdg = {
-    enable = true;
-    configFile = {
-      "ghostty".source = config.lib.file.mkOutOfStoreSymlink "${self}/ghostty";
-      # emacs/init.el and emacs/.emacs.custom.el handled by activation script below
-      "emacs/snippets".source = config.lib.file.mkOutOfStoreSymlink "${self}/emacs/snippets";
-    };
-  };
-
-  # Manual activation script to create writable symlinks for Emacs files
-  home.activation.linkEmacsFiles = config.lib.dag.entryAfter ["writeBoundary"] ''
-    run rm -f ${config.xdg.configHome}/emacs/init.el
-    run ln -sf ${config.home.homeDirectory}/.dotfiles/emacs/init.el ${config.xdg.configHome}/emacs/init.el
-    run rm -f ${config.xdg.configHome}/emacs/.emacs.custom.el
-    run ln -sf ${config.home.homeDirectory}/.dotfiles/emacs/.emacs.custom.el ${config.xdg.configHome}/emacs/.emacs.custom.el
-  '';
 }

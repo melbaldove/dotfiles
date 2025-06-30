@@ -18,6 +18,7 @@
       imports = [
         ../../users/melbournebaldove/core.nix
         ../../users/melbournebaldove/dev.nix
+        ../../users/melbournebaldove/desktop.nix
       ];
     };
   };
