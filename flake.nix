@@ -28,14 +28,6 @@
       flake = false;
     };
 
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    nixos-facter-modules = {
-      url = "github:numtide/nixos-facter-modules";
-    };
   };
 
   outputs = inputs@{ self, nix-darwin, home-manager, nix-homebrew, nixpkgs, ... }:
@@ -52,9 +44,6 @@
       specialArgs = { inherit inputs self; };
       modules = [ 
         ./hosts/einstein/default.nix
-        inputs.disko.nixosModules.disko
-        inputs.nixos-facter-modules.nixosModules.facter
-        { config.facter.reportPath = ./hosts/einstein/facter.json; }
       ];
     };
   };
