@@ -1,6 +1,6 @@
 
 {
-  config, pkgs, self, ...
+  config, pkgs, inputs, ...
 }:
 {
   home.username = "melbournebaldove";
@@ -21,7 +21,7 @@
 
     nushell = {
       enable = true;
-      configFile.source = config.lib.file.mkOutOfStoreSymlink "${self}/nushell/config.nu";
+      configFile.source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/nushell/config.nu";
     };
 
     git = {
@@ -43,6 +43,6 @@
   };
 
   home.file = {
-    ".gitignore".source = config.lib.file.mkOutOfStoreSymlink "${self}/git/.gitignore-config";
+    ".gitignore".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/git/.gitignore-config";
   };
 }

@@ -1,3 +1,13 @@
 {
-    "includeCoAuthoredBy": false
+    "includeCoAuthoredBy": false,
+    "permissions": {
+        "allow": [
+            "Bash(ast-grep)",
+            "Bash(rg)",
+            "Bash(find)",
+            "LS",
+            "WebFetch",
+            "WebSearch"
+        ]
+    }
 }

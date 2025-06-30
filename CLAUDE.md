@@ -32,8 +32,8 @@ When adding or changing a configuration, use the following guidelines to determi
 ## Development Commands
 
 ```bash
-# Rebuild the 'Turing' system configuration
-sudo darwin-rebuild switch --flake .#Turing
+# Rebuild the 'turing' system configuration
+sudo darwin-rebuild switch --flake .#turing
 
 # Update dependencies
 nix flake update

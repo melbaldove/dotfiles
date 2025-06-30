@@ -24,8 +24,8 @@ This repository uses a modular, flake-based approach to manage configurations fo
     To provision a new machine, apply the desired host configuration from this repository.
 
     ```bash
-    # For the 'Turing' macOS configuration
-    sudo darwin-rebuild switch --flake github:melbournebaldove/dotfiles#Turing
+    # For the 'turing' macOS configuration
+    sudo darwin-rebuild switch --flake github:melbournebaldove/dotfiles#turing
     ```
 
 ## Local Development
@@ -35,7 +35,7 @@ This repository uses a modular, flake-based approach to manage configurations fo
 cd ~/.dotfiles
 
 # Rebuild the system
-sudo darwin-rebuild --impure switch --flake .#Turing
+sudo darwin-rebuild --impure switch --flake .#turing
 
 # Update dependencies
 nix flake update

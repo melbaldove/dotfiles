@@ -27,14 +27,28 @@
       url = "github:shaunsingh/SFMono-Nerd-Font-Ligaturized";
       flake = false;
     };
+
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nix-darwin, home-manager, nix-homebrew, nixpkgs, ... }:
   {
-    darwinConfigurations."Turing" = nix-darwin.lib.darwinSystem {
+    darwinConfigurations."turing" = nix-darwin.lib.darwinSystem {
       specialArgs = { inherit inputs self; };
       modules = [ 
         ./hosts/turing/default.nix
+      ];
+    };
+
+    nixosConfigurations."einstein" = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs self; };
+      modules = [ 
+        ./hosts/einstein/default.nix
+        inputs.disko.nixosModules.disko
       ];
     };
   };

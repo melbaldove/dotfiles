@@ -31,6 +31,7 @@ in
     ast-grep
     nodejs
     gemini-cli
+    nmap
   ];
 
   # Development-specific bash aliases

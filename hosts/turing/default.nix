@@ -32,5 +32,11 @@
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
 
+  # Set the hostname
+  networking.hostName = "turing";
+
+  # Enable Linux emulation for cross-platform builds
+  nix.settings.extra-platforms = [ "x86_64-linux" "aarch64-linux" ];
+
   nix.enable = false;
 }
