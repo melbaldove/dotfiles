@@ -2,7 +2,9 @@
 
 {
   imports = [
+    ./hardware-configuration.nix
     ../../modules/system/shared/core.nix
+    ../../modules/system/linux/default.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
@@ -19,13 +21,6 @@
     ];
   };
 
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      PermitRootLogin = "prohibit-password";
-    };
-  };
 
   home-manager = {
     useGlobalPkgs = true;

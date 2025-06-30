@@ -29,15 +29,23 @@ When adding or changing a configuration, use the following guidelines to determi
   - **`users/melbournebaldove/dev.nix`**: Settings for your development environment (e.g., Emacs, programming languages).
   - Create new files here to define different roles (e.g., `server.nix` for headless servers).
 
+## Available Hosts
+
+- **`turing`**: macOS development machine (aarch64-darwin)
+- **`einstein`**: Linux home server (x86_64-linux)
+
 ## Development Commands
 
 ```bash
-# Rebuild the 'turing' system configuration
+# Rebuild the 'turing' macOS system configuration
 sudo darwin-rebuild switch --flake .#turing
+
+# Rebuild the 'einstein' NixOS home server configuration
+sudo nixos-rebuild switch --flake .#einstein
 
 # Update dependencies
 nix flake update
 
-# Initial system setup (run once)
+# Initial macOS setup (run once)
 ./scripts/setup-darwin.sh
 ```

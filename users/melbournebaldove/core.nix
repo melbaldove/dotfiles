@@ -4,7 +4,10 @@
 }:
 {
   home.username = "melbournebaldove";
-  home.homeDirectory = pkgs.lib.mkDefault "/Users/melbournebaldove";
+  home.homeDirectory = 
+    if pkgs.stdenv.isDarwin 
+    then "/Users/melbournebaldove"
+    else "/home/melbournebaldove";
   home.stateVersion = "24.11";
 
   home.shell.enableShellIntegration = true;
