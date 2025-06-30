@@ -17,7 +17,7 @@ let
 in
 {
   home.packages = with pkgs; [
-    tex
+    # tex  # Temporarily disabled due to build errors
     aider-chat
     claude-code
     imagemagick
