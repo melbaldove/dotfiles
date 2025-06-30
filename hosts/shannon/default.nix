@@ -6,27 +6,27 @@
     ../../modules/system/shared/core.nix
     ../../modules/system/shared/ssh-keys.nix
     ../../modules/system/linux/default.nix
-    ../../modules/system/linux/media-server.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
-  networking.hostName = "einstein";
+  networking.hostName = "shannon";
+  networking.usePredictableInterfaceNames = false;
+  networking.useDHCP = false; # Disable DHCP globally as we will not need it.
+  # required for ssh?
+  networking.interfaces.eth0.useDHCP = true;
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = true;
 
-  # Mount /dev/sda1 to /mnt/media
-  fileSystems."/mnt/media" = {
-    device = "/dev/sda1";
-    fsType = "auto";
-    options = [ "defaults" "user" "rw" ];
-  };
+  environment.systemPackages = with pkgs; [
+    inetutils
+    mtr
+    sysstat
+  ];
 
   users.users.melbournebaldove = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "users" ];
+    extraGroups = [ "wheel" "users" "networkmanager" ];
   };
-
 
   home-manager = {
     useGlobalPkgs = true;
@@ -35,10 +35,9 @@
     users.melbournebaldove = {
       imports = [
         ../../users/melbournebaldove/core.nix
-        ../../users/melbournebaldove/claude.nix
       ];
     };
   };
 
-  system.stateVersion = "24.05";
+  system.stateVersion = "24.11";
 }

@@ -48,12 +48,29 @@
       ];
     };
 
+    nixosConfigurations."shannon" = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs self; };
+      modules = [ 
+        ./hosts/shannon/default.nix
+      ];
+    };
+
     deploy.nodes.einstein = {
       hostname = "einstein";
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.x86_64-linux.activate.nixos 
           self.nixosConfigurations.einstein;
+      };
+    };
+
+    deploy.nodes.shannon = {
+      hostname = "shannon";
+      profiles.system = {
+        user = "root";
+        path = deploy-rs.lib.x86_64-linux.activate.nixos 
+          self.nixosConfigurations.shannon;
       };
     };
 

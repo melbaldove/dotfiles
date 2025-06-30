@@ -33,6 +33,7 @@ When adding or changing a configuration, use the following guidelines to determi
 
 - **`turing`**: macOS development machine (aarch64-darwin)
 - **`einstein`**: Linux home server (x86_64-linux)
+- **`shannon`**: Linux remote server (x86_64-linux)
 
 ## Development Commands
 
@@ -43,8 +44,12 @@ sudo darwin-rebuild switch --flake .#turing
 # Deploy to 'einstein' NixOS home server remotely
 deploy --remote-build --skip-checks --hostname 192.168.50.141 .#einstein
 
+# Deploy to 'shannon' remote server
+deploy --remote-build --skip-checks --hostname <shannon-ip> .#shannon
+
 # Dry run deployment (test without applying changes)
 deploy --dry-activate --remote-build --skip-checks --hostname 192.168.50.141 .#einstein
+deploy --dry-activate --remote-build --skip-checks --hostname <shannon-ip> .#shannon
 
 # Update dependencies
 nix flake update
