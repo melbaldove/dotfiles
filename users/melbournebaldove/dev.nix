@@ -31,6 +31,7 @@ in
     nmap
     deploy-rs
     wireguard-tools
+    inputs.agenix.packages.${pkgs.system}.default
   ];
 
   # Development-specific bash aliases

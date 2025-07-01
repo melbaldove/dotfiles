@@ -7,6 +7,7 @@
     inputs.home-manager.darwinModules.home-manager
     ../../modules/system/darwin/default.nix
     ../../modules/system/darwin/gui.nix
+    ../../modules/system/darwin/agenix.nix
     ../../modules/system/darwin/wireguard-client.nix
     ../../modules/system/shared/core.nix
   ];
