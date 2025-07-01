@@ -42,14 +42,14 @@ When adding or changing a configuration, use the following guidelines to determi
 sudo darwin-rebuild switch --flake .#turing
 
 # Deploy to 'einstein' NixOS home server remotely
-deploy --remote-build --skip-checks --hostname 192.168.50.141 .#einstein
+deploy --remote-build --skip-checks --hostname einstein .#einstein
 
 # Deploy to 'shannon' remote server
-deploy --remote-build --skip-checks --hostname <shannon-ip> .#shannon
+deploy --remote-build --skip-checks --magic-rollback false --hostname shannon .#shannon
 
 # Dry run deployment (test without applying changes)
-deploy --dry-activate --remote-build --skip-checks --hostname 192.168.50.141 .#einstein
-deploy --dry-activate --remote-build --skip-checks --hostname <shannon-ip> .#shannon
+deploy --dry-activate --remote-build --skip-checks --hostname einstein .#einstein
+deploy --dry-activate --remote-build --skip-checks --magic-rollback false --hostname shannon .#shannon
 
 # Update dependencies
 nix flake update

@@ -58,6 +58,7 @@
 
     deploy.nodes.einstein = {
       hostname = "einstein";
+      remoteBuild = true;
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.x86_64-linux.activate.nixos 
@@ -67,6 +68,8 @@
 
     deploy.nodes.shannon = {
       hostname = "shannon";
+      remoteBuild = true;
+      magicRollback = false;
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.x86_64-linux.activate.nixos 
