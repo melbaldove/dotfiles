@@ -12,6 +12,9 @@
   ];
 
   networking.hostName = "einstein";
+  networking.extraHosts = ''
+    172.236.148.68 shannon
+  '';
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

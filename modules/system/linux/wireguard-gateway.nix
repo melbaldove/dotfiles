@@ -35,7 +35,7 @@
           # Shannon VPN server
           publicKey = "8jFBCynKH6dwA/T/duyIg7n2GSaC1gBsjJREYjWdyU4=";
           allowedIPs = [ "10.0.0.0/24" ];
-          endpoint = "SHANNON_IP_ADDRESS:51820";
+          endpoint = "shannon:51820";
           persistentKeepalive = 25;
         }
       ];
