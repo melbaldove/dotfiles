@@ -63,3 +63,14 @@ nix flake update
 This repository uses deploy-rs for remote deployment to Linux systems:
 
 - **Remote building**: Builds happen on the target machine to avoid cross-compilation issues
+
+## Secrets Management
+
+- **`secrets/`**: Contains encrypted secrets managed with agenix
+- **SSH keys**: Used for both authentication and secret encryption/decryption
+- **WireGuard keys**: Managed through agenix for secure VPN configuration
+
+## Scripts
+
+- **`scripts/setup-wireguard-agenix-darwin.sh`**: Sets up WireGuard on macOS using agenix secrets
+- **`scripts/test-vpn-connectivity.sh`**: Tests VPN connectivity between all machines

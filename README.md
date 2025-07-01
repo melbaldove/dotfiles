@@ -47,3 +47,5 @@ nix flake update
 - **`hosts/`**: Contains the entrypoint for each machine.
 - **`modules/`**: Reusable system-level configurations (for macOS, Linux, etc.).
 - **`users/`**: Composable user profiles (e.g., a base profile, a developer profile).
+- **`secrets/`**: Encrypted secrets managed with agenix.
+- **`scripts/`**: Utility scripts for setup and testing.
