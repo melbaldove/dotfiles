@@ -1,6 +1,9 @@
 { config, lib, pkgs, ... }:
 
 {
+  # Declare the encrypted secret
+  age.secrets.wireguard-einstein-private.file = ../../../secrets/wireguard-einstein-private.age;
+
   networking.firewall = {
     trustedInterfaces = [ "wg0" ];
   };
@@ -28,7 +31,7 @@
         ${pkgs.iptables}/bin/iptables -D FORWARD -i enp4s0 -o wg0 -j ACCEPT
       '';
 
-      privateKeyFile = "/etc/wireguard/private";
+      privateKeyFile = config.age.secrets.wireguard-einstein-private.path;
 
       peers = [
         {

@@ -1,6 +1,6 @@
 
 {
-  pkgs, ...
+  pkgs, lib, ...
 }:
 {
   # List packages installed in system profile. To search by name, run:

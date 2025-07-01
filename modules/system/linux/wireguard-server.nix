@@ -1,6 +1,9 @@
 { config, lib, pkgs, ... }:
 
 {
+  # Declare the encrypted secret
+  age.secrets.wireguard-shannon-private.file = ../../../secrets/wireguard-shannon-private.age;
+
   networking.firewall = {
     allowedUDPPorts = [ 51820 ];
     trustedInterfaces = [ "wg0" ];
@@ -25,7 +28,7 @@
         ${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
       '';
 
-      privateKeyFile = "/etc/wireguard/private";
+      privateKeyFile = config.age.secrets.wireguard-shannon-private.path;
 
       peers = [
         {
