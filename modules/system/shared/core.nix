@@ -16,6 +16,7 @@
   # Necessary for using flakes on this system.
   nix.settings = {
     experimental-features = "nix-command flakes";
+    trusted-users = [ "root" "melbournebaldove" ];
     substituters = [
       "https://cache.nixos.org/"
       "https://nix-community.cachix.org"
