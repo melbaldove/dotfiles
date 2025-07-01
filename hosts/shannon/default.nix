@@ -6,6 +6,7 @@
     ../../modules/system/shared/core.nix
     ../../modules/system/shared/ssh-keys.nix
     ../../modules/system/linux/default.nix
+    ../../modules/system/linux/wireguard-server.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 

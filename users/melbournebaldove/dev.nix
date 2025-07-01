@@ -30,6 +30,7 @@ in
     gemini-cli
     nmap
     deploy-rs
+    wireguard-tools
   ];
 
   # Development-specific bash aliases

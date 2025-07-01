@@ -13,3 +13,6 @@ Thumbs.db
 # Logs
 *.log
 
+# Secrets and private keys
+docs/wireguard-manual-setup.md
+
