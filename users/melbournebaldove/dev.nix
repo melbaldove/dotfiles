@@ -32,6 +32,7 @@ in
     deploy-rs
     wireguard-tools
     inputs.agenix.packages.${pkgs.system}.default
+    go-ios
   ];
 
   # Development-specific bash aliases
