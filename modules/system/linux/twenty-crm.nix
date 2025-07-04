@@ -101,7 +101,17 @@ with lib;
         imports = [ 
           (import "${inputs.twenty}/arion-compose.nix" {
             inherit pkgs lib;
-            config = config.services.twenty-crm;
+            config = config.services.twenty-crm // {
+              # Read secrets at build time and pass actual values
+              database = config.services.twenty-crm.database // {
+                password = if config.services.twenty-crm.database.passwordFile != null
+                  then builtins.readFile config.services.twenty-crm.database.passwordFile
+                  else "postgres";
+              };
+              appSecret = if config.services.twenty-crm.appSecretFile != null
+                then builtins.readFile config.services.twenty-crm.appSecretFile
+                else "replace_me_with_a_random_string";
+            };
           })
         ];
       };

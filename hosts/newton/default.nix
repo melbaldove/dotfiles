@@ -44,7 +44,7 @@
     port = 3000;
     
     database = {
-      user = "twenty";
+      user = "postgres";
     };
     
     storage.type = "local";
