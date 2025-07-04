@@ -94,6 +94,16 @@ with lib;
       };
     };
 
+    # Workaround: Ensure worker starts after deployment
+    systemd.services.twenty = {
+      postStart = ''
+        # Wait for containers to be created
+        sleep 10
+        # Start the worker if it's not running
+        ${pkgs.docker}/bin/docker start twenty-worker-1 || true
+      '';
+    };
+
     # Configure Arion project for Twenty CRM
     virtualisation.arion.projects.twenty = {
       serviceName = "twenty";
