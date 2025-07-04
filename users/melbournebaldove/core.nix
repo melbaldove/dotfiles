@@ -11,6 +11,10 @@
   home.stateVersion = "24.11";
 
   home.shell.enableShellIntegration = true;
+  
+  home.sessionVariables = {
+    EDITOR = "vim";
+  };
 
   programs = {
     bash = {

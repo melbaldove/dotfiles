@@ -20,16 +20,26 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Mount /dev/sda1 to /mnt/media
+  # Mount /dev/sda1 to /mnt/media (NTFS)
   fileSystems."/mnt/media" = {
     device = "/dev/sda1";
-    fsType = "auto";
-    options = [ "defaults" "user" "rw" ];
+    fsType = "ntfs-3g";
+    options = [ "defaults" "rw" "uid=1000" "gid=100" "umask=002" "nofail" ];
   };
 
   users.users.melbournebaldove = {
     isNormalUser = true;
     extraGroups = [ "wheel" "users" ];
+  };
+
+  # Add ntfs-3g for NTFS support
+  environment.systemPackages = with pkgs; [
+    ntfs3g
+  ];
+
+  # Configure as remote builder
+  nix.settings = {
+    trusted-users = [ "root" "melbournebaldove" ];
   };
 
 
@@ -41,6 +51,7 @@
       imports = [
         ../../users/melbournebaldove/core.nix
         ../../users/melbournebaldove/claude.nix
+        ../../users/melbournebaldove/dev.nix
       ];
     };
   };

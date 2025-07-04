@@ -1,6 +1,6 @@
 
 {
-  config, pkgs, inputs, ...
+  config, pkgs, lib, inputs, ...
 }:
 let
   # tex = (pkgs.texlive.combine {
@@ -27,11 +27,13 @@ in
     ripgrep
     ast-grep
     nodejs
+    bun
     gemini-cli
     nmap
     deploy-rs
     wireguard-tools
     inputs.agenix.packages.${pkgs.system}.default
+  ] ++ lib.optionals pkgs.stdenv.isDarwin [
     go-ios
   ];
 
@@ -43,17 +45,12 @@ in
 
 
   programs = {
-    emacs = {
-      enable = true;
-      package = pkgs.emacs-unstable;
-      extraPackages = epkgs: [
-        epkgs.use-package
-      ];
-    };
-
     nushell = {
       enable = true;
-      configFile.source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/nushell/config.nu";
+      configFile.text = builtins.replaceStrings 
+        ["@direnv@"] 
+        ["${pkgs.direnv}/bin/direnv"] 
+        (builtins.readFile "${inputs.self}/nushell/config.nu");
     };
 
     direnv = {
@@ -68,14 +65,6 @@ in
       enable = true;
     };
   };
-  
-  services = {
-    emacs = {
-      enable = true;
-      package = pkgs.emacs-unstable;
-      defaultEditor = true;
-    };
-  };
 
   # Gemini assistant configurations (Claude configs are now in claude.nix)
   home.file = {
@@ -85,16 +74,4 @@ in
     ".gemini/shared".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/shared";
   };
 
-  # Emacs configuration
-  xdg.configFile = {
-    "emacs/snippets".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/emacs/snippets";
-  };
-
-  # Manual activation script to create writable symlinks for Emacs files
-  home.activation.linkEmacsFiles = config.lib.dag.entryAfter ["writeBoundary"] ''
-    run rm -f ${config.xdg.configHome}/emacs/init.el
-    run ln -sf ${config.home.homeDirectory}/.dotfiles/emacs/init.el ${config.xdg.configHome}/emacs/init.el
-    run rm -f ${config.xdg.configHome}/emacs/.emacs.custom.el
-    run ln -sf ${config.home.homeDirectory}/.dotfiles/emacs/.emacs.custom.el ${config.xdg.configHome}/emacs/.emacs.custom.el
-  '';
 }

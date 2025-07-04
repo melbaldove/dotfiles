@@ -3,10 +3,12 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./nginx.nix
     ../../modules/system/shared/core.nix
     ../../modules/system/shared/ssh-keys.nix
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
+    ../../modules/system/linux/twenty-crm.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
@@ -15,15 +17,40 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
 
+  # Mount /dev/sdb to /mnt/data
+  fileSystems."/mnt/data" = {
+    device = "/dev/sdb";
+    fsType = "ext4";
+    options = [ "defaults" "rw" ];
+  };
+
   environment.systemPackages = with pkgs; [
     inetutils
     mtr
     sysstat
+    arion
+    podman-compose
   ];
 
   users.users.melbournebaldove = {
     isNormalUser = true;
     extraGroups = [ "wheel" "users" ];
+  };
+
+  # Configure Twenty CRM service
+  services.twenty-crm = {
+    enable = true;
+    serverUrl = "https://crm.workwithnextdesk.com";
+    port = 3000;
+    
+    database = {
+      user = "twenty";
+    };
+    
+    storage.type = "local";
+    auth.google.enabled = false;
+    auth.microsoft.enabled = false;
+    email.driver = null;
   };
 
   home-manager = {

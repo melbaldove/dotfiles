@@ -21,6 +21,7 @@
         ../../users/melbournebaldove/core.nix
         ../../users/melbournebaldove/dev.nix
         ../../users/melbournebaldove/desktop.nix
+        ../../users/melbournebaldove/emacs.nix
       ];
     };
   };
@@ -39,4 +40,17 @@
 
   # Enable Linux emulation for cross-platform builds
   nix.settings.extra-platforms = [ "x86_64-linux" "aarch64-linux" ];
+  
+  # Configure remote builders
+  nix.buildMachines = [{
+    hostName = "einstein";
+    system = "x86_64-linux";
+    protocol = "ssh-ng";
+    maxJobs = 4;
+    speedFactor = 2;
+    supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
+    mandatoryFeatures = [ ];
+  }];
+  
+  nix.distributedBuilds = true;
 }
