@@ -47,7 +47,10 @@
       user = "postgres";
     };
     
-    storage.type = "local";
+    storage = {
+      type = "local";
+      dataPath = "/mnt/data";
+    };
     auth.google.enabled = false;
     auth.microsoft.enabled = false;
     email.driver = null;

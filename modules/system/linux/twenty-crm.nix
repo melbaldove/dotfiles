@@ -45,10 +45,18 @@ with lib;
       };
     };
 
-    storage.type = mkOption {
-      type = types.enum [ "local" "s3" ];
-      default = "local";
-      description = "Storage backend type";
+    storage = {
+      type = mkOption {
+        type = types.enum [ "local" "s3" ];
+        default = "local";
+        description = "Storage backend type";
+      };
+      
+      dataPath = mkOption {
+        type = types.str;
+        default = "/var/lib/twenty";
+        description = "Base path for Twenty data storage";
+      };
     };
 
     auth = {
@@ -81,6 +89,14 @@ with lib;
     
     # Add user to docker group
     users.users.melbournebaldove.extraGroups = [ "docker" ];
+
+    # Create data directories with proper permissions
+    systemd.tmpfiles.rules = [
+      # PostgreSQL data directory (postgres user is 999 in container)
+      "d ${config.services.twenty-crm.storage.dataPath}/postgres 0700 999 999"
+      # Twenty files directory (node user is 1000 in container)
+      "d ${config.services.twenty-crm.storage.dataPath}/twenty-files 0755 1000 1000"
+    ];
 
     # Configure Twenty CRM secrets
     age.secrets = {
