@@ -91,7 +91,6 @@
 
     deploy.nodes.newton = {
       hostname = "newton";
-      remoteBuild = true;
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.x86_64-linux.activate.nixos 
