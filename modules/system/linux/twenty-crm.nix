@@ -73,16 +73,14 @@ with lib;
 
   config = mkIf config.services.twenty-crm.enable {
     # Enable container runtime for Arion
-    virtualisation.docker.enable = false;
-    virtualisation.podman.enable = true;
-    virtualisation.podman.dockerSocket.enable = true;
-    virtualisation.podman.defaultNetwork.settings.dns_enabled = true;
+    virtualisation.docker.enable = true;
+    virtualisation.podman.enable = false;
     
     # Configure Arion backend
-    virtualisation.arion.backend = "podman-socket";
+    virtualisation.arion.backend = "docker";
     
-    # Add user to podman group
-    users.users.melbournebaldove.extraGroups = [ "podman" ];
+    # Add user to docker group
+    users.users.melbournebaldove.extraGroups = [ "docker" ];
 
     # Configure Twenty CRM secrets
     age.secrets = {

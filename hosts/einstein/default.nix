@@ -15,6 +15,7 @@
   networking.hostName = "einstein";
   networking.extraHosts = ''
     172.236.148.68 shannon
+    157.180.91.120 newton
   '';
 
   boot.loader.systemd-boot.enable = true;

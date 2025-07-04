@@ -29,7 +29,7 @@
     mtr
     sysstat
     arion
-    podman-compose
+    docker-compose
   ];
 
   users.users.melbournebaldove = {
