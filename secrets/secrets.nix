@@ -17,4 +17,7 @@ in
   # Twenty CRM secrets
   "twenty-app-secret.age".publicKeys = [ user newton ];
   "twenty-db-password.age".publicKeys = [ user newton ];
+
+  # Ghost CMS secrets
+  "ghost-db-password.age".publicKeys = [ user newton ];
 }

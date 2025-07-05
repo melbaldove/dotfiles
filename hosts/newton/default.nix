@@ -46,7 +46,10 @@
     
     database = {
       user = "postgres";
+      passwordFile = config.age.secrets.twenty-db-password.path;
     };
+    
+    appSecretFile = config.age.secrets.twenty-app-secret.path;
     
     storage = {
       type = "local";
