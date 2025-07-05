@@ -8,6 +8,7 @@
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/wireguard-server.nix
+    ../../modules/system/linux/monitoring.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 

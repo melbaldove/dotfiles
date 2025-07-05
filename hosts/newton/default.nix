@@ -10,10 +10,37 @@
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/twenty-crm.nix
     ../../modules/system/linux/ghost-cms.nix
+    ../../modules/system/shared/node-exporter.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
   networking.hostName = "newton";
+  networking.extraHosts = ''
+    172.236.148.68 shannon
+  '';
+
+  # WireGuard VPN client configuration
+  age.secrets.wireguard-newton-private.file = ../../secrets/wireguard-newton-private.age;
+
+  networking.wireguard.interfaces = {
+    wg0 = {
+      ips = [ "10.0.1.2/24" ];
+      privateKeyFile = config.age.secrets.wireguard-newton-private.path;
+
+      peers = [
+        {
+          # Shannon VPN server (startup interface)
+          publicKey = "VyeqpVLFr+62pyzKUI4Dq/WZXS5pZR/Ps2Yx3aNKgm0=";
+          allowedIPs = [ "10.0.1.0/24" ];
+          endpoint = "shannon:51821";
+          persistentKeepalive = 25;
+        }
+      ];
+    };
+  };
+
+  # Node exporter configuration
+  monitoring.nodeExporter.listenAddress = "10.0.1.2";
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";

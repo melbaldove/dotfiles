@@ -9,6 +9,7 @@
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/media-server.nix
     ../../modules/system/linux/wireguard-gateway.nix
+    ../../modules/system/shared/node-exporter.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
@@ -56,6 +57,8 @@
       ];
     };
   };
+
+  monitoring.nodeExporter.listenAddress = "10.0.0.2";
 
   system.stateVersion = "24.05";
 }

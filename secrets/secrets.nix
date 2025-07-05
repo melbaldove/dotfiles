@@ -12,7 +12,9 @@ in
   # WireGuard private keys - each machine can only decrypt its own key
   "wireguard-einstein-private.age".publicKeys = [ user einstein ];
   "wireguard-shannon-private.age".publicKeys = [ user shannon ];
+  "wireguard-shannon-startup-private.age".publicKeys = [ user shannon ];
   "wireguard-turing-private.age".publicKeys = [ user turing ];
+  "wireguard-newton-private.age".publicKeys = [ user newton ];
 
   # Twenty CRM secrets
   "twenty-app-secret.age".publicKeys = [ user newton ];

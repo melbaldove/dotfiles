@@ -1,22 +1,24 @@
 { config, lib, pkgs, ... }:
 
 {
-  # Declare the encrypted secret
+  # Declare the encrypted secrets
   age.secrets.wireguard-shannon-private.file = ../../../secrets/wireguard-shannon-private.age;
+  age.secrets.wireguard-shannon-startup-private.file = ../../../secrets/wireguard-shannon-startup-private.age;
 
   networking.firewall = {
-    allowedUDPPorts = [ 51820 ];
-    trustedInterfaces = [ "wg0" ];
+    allowedUDPPorts = [ 51820 51821 ];
+    trustedInterfaces = [ "wg-personal" "wg-startup" ];
   };
 
   networking.nat = {
     enable = true;
     externalInterface = "eth0";
-    internalInterfaces = [ "wg0" ];
+    internalInterfaces = [ "wg-personal" "wg-startup" ];
   };
 
   networking.wireguard.interfaces = {
-    wg0 = {
+    # Personal VPN network
+    wg-personal = {
       ips = [ "10.0.0.1/24" ];
       listenPort = 51820;
 
@@ -45,6 +47,30 @@
           # Phone client
           publicKey = "gm+26mzkPBb5AYomVDeJJddy2b00Ymv58f5H4icYgyY=";
           allowedIPs = [ "10.0.0.4/32" ];
+        }
+      ];
+    };
+
+    # Startup VPN network
+    wg-startup = {
+      ips = [ "10.0.1.1/24" ];
+      listenPort = 51821;
+
+      postSetup = ''
+        ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 10.0.1.0/24 -o eth0 -j MASQUERADE
+      '';
+
+      postShutdown = ''
+        ${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 10.0.1.0/24 -o eth0 -j MASQUERADE
+      '';
+
+      privateKeyFile = config.age.secrets.wireguard-shannon-startup-private.path;
+
+      peers = [
+        {
+          # Newton startup server
+          publicKey = "0bukNqCr3lUH0OyH4uNvYUC/JfxfuEMDpAN49/YHWgQ=";
+          allowedIPs = [ "10.0.1.2/32" ];
         }
       ];
     };
