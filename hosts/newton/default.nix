@@ -9,6 +9,7 @@
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/twenty-crm.nix
+    ../../modules/system/linux/ghost-cms.nix
     inputs.home-manager.nixosModules.home-manager
   ];
 
@@ -54,6 +55,27 @@
     auth.google.enabled = false;
     auth.microsoft.enabled = false;
     email.driver = null;
+  };
+
+  # Configure Ghost CMS service
+  services.ghost-cms = {
+    enable = true;
+    url = "https://blog.workwithnextdesk.com";
+    port = 8080;
+    
+    database = {
+      client = "mysql";
+      host = "db";
+      user = "root";
+      database = "ghost";
+    };
+    
+    mail = {
+      transport = "Direct";
+      from = null;
+    };
+    
+    nodeEnv = "production";
   };
 
   home-manager = {
