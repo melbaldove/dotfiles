@@ -1,0 +1,776 @@
+#+TITLE: Dotfiles Infrastructure Resilience Plan
+#+AUTHOR: Melbourne Baldove
+#+DATE: [2025-07-05 Sat]
+#+STARTUP: overview
+#+TODO: TODO(t) IN-PROGRESS(i) WAITING(w) | DONE(d) CANCELLED(c)
+#+TAGS: critical(c) infrastructure(i) security(s) monitoring(m) automation(a)
+
+* Overview
+
+This document outlines a comprehensive plan to improve the resilience, robustness, and operational maturity of the dotfiles infrastructure. The plan addresses identified brittleness points and implements industry best practices for system reliability.
+
+** Current State Assessment
+- Strong architectural foundations with modular design
+- Proper secret management via agenix
+- Good separation of concerns
+- Operational brittleness in service orchestration and error recovery
+
+** Target State
+- Automated health monitoring and recovery
+- Comprehensive backup and restore procedures
+- Resilient service architecture with failover capabilities
+- Proactive monitoring and alerting
+- Streamlined maintenance and operations
+
+* Phase 1: Critical Infrastructure 🚨                                :critical:
+
+** TODO Design comprehensive health check system for all services    :monitoring:
+   DEADLINE: <2025-07-12 Sat>
+
+*** Implementation Details
+
+Create a new module =modules/monitoring/health-checks.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  systemd.services.health-monitor = {
+    description = "System Health Monitor";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "30s";
+      ExecStart = "${pkgs.writeShellScript "health-monitor" ''
+        while true; do
+          # Check Twenty CRM
+          curl -f http://localhost:3000/healthz || systemctl restart twenty.service
+          
+          # Check Ghost CMS  
+          curl -f http://localhost:2368/ghost/api/v4/admin/site/ || systemctl restart ghost.service
+          
+          # Check WireGuard
+          wg show wg0 || systemctl restart wireguard-wg0.service
+          
+          # Check disk space
+          df -h / | awk 'NR==2 {if(substr($5,1,length($5)-1) > 85) exit 1}'
+          
+          sleep 60
+        done
+      ''}";
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- HTTP endpoint monitoring with auto-restart
+- Disk space monitoring with alerts
+- Service dependency validation
+- Configurable retry policies
+- Integration with systemd notifications
+
+*** Files to Create
+- =modules/monitoring/health-checks.nix=
+- =modules/monitoring/service-definitions.nix=
+- Update host configurations to import health monitoring
+
+** TODO Implement automated backup and restore system               :critical:
+   DEADLINE: <2025-07-12 Sat>
+
+*** Implementation Details
+
+Create =modules/backup/backup-system.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  # Daily database backups
+  systemd.services.backup-databases = {
+    description = "Database Backup Service";
+    serviceConfig = {
+      Type = "oneshot";
+      User = "backup";
+      ExecStart = pkgs.writeShellScript "backup-databases" ''
+        BACKUP_DIR="/mnt/data/backups/$(date +%Y-%m-%d)"
+        mkdir -p "$BACKUP_DIR"
+        
+        # Twenty CRM PostgreSQL
+        docker exec twenty-db-1 pg_dump -U postgres default > "$BACKUP_DIR/twenty-db.sql"
+        
+        # Ghost CMS MySQL  
+        docker exec ghost-db-1 mysqldump -u ghost ghost > "$BACKUP_DIR/ghost-db.sql"
+        
+        # Compress and encrypt
+        tar czf "$BACKUP_DIR.tar.gz" "$BACKUP_DIR"
+        gpg --encrypt --recipient backup@example.com "$BACKUP_DIR.tar.gz"
+        
+        # Clean old backups (keep 30 days)
+        find /mnt/data/backups -name "*.gpg" -mtime +30 -delete
+      '';
+    };
+  };
+  
+  systemd.timers.backup-databases = {
+    description = "Daily Database Backup";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Daily automated PostgreSQL/MySQL dumps
+- Encrypted backup storage with GPG
+- Retention policy (30 days)
+- Volume snapshots for Docker data
+- Remote backup sync to cloud storage
+
+*** Files to Create
+- =modules/backup/backup-system.nix=
+- =modules/backup/restore-procedures.nix=
+- =scripts/manual-backup.sh=
+- =scripts/restore-from-backup.sh=
+
+** TODO Create deployment validation and rollback procedures       :critical:
+   DEADLINE: <2025-07-12 Sat>
+
+*** Implementation Details
+
+Create =scripts/deploy-with-validation.nix=:
+
+#+BEGIN_SRC nix
+{ pkgs }:
+pkgs.writeShellScriptBin "deploy-validated" ''
+  set -euo pipefail
+  
+  HOST="$1"
+  CONFIG="$2"
+  
+  echo "🚀 Starting validated deployment to $HOST"
+  
+  # Pre-deployment checks
+  echo "📋 Running pre-deployment checks..."
+  ssh "$HOST" "systemctl is-active --quiet multi-user.target"
+  ssh "$HOST" "df -h / | awk 'NR==2 {if(substr($5,1,length($5)-1) > 90) exit 1}'"
+  
+  # Create rollback point
+  ROLLBACK_GEN=$(ssh "$HOST" "readlink /nix/var/nix/profiles/system | grep -o '[0-9]*$'")
+  echo "📸 Rollback generation: $ROLLBACK_GEN"
+  
+  # Deploy
+  echo "🔧 Deploying configuration..."
+  deploy --skip-checks --hostname "$HOST" "$CONFIG" || {
+    echo "❌ Deployment failed, rolling back..."
+    ssh "$HOST" "sudo /nix/var/nix/profiles/system-$ROLLBACK_GEN-link/bin/switch-to-configuration switch"
+    exit 1
+  }
+  
+  # Post-deployment validation
+  echo "✅ Running post-deployment validation..."
+  sleep 30
+  ssh "$HOST" "systemctl is-active --quiet twenty.service" || FAILED=1
+  ssh "$HOST" "curl -f http://localhost:3000/healthz" || FAILED=1
+  
+  if [[ ''${FAILED:-0} == 1 ]]; then
+    echo "❌ Validation failed, rolling back..."
+    ssh "$HOST" "sudo /nix/var/nix/profiles/system-$ROLLBACK_GEN-link/bin/switch-to-configuration switch"
+    exit 1
+  fi
+  
+  echo "🎉 Deployment successful and validated!"
+''
+#+END_SRC
+
+*** Features
+- Pre-deployment system checks
+- Automatic rollback on failure
+- Post-deployment validation
+- Health check integration
+- Detailed logging and reporting
+
+*** Files to Create
+- =scripts/deploy-with-validation.nix=
+- =scripts/emergency-rollback.sh=
+- Update =CLAUDE.md= with new deployment commands
+
+** TODO Design monitoring and alerting infrastructure             :monitoring:
+   DEADLINE: <2025-07-19 Sat>
+
+*** Implementation Details
+
+Create =modules/monitoring/prometheus.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  services.prometheus = {
+    enable = true;
+    port = 9090;
+    scrapeConfigs = [
+      {
+        job_name = "node";
+        static_configs = [{
+          targets = [ "localhost:9100" "newton:9100" "shannon:9100" ];
+        }];
+      }
+      {
+        job_name = "twenty-crm";
+        static_configs = [{
+          targets = [ "localhost:3000" ];
+        }];
+        metrics_path = "/metrics";
+      }
+    ];
+    rules = [
+      (pkgs.writeText "alerts.yml" ''
+        groups:
+        - name: system
+          rules:
+          - alert: ServiceDown
+            expr: up == 0
+            for: 2m
+            annotations:
+              summary: "Service {{ $labels.job }} is down"
+          
+          - alert: HighDiskUsage
+            expr: (1 - node_filesystem_avail_bytes/node_filesystem_size_bytes) > 0.85
+            annotations:
+              summary: "Disk usage above 85%"
+      '')
+    ];
+  };
+  
+  services.grafana = {
+    enable = true;
+    settings.server.http_port = 3001;
+  };
+  
+  # Alert manager with Discord/email notifications
+  services.prometheus.alertmanager = {
+    enable = true;
+    configuration = {
+      global.smtp_smarthost = "smtp.gmail.com:587";
+      route.group_by = [ "alertname" ];
+      receivers = [{
+        name = "discord";
+        discord_configs = [{
+          webhook_url = "https://discord.com/api/webhooks/...";
+        }];
+      }];
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Prometheus metrics collection
+- Grafana dashboards
+- Alert manager with notifications
+- Custom alerting rules
+- Multi-channel notifications (Discord, email)
+
+*** Files to Create
+- =modules/monitoring/prometheus.nix=
+- =modules/monitoring/grafana-dashboards.nix=
+- =modules/monitoring/alerting-rules.nix=
+
+* Phase 2: Service Resilience 🔄                               :infrastructure:
+
+** TODO Implement service redundancy and failover
+   DEADLINE: <2025-07-26 Sat>
+
+*** Implementation Details
+
+Create =modules/redundancy/load-balancer.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  services.nginx = {
+    enable = true;
+    upstreams = {
+      twenty-backend = {
+        servers = {
+          "newton:3000" = { weight = 1; };
+          "backup-server:3000" = { weight = 1; backup = true; };
+        };
+      };
+    };
+    
+    virtualHosts."crm.workwithnextdesk.com" = {
+      locations."/" = {
+        proxyPass = "http://twenty-backend";
+        extraConfig = ''
+          proxy_next_upstream error timeout http_502 http_503;
+          proxy_connect_timeout 2s;
+          proxy_send_timeout 30s;
+          proxy_read_timeout 30s;
+        '';
+      };
+    };
+  };
+  
+  # Database replication setup
+  services.postgresql.extraConfig = ''
+    wal_level = replica
+    max_wal_senders = 3
+    wal_keep_segments = 64
+  '';
+}
+#+END_SRC
+
+*** Features
+- Load balancing with health checks
+- Database replication
+- Automatic failover
+- Geographic distribution
+- Service mesh integration
+
+*** Files to Create
+- =modules/redundancy/load-balancer.nix=
+- =modules/redundancy/database-replication.nix=
+- =modules/redundancy/failover-scripts.nix=
+
+** TODO Add container orchestration improvements                  :automation:
+   DEADLINE: <2025-07-26 Sat>
+
+*** Implementation Details
+
+Create =modules/containers/improved-orchestration.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  virtualisation.docker.daemon.settings = {
+    live-restore = true;
+    max-concurrent-downloads = 3;
+    max-concurrent-uploads = 5;
+  };
+  
+  systemd.services.twenty = {
+    serviceConfig = {
+      # Proper dependency management
+      After = [ "docker.service" "network-online.target" ];
+      Wants = [ "network-online.target" ];
+      
+      # Resource limits
+      MemoryLimit = "2G";
+      CPUQuota = "150%";
+      
+      # Health checks
+      ExecStartPost = pkgs.writeShellScript "twenty-health-check" ''
+        for i in {1..30}; do
+          if curl -f http://localhost:3000/healthz; then
+            exit 0
+          fi
+          sleep 10
+        done
+        exit 1
+      '';
+      
+      # Graceful shutdown
+      ExecStop = pkgs.writeShellScript "twenty-stop" ''
+        docker-compose -f ${config.services.twenty-crm.composeFile} down --timeout 30
+      '';
+      
+      TimeoutStopSec = "60s";
+      KillMode = "mixed";
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Resource limits and monitoring
+- Proper startup/shutdown sequences
+- Health check integration
+- Dependency management
+- Container lifecycle management
+
+*** Files to Create
+- =modules/containers/improved-orchestration.nix=
+- =modules/containers/resource-management.nix=
+- Update existing service definitions
+
+* Phase 3: Infrastructure Hardening 🔒                              :security:
+
+** TODO Fix agenix secret management for macOS                      :security:
+   DEADLINE: <2025-08-02 Sat>
+
+*** Implementation Details
+
+Create =modules/system/darwin/agenix-integration.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  # Proper agenix integration for Darwin
+  system.activationScripts.agenix = {
+    text = ''
+      echo "Setting up agenix secrets for Darwin..."
+      mkdir -p /run/agenix
+      
+      # Decrypt secrets using age
+      ${pkgs.age}/bin/age --decrypt \
+        --identity ~/.ssh/id_ed25519 \
+        ${../../../secrets/macos-secrets.age} > /run/agenix/macos-secrets
+      
+      chmod 400 /run/agenix/macos-secrets
+      chown ${config.users.users.melbournebaldove.name} /run/agenix/macos-secrets
+    '';
+  };
+  
+  # Launchd service for secret management
+  launchd.user.agents.agenix-secrets = {
+    command = "${pkgs.writeShellScript "agenix-darwin" ''
+      # Reload secrets periodically
+      while true; do
+        sleep 3600
+        # Re-decrypt if source files changed
+      done
+    ''}";
+    serviceConfig = {
+      KeepAlive = true;
+      RunAtLoad = true;
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Native agenix integration for macOS
+- Automatic secret decryption
+- Proper file permissions
+- Launchd service management
+- Secret rotation support
+
+*** Files to Create
+- =modules/system/darwin/agenix-integration.nix=
+- =secrets/macos-secrets.age=
+- Update =hosts/turing/default.nix=
+
+** TODO Create secret rotation automation                           :security:
+   DEADLINE: <2025-08-02 Sat>
+
+*** Implementation Details
+
+Create =modules/secrets/improved-agenix.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  # Multi-admin key support
+  age.secrets = lib.mkMerge [
+    {
+      # Primary admin key
+      wireguard-shannon-private = {
+        file = ../../../secrets/wireguard-shannon-private.age;
+        owner = "systemd-network";
+        group = "systemd-network";
+      };
+    }
+    # Emergency admin key
+    (lib.mkIf config.security.emergency-access.enable {
+      wireguard-shannon-private-emergency = {
+        file = ../../../secrets/wireguard-shannon-private-emergency.age;
+        owner = "systemd-network";
+        group = "systemd-network";
+      };
+    })
+  ];
+  
+  # Secret rotation automation
+  systemd.services.rotate-secrets = {
+    description = "Rotate aging secrets";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "rotate-secrets" ''
+        # Check secret age and rotate if > 90 days
+        SECRET_FILES="/run/agenix/*"
+        for secret in $SECRET_FILES; do
+          if test "$(find "$secret" -mtime +90)"; then
+            echo "Secret $secret is over 90 days old, flagging for rotation"
+            # Send alert to admin
+          fi
+        done
+      '';
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Multi-admin key support
+- Automated rotation checks
+- Emergency access procedures
+- Secret age monitoring
+- Rotation notifications
+
+*** Files to Create
+- =modules/secrets/improved-agenix.nix=
+- =modules/secrets/rotation-automation.nix=
+- =scripts/rotate-secret.sh=
+
+** TODO Replace hard-coded IPs with DNS and service discovery     :infrastructure:
+   DEADLINE: <2025-08-09 Sat>
+
+*** Implementation Details
+
+Create =modules/network/service-discovery.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  services.consul = {
+    enable = true;
+    extraConfig = {
+      datacenter = "homelab";
+      data_dir = "/var/lib/consul";
+      log_level = "INFO";
+      server = true;
+      bootstrap_expect = 1;
+    };
+  };
+  
+  # Replace hard-coded IPs with service discovery
+  services.nginx.virtualHosts = lib.mkForce {
+    "crm.workwithnextdesk.com" = {
+      locations."/" = {
+        proxyPass = "http://twenty.service.consul:3000";
+      };
+    };
+  };
+  
+  # Dynamic host file generation
+  systemd.services.update-hosts = {
+    description = "Update /etc/hosts from Consul";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "update-hosts" ''
+        consul-template -template="/etc/consul-templates/hosts.tpl:/etc/hosts:systemctl reload networking"
+      '';
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Consul service discovery
+- Dynamic DNS resolution
+- Service health registration
+- Automatic service registration
+- Template-based configuration
+
+*** Files to Create
+- =modules/network/service-discovery.nix=
+- =modules/network/consul-config.nix=
+- =templates/hosts.tpl=
+- Update all hard-coded IP references
+
+* Phase 4: Operational Excellence 📊                               :automation:
+
+** TODO Create maintenance automation and documentation            :automation:
+   DEADLINE: <2025-08-16 Sat>
+
+*** Implementation Details
+
+Create =modules/maintenance/automation.nix=:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+{
+  # Automated flake updates
+  systemd.services.update-flakes = {
+    description = "Update Nix flakes";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "update-flakes" ''
+        cd /home/melbournebaldove/dotfiles
+        git fetch origin
+        nix flake update
+        
+        # Test build locally first
+        nix build .#nixosConfigurations.$(hostname).config.system.build.toplevel
+        
+        # Commit if successful
+        git add flake.lock
+        git commit -m "chore: automated flake update $(date)"
+        
+        # Push to trigger CI/CD
+        git push origin main
+      '';
+    };
+  };
+  
+  systemd.timers.update-flakes = {
+    description = "Weekly flake updates";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "weekly";
+      Persistent = true;
+    };
+  };
+  
+  # System cleanup
+  systemd.services.nix-cleanup = {
+    description = "Nix store cleanup";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.nix}/bin/nix-collect-garbage --delete-older-than 30d";
+    };
+  };
+}
+#+END_SRC
+
+*** Features
+- Automated dependency updates
+- System cleanup procedures
+- Documentation generation
+- Maintenance scheduling
+- Change tracking
+
+*** Files to Create
+- =modules/maintenance/automation.nix=
+- =modules/maintenance/cleanup.nix=
+- =docs/operational-procedures.org=
+- =docs/troubleshooting-guide.org=
+
+* Implementation Timeline 📅
+
+** Week 1-2: Critical Infrastructure
+- [ ] Health check system
+- [ ] Backup automation  
+- [ ] Deployment validation
+
+** Week 3-4: Service Resilience
+- [ ] Monitoring setup
+- [ ] Container improvements
+- [ ] Basic redundancy
+
+** Week 5-6: Infrastructure Hardening
+- [ ] DNS/service discovery
+- [ ] Secret management improvements
+- [ ] Network resilience
+
+** Week 7-8: Operational Excellence
+- [ ] Maintenance automation
+- [ ] Documentation
+- [ ] Testing & validation
+
+* Testing and Validation
+
+** Unit Tests
+- [ ] Health check scripts
+- [ ] Backup/restore procedures
+- [ ] Deployment validation
+
+** Integration Tests
+- [ ] Service failover scenarios
+- [ ] Network partition handling
+- [ ] Secret rotation procedures
+
+** Chaos Engineering
+- [ ] Random service failures
+- [ ] Network connectivity issues
+- [ ] Disk space exhaustion
+- [ ] High load scenarios
+
+* Success Metrics
+
+** Reliability Metrics
+- [ ] 99.9% service uptime
+- [ ] < 5 minute recovery time
+- [ ] < 1% data loss during failures
+
+** Operational Metrics
+- [ ] < 30 seconds deployment time
+- [ ] < 5 minutes backup completion
+- [ ] < 2 minutes monitoring detection
+
+** Maintenance Metrics
+- [ ] Weekly automated updates
+- [ ] Monthly security reviews
+- [ ] Quarterly disaster recovery tests
+
+* Notes and Considerations
+
+** Security Considerations
+- All secrets must be encrypted at rest
+- Access logs for all administrative actions
+- Regular security audits and penetration testing
+- Principle of least privilege for all services
+
+** Performance Considerations
+- Resource monitoring and alerting
+- Capacity planning for growth
+- Performance benchmarking
+- Load testing procedures
+
+** Compliance Considerations
+- Data retention policies
+- Audit trail requirements
+- Backup verification procedures
+- Documentation standards
+
+** Cost Considerations
+- Cloud storage costs for backups
+- Monitoring service costs
+- Redundancy infrastructure costs
+- Operational overhead
+
+* Appendix
+
+** Useful Commands
+#+BEGIN_SRC shell
+# Deploy with validation
+./scripts/deploy-validated.nix newton .#newton
+
+# Manual backup
+./scripts/manual-backup.sh twenty-crm
+
+# Emergency rollback
+./scripts/emergency-rollback.sh newton
+
+# Health check status
+systemctl status health-monitor
+
+# View monitoring dashboards
+http://localhost:3001  # Grafana
+http://localhost:9090  # Prometheus
+#+END_SRC
+
+** Configuration Examples
+#+BEGIN_SRC nix
+# Example service with health checks
+systemd.services.example = {
+  description = "Example Service";
+  wantedBy = [ "multi-user.target" ];
+  serviceConfig = {
+    Type = "simple";
+    Restart = "always";
+    RestartSec = "10s";
+    ExecStart = "${pkgs.example}/bin/example";
+    
+    # Health check
+    ExecStartPost = "${pkgs.curl}/bin/curl -f http://localhost:8080/health";
+    
+    # Resource limits
+    MemoryLimit = "512M";
+    CPUQuota = "50%";
+  };
+};
+#+END_SRC
+
+** Troubleshooting Checklist
+- [ ] Check systemd service status
+- [ ] Review journald logs
+- [ ] Verify network connectivity
+- [ ] Check disk space
+- [ ] Validate configuration syntax
+- [ ] Test secret accessibility
+- [ ] Verify container health
+- [ ] Check monitoring alerts

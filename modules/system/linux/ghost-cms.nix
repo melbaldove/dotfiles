@@ -157,6 +157,35 @@ with lib;
       };
     };
 
+    # Configure Ghost CMS service with secrets handling
+    systemd.services.ghost = {
+      serviceConfig = {
+        # Create runtime directory for environment file
+        RuntimeDirectory = "ghost";
+        RuntimeDirectoryMode = "0700";
+      };
+      
+      preStart = mkIf (config.services.ghost-cms.database.passwordFile != null || config.services.ghost-cms.mail.smtp.passwordFile != null || config.services.ghost-cms.mail.smtp.userFile != null) ''
+        # Read secrets and create environment file
+        {
+          echo "# Generated environment file for Ghost CMS"
+          
+          ${optionalString (config.services.ghost-cms.database.passwordFile != null) ''
+            DB_PASSWORD=$(cat ${config.services.ghost-cms.database.passwordFile})
+            echo "database__connection__password=$DB_PASSWORD"
+          ''}
+          
+          ${optionalString (config.services.ghost-cms.mail.smtp.userFile != null) ''
+            echo "mail__options__auth__user=$(cat ${config.services.ghost-cms.mail.smtp.userFile})"
+          ''}
+          
+          ${optionalString (config.services.ghost-cms.mail.smtp.passwordFile != null) ''
+            echo "mail__options__auth__pass=$(cat ${config.services.ghost-cms.mail.smtp.passwordFile})"
+          ''}
+        } > /run/ghost/env
+      '';
+    };
+
     # Configure Arion project for Ghost CMS
     virtualisation.arion.projects.ghost = {
       serviceName = "ghost";
