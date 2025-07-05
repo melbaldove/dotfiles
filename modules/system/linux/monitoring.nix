@@ -26,7 +26,7 @@
       {
         job_name = "startup-docker";
         static_configs = [{
-          targets = [ "10.0.1.2:8080" ]; # newton cadvisor
+          targets = [ "10.0.1.2:9200" ]; # newton cadvisor
         }];
       }
     ];

@@ -45,12 +45,12 @@
   # cAdvisor for Docker container metrics
   services.cadvisor = {
     enable = true;
-    port = 8080;
+    port = 9200;
     listenAddress = "10.0.1.2";
   };
 
   # Allow VPN traffic to monitoring ports
-  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 8080 ];
+  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 9200 ];
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
