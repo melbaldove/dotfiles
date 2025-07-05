@@ -118,9 +118,7 @@ with lib;
           
           ${optionalString (config.services.twenty-crm.database.passwordFile != null) ''
             DB_PASSWORD=$(cat ${config.services.twenty-crm.database.passwordFile})
-            # URL encode the password for PostgreSQL connection string
-            DB_PASSWORD_ENCODED=$(printf '%s' "$DB_PASSWORD" | ${pkgs.curl}/bin/curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" | cut -c 3-)
-            echo "PG_DATABASE_URL=postgres://${config.services.twenty-crm.database.user}:$DB_PASSWORD_ENCODED@db:5432/default"
+            echo "PG_DATABASE_URL=postgres://${config.services.twenty-crm.database.user}:$DB_PASSWORD@db:5432/default"
           ''}
           
           ${optionalString (config.services.twenty-crm.appSecretFile != null) ''
