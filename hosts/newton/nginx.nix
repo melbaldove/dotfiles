@@ -30,6 +30,10 @@
         forceSSL = true;
         
         locations."/" = {
+          return = "301 https://$host/ghost/";
+        };
+        
+        locations."~* ^/(ghost|content|assets|public)(/.*)?$" = {
           proxyPass = "http://localhost:8080";
           proxyWebsockets = true;
           extraConfig = ''
