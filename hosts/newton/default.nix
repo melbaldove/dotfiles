@@ -42,8 +42,15 @@
   # Node exporter configuration
   monitoring.nodeExporter.listenAddress = "10.0.1.2";
 
-  # Allow VPN traffic to node exporter
-  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 ];
+  # cAdvisor for Docker container metrics
+  services.cadvisor = {
+    enable = true;
+    port = 8080;
+    listenAddress = "10.0.1.2";
+  };
+
+  # Allow VPN traffic to monitoring ports
+  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 8080 ];
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
