@@ -71,6 +71,7 @@
       host = "db";
       user = "root";
       database = "ghost";
+      passwordFile = config.age.secrets.ghost-db-password.path;
     };
     
     mail = {
