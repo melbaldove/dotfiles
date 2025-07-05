@@ -42,6 +42,9 @@
   # Node exporter configuration
   monitoring.nodeExporter.listenAddress = "10.0.1.2";
 
+  # Allow VPN traffic to node exporter
+  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 ];
+
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
 
