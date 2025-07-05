@@ -43,7 +43,7 @@
         }
         {
           # Phone client
-          publicKey = "J1WSy9QFqt6VGzbKaPWzI22KMqq6jDN4xR+K0XLhhWY=";
+          publicKey = "gm+26mzkPBb5AYomVDeJJddy2b00Ymv58f5H4icYgyY=";
           allowedIPs = [ "10.0.0.4/32" ];
         }
       ];
