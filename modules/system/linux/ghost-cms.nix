@@ -89,6 +89,18 @@ with lib;
           description = "Use secure SMTP connection";
         };
 
+        user = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "SMTP username";
+        };
+
+        password = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "SMTP password";
+        };
+
         userFile = mkOption {
           type = types.nullOr types.path;
           default = null;
@@ -152,7 +164,24 @@ with lib;
         imports = [ 
           (import "${inputs.ghost}/ghost-arion-compose.nix" {
             inherit pkgs lib;
-            config = config.services.ghost-cms;
+            config = config.services.ghost-cms // {
+              # Read secrets at build time and pass actual values
+              database = config.services.ghost-cms.database // {
+                password = if config.services.ghost-cms.database.passwordFile != null
+                  then builtins.readFile config.services.ghost-cms.database.passwordFile
+                  else "ghostpass";
+              };
+              mail = config.services.ghost-cms.mail // {
+                smtp = config.services.ghost-cms.mail.smtp // {
+                  user = if config.services.ghost-cms.mail.smtp.userFile != null
+                    then builtins.readFile config.services.ghost-cms.mail.smtp.userFile
+                    else config.services.ghost-cms.mail.smtp.user;
+                  password = if config.services.ghost-cms.mail.smtp.passwordFile != null
+                    then builtins.readFile config.services.ghost-cms.mail.smtp.passwordFile
+                    else config.services.ghost-cms.mail.smtp.password;
+                };
+              };
+            };
           })
         ];
       };

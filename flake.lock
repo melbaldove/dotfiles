@@ -124,11 +124,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1751716432,
+        "lastModified": 1751718029,
         "narHash": "sha256-xUbvsXMi6eNNYzyqjA7aueDY/aCnMulq9P5Dc09f4UI=",
         "owner": "next-desk-business-solutions",
         "repo": "Ghost",
-        "rev": "aaafc491310b28e03d2a36175ec00eb005639fc7",
+        "rev": "a9ea85d255d88cf863878e76a0a37f634fd3bda5",
         "type": "github"
       },
       "original": {
