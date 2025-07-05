@@ -63,7 +63,7 @@
   # Configure Ghost CMS service
   services.ghost-cms = {
     enable = true;
-    url = "https://blog.workwithnextdesk.com";
+    url = "https://cms.workwithnextdesk.com";
     port = 8080;
     
     database = {

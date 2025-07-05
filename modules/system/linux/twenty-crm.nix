@@ -105,6 +105,34 @@ with lib;
 
     # Workaround: Ensure worker starts after deployment
     systemd.services.twenty = {
+      serviceConfig = {
+        # Create runtime directory for environment file
+        RuntimeDirectory = "twenty";
+        RuntimeDirectoryMode = "0700";
+      };
+      
+      preStart = mkIf (config.services.twenty-crm.database.passwordFile != null || config.services.twenty-crm.appSecretFile != null) ''
+        # Read secrets and create environment file
+        {
+          echo "# Generated environment file for Twenty CRM"
+          
+          ${optionalString (config.services.twenty-crm.database.passwordFile != null) ''
+            DB_PASSWORD=$(cat ${config.services.twenty-crm.database.passwordFile})
+            echo "PG_DATABASE_URL=postgres://${config.services.twenty-crm.database.user}:$DB_PASSWORD@db:5432/default"
+          ''}
+          
+          ${optionalString (config.services.twenty-crm.appSecretFile != null) ''
+            echo "APP_SECRET=$(cat ${config.services.twenty-crm.appSecretFile})"
+          ''}
+          
+          # Pass through other environment variables  
+          echo "REDIS_URL=redis://redis:6379"
+          echo "NODE_PORT=${toString config.services.twenty-crm.port}"
+          echo "SERVER_URL=${config.services.twenty-crm.serverUrl}"
+          echo "STORAGE_TYPE=${config.services.twenty-crm.storage.type}"
+        } > /run/twenty/env
+      '';
+      
       postStart = ''
         # Wait for containers to be created
         sleep 10

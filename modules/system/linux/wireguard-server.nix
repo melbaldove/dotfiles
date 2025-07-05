@@ -41,6 +41,11 @@
           publicKey = "w/iizjwjWD6c3zmGYcCL0/ThHCW0odzEVbiq2FRQdBg=";
           allowedIPs = [ "10.0.0.3/32" ];
         }
+        {
+          # Phone client
+          publicKey = "J1WSy9QFqt6VGzbKaPWzI22KMqq6jDN4xR+K0XLhhWY=";
+          allowedIPs = [ "10.0.0.4/32" ];
+        }
       ];
     };
   };

@@ -25,7 +25,7 @@
         };
       };
 
-      "blog.workwithnextdesk.com" = {
+      "cms.workwithnextdesk.com" = {
         enableACME = true;
         forceSSL = true;
         
