@@ -12,6 +12,8 @@ secrets/       # Encrypted with agenix
 ```
 
 ## Finding Files
+**IMPORTANT: Use `tree` for file discovery. DON'T use `find` for simple name matching - use `tree` instead.**
+
 ```bash
 tree -L 2                    # Project overview
 tree modules/system/linux/   # Linux modules
