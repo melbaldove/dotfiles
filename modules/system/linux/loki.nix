@@ -62,6 +62,21 @@
         max_chunk_age = "1h";
         chunk_retain_period = "30s";
       };
+      
+      # Configure all ring components to use inmemory kvstore
+      ring = {
+        kvstore = {
+          store = "inmemory";
+        };
+      };
+      
+      memberlist = {
+        join_members = [];
+      };
+      
+      analytics = {
+        reporting_enabled = false;
+      };
     };
   };
   
