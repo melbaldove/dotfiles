@@ -13,7 +13,7 @@
       
       limits_config = {
         allow_structured_metadata = true; # Enable with TSDB backend
-        retention_period = "168h"; # 7 days
+        retention_period = "744h"; # 31 days
         reject_old_samples = true;
         reject_old_samples_max_age = "72h"; # 3 days
       };
