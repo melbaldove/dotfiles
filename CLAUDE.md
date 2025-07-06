@@ -157,14 +157,14 @@ sudo darwin-rebuild switch --flake .#turing
 deploy --remote-build --skip-checks --hostname einstein .#einstein
 
 # Deploy to 'shannon' remote server
-deploy --remote-build --skip-checks --magic-rollback false --hostname shannon .#shannon
+deploy --remote-build --skip-checks --hostname shannon .#shannon
 
 # Deploy to 'newton' startup server
 deploy --remote-build --skip-checks --hostname newton .#newton
 
 # Dry run deployment (test without applying changes)
 deploy --dry-activate --remote-build --skip-checks --hostname einstein .#einstein
-deploy --dry-activate --remote-build --skip-checks --magic-rollback false --hostname shannon .#shannon
+deploy --dry-activate --remote-build --skip-checks --hostname shannon .#shannon
 
 # Update dependencies
 nix flake update
