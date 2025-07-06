@@ -11,6 +11,10 @@
       
       auth_enabled = false;
       
+      limits_config = {
+        allow_structured_metadata = false;
+      };
+      
       ingester = {
         lifecycler = {
           address = "10.0.0.1";
@@ -42,6 +46,7 @@
       storage_config = {
         boltdb_shipper = {
           active_index_directory = "/var/lib/loki/index";
+          cache_location = "/var/lib/loki/cache";
         };
         filesystem = {
           directory = "/var/lib/loki/chunks";
