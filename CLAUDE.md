@@ -13,8 +13,11 @@ secrets/       # Encrypted with agenix
 
 ## Finding Files
 ```bash
-tree modules/system/linux/   # Find specific modules
-tree hosts/                  # Find host configs
+tree -L 2                    # Project overview
+tree modules/system/linux/   # Linux modules
+tree hosts/                  # Host configs
+tree users/                  # User configs
+tree -P '*.nix' --prune      # All .nix files
 ```
 
 ## Commands
