@@ -11,7 +11,13 @@
   security.sudo.wheelNeedsPassword = false;
 
   # Enable SSH for Linux systems
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = "no";
+    };
+  };
 
   # Enable fail2ban for SSH protection
   services.fail2ban = {
