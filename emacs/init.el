@@ -12,33 +12,51 @@
 ;; Core settings
 (setq custom-file "~/.config/emacs/.emacs.custom.el")
 
+;; Bootstrap straight.el package manager
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el"
+                         user-emacs-directory))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; Install use-package with straight
+(straight-use-package 'use-package)
+
+;; Configure use-package to use straight.el by default
+(setq straight-use-package-by-default t)
+
 ;; Make sure we load our custom org version before anything else
 ;; This prevents org version mismatch errors
 (add-to-list 'load-path "~/.config/emacs/elpa/org-mode/lisp/")
 (require 'org)
 
-;; Package management setup
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
-;; and `package-pinned-packages`. Most users will not need or want to do this.
-;; (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(package-initialize)
+;; Tell straight.el not to manage org since we're loading it manually
+(straight-register-package 'org)
 
 ;; Load custom file
 (load custom-file)
 ;; System integration
 (use-package exec-path-from-shell
-  :ensure t
   :if (memq window-system '(mac ns x)) ; Only run on GUI Emacs
   :custom
   (exec-path-from-shell-variables '("PATH" "MANPATH" "LANG")) ; Customize variables to copy if needed
   :config
   (exec-path-from-shell-initialize))
 
+;; Ensure .local/bin is in exec-path for glibtool
+(add-to-list 'exec-path (expand-file-name "~/.local/bin"))
+(setenv "PATH" (concat (expand-file-name "~/.local/bin") ":" (getenv "PATH")))
+
 ;; UI Configuration
 (use-package monotropic-theme
-  :ensure t
   :config
   (load-theme 'monotropic t))
 
@@ -72,11 +90,12 @@
 
 ;; Org-mode Configuration
 (use-package org-modern
-  :ensure t
+  :after org
   :config
-  (with-eval-after-load 'org (global-org-modern-mode)))
+  (global-org-modern-mode))
 
 ;; Configure org-mode
+(setq org-directory "~/org")
 (setq org-hide-emphasis-markers t)
 (setq org-agenda-files '("~/org/daily"))
 
@@ -87,20 +106,19 @@
                            (setq-local line-spacing 0.2)))
 
 ;; Dependencies for org-roam and other packages
-(use-package transient :ensure t)
-(use-package dash :ensure t)
-(use-package f :ensure t)
-(use-package s :ensure t)
-(use-package emacsql :ensure t)
-(use-package magit-section :ensure t)
+(use-package transient)
+(use-package dash)
+(use-package f)
+(use-package s)
+(use-package emacsql)
+(use-package magit-section)
 
 ;; Version control
-(use-package magit :ensure t)
+(use-package magit)
 
 ;; Note-taking with org-roam
 (use-package org-roam
   :after org
-  :ensure t
   :custom
   (org-roam-directory org-directory)
   (org-roam-dailies-capture-templates
@@ -118,23 +136,19 @@
 
 ;; Completion and editing tools
 (use-package smex
-  :ensure t
   :bind
   (("M-x" . smex)
    ("C-c C-c M-x" . execute-extended-command)))
 
 (use-package expand-region
-  :ensure t
   :bind ("C-=" . er/expand-region))
 
 (use-package ace-window
-  :ensure t
   :bind ("M-o" . ace-window)
   :custom
   (aw-keys '(?a ?r ?s ?t ?g ?m ?n ?e ?i)))
 
 (use-package avy
-  :ensure t
   :bind (("C-;" . avy-goto-char-timer)
          ("M-g f" . avy-goto-line)
          ("M-g w" . avy-goto-word-1)
@@ -143,85 +157,86 @@
   (setq avy-timeout-seconds 0.2))
 
 (use-package projectile
-  :ensure t
   :init
   (projectile-mode +1)
   :bind (:map projectile-mode-map
               ("s-p" . projectile-command-map)
               ("C-c p" . projectile-command-map)))
 
-(use-package rg
-  :ensure t)
+(use-package rg)
 
 (use-package ido-completing-read+
-  :ensure t
   :config
   (ido-mode 1)
   (ido-everywhere 1)
   (ido-ubiquitous-mode 1))
 
 (use-package direnv
-  :ensure t
   :config
   (direnv-mode))
 
 (use-package company
-  :ensure t
   :hook
   (after-init . global-company-mode))
 
 ;; Snippet support
 (use-package yasnippet
-  :ensure t
   :config
   (yas-global-mode 1))
 
-(use-package yasnippet-snippets
-  :ensure t)
+(use-package yasnippet-snippets)
 
 ;; Writing environment
-(use-package visual-fill-column
-  :ensure t)
+(use-package visual-fill-column)
 
-(use-package writeroom-mode
-  :ensure t)
+(use-package writeroom-mode)
 
-(use-package adaptive-wrap
-  :ensure t)
+(use-package adaptive-wrap)
 
 ;; Development tools
 
+;; Terminal emulator - using Nix-provided vterm
+(when (require 'vterm nil t)
+  (setq vterm-max-scrollback 10000)
+  (setq vterm-shell "zsh"))
+
+;; Syntax checking
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+;; Claude Code IDE integration
+(use-package claude-code-ide
+  :straight (:host github :repo "manzaltu/claude-code-ide.el")
+  :after flycheck
+  :config
+  ;; Add any claude-code-ide specific configuration here
+  )
+
 ;; .editorconfig file support
 (use-package editorconfig
-  :ensure t
   :config 
   (editorconfig-mode +1))
 
 ;; Rainbow delimiters makes nested delimiters easier to understand
 (use-package rainbow-delimiters
-  :ensure t
   :hook 
   (prog-mode . rainbow-delimiters-mode))
 
 ;; LSP support
 (use-package lsp-mode
-  :ensure t
   :commands lsp)
 
 (use-package lsp-ui
-  :ensure t
   :after lsp-mode)
 
 ;; Swift development configuration
 (use-package swift-mode
-  :ensure t
   :mode "\\.swift\\'"
   :interpreter "swift"
   :hook 
   (swift-mode . lsp))
 
 (use-package lsp-sourcekit
-  :ensure t
   :after lsp-mode
   :custom
   (lsp-sourcekit-executable 
@@ -232,7 +247,6 @@
 
 ;; Rust development configuration
 (use-package rust-mode
-  :ensure t
   :mode "\\.rs\\'"
   :hook 
   (rust-mode . lsp))
@@ -243,11 +257,15 @@
 ;; Global keybindings
 (global-set-key (kbd "C-x C-r") 'recentf-open-files)
 (global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cc" 'claude-code-ide)
+(global-set-key "\C-cr" 'claude-code-ide-resume)
+(global-set-key "\C-cl" 'claude-code-ide-list-sessions)
 (global-set-key "\C-cf" 'org-roam-node-find)
 (global-set-key "\C-ci" 'org-roam-node-insert)
 (global-set-key "\C-cy" 'org-roam-dailies-goto-yesterday)
 (global-set-key "\C-cj" (lambda ()
                           (interactive)
+                          (require 'org-roam-dailies)
                           (split-window-horizontally)
                           (other-window 1)
                           (org-roam-dailies-goto-today)

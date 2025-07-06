@@ -8,6 +8,7 @@
       package = pkgs.emacs-unstable;
       extraPackages = epkgs: [
         epkgs.use-package
+        epkgs.vterm
       ];
     };
   };

@@ -3,16 +3,16 @@
   config, pkgs, lib, inputs, ...
 }:
 let
-  # tex = (pkgs.texlive.combine {
-  #   inherit (pkgs.texlive) scheme-basic
-  #     luatex
-  #     fontspec
-  #     xcolor
-  #     mylatexformat
-  #     preview
-  #     dvisvgm dvipng # for preview and export as html
-  #     wrapfig amsmath ulem hyperref capt-of;
-  # });
+  tex = (pkgs.texlive.combine {
+    inherit (pkgs.texlive) scheme-basic
+      luatex
+      fontspec
+      xcolor
+      mylatexformat
+      preview
+      dvisvgm dvipng # for preview and export as html
+      wrapfig amsmath ulem hyperref capt-of;
+  });
   
 in
 {
@@ -21,7 +21,7 @@ in
   ];
 
   home.packages = with pkgs; [
-    # tex  # Temporarily disabled due to build errors
+    tex
     imagemagick
     gh
     ripgrep
@@ -32,16 +32,30 @@ in
     nmap
     deploy-rs
     wireguard-tools
+    cmake
+    libtool
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     go-ios
   ];
 
-  # Development-specific bash aliases
+  # Development-specific bash aliases and setup
   programs.bash.bashrcExtra = ''
     # Alias for ast-grep
     alias sg='ast-grep'
+    
+    # Add .local/bin to PATH for glibtool
+    export PATH="$HOME/.local/bin:$PATH"
   '';
+  
+  # Create glibtool wrapper for vterm compilation on macOS
+  home.file.".local/bin/glibtool" = lib.mkIf pkgs.stdenv.isDarwin {
+    executable = true;
+    text = ''
+      #!/bin/sh
+      exec ${pkgs.libtool}/bin/libtool "$@"
+    '';
+  };
 
 
   programs = {
