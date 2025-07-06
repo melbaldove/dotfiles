@@ -50,7 +50,6 @@
       storage_config = {
         boltdb_shipper = {
           active_index_directory = "/var/lib/loki/index";
-          shared_store = "filesystem";
         };
         filesystem = {
           directory = "/var/lib/loki/chunks";
