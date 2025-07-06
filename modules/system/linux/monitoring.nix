@@ -8,7 +8,7 @@
   services.prometheus = {
     enable = true;
     port = 9090;
-    listenAddress = "127.0.0.1";
+    listenAddress = "localhost";
     retentionTime = "30d";
     
     scrapeConfigs = [
@@ -16,7 +16,7 @@
         job_name = "personal";
         static_configs = [{
           targets = [ 
-            "127.0.0.1:9100"      # shannon itself
+            "localhost:9100"      # shannon itself
             "10.0.0.2:9100"       # einstein
             "10.0.0.3:9100"       # turing
           ];
@@ -37,14 +37,14 @@
       {
         job_name = "loki";
         static_configs = [{
-          targets = [ "127.0.0.1:3100" ]; # loki itself
+          targets = [ "localhost:3100" ]; # loki itself
         }];
       }
       {
         job_name = "promtail";
         static_configs = [{
           targets = [
-            "127.0.0.1:9080"      # shannon promtail
+            "localhost:9080"      # shannon promtail
             "10.0.0.2:9080"       # einstein promtail
             "10.0.1.2:9080"       # newton promtail
           ];
@@ -53,7 +53,7 @@
       {
         job_name = "blackbox-exporter";
         static_configs = [{
-          targets = [ "127.0.0.1:9115" ];
+          targets = [ "localhost:9115" ];
         }];
       }
       {
@@ -79,7 +79,7 @@
           }
           {
             target_label = "__address__";
-            replacement = "127.0.0.1:9115";
+            replacement = "localhost:9115";
           }
         ];
       }
@@ -106,7 +106,7 @@
           }
           {
             target_label = "__address__";
-            replacement = "127.0.0.1:9115";
+            replacement = "localhost:9115";
           }
         ];
       }
@@ -156,13 +156,13 @@
   services.prometheus.exporters.node = {
     enable = true;
     port = 9100;
-    listenAddress = "127.0.0.1";
+    listenAddress = "localhost";
   };
 
   services.prometheus.exporters.blackbox = {
     enable = true;
     port = 9115;
-    listenAddress = "127.0.0.1";
+    listenAddress = "localhost";
     configFile = pkgs.writeText "blackbox.yml" ''
       modules:
         http_2xx:
