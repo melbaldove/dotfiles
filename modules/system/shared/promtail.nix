@@ -105,7 +105,8 @@
     "d /var/lib/promtail 0755 promtail promtail -"
   ];
   
-  # Grant promtail access to system logs
+  # Grant promtail access to system logs and docker (if available)
   users.groups.promtail.members = [ "promtail" ];
-  users.users.promtail.extraGroups = [ "systemd-journal" ];
+  users.users.promtail.extraGroups = [ "systemd-journal" ] ++ 
+    (if builtins.hasAttr "docker" config.users.groups then [ "docker" ] else []);
 }

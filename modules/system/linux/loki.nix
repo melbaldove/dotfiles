@@ -42,6 +42,10 @@
         reject_old_samples_max_age = "168h"; # 7 days
         allow_structured_metadata = false;
       };
+      
+      compactor = {
+        working_directory = "/var/lib/loki/compactor";
+      };
     };
   };
   
