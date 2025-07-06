@@ -18,13 +18,21 @@
     enable = true;
     maxretry = 3;
     bantime = "7d";
-    findtime = "10m";
     ignoreIP = [
       "127.0.0.1/8"
       "10.0.0.0/24"     # Personal VPN network
       "10.0.1.0/24"     # Startup VPN network
       "192.168.50.0/24" # Local network
     ];
+    jails = {
+      sshd.settings = {
+        enabled = true;
+        filter = "sshd";
+        maxretry = 3;
+        findtime = "10m";
+        bantime = "7d";
+      };
+    };
   };
 
   # Open SSH port in firewall
