@@ -6,7 +6,7 @@
     configuration = {
       server = {
         http_listen_port = 3100;
-        http_listen_address = "10.0.0.1";
+        http_listen_address = "0.0.0.0";  # Listen on all interfaces to accept connections from both VPN networks
       };
       
       auth_enabled = false;

@@ -9,6 +9,7 @@
     vim
     coreutils
     findutils
+    jq
   ];
 
   nixpkgs.config.allowUnfree = true;

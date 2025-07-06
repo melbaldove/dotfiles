@@ -53,6 +53,13 @@
   # Allow VPN traffic to monitoring ports
   networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 9200 9080 ];
 
+  # Override Promtail client to use Shannon's startup network IP
+  services.promtail.configuration.clients = lib.mkForce [
+    {
+      url = "http://10.0.1.1:3100/loki/api/v1/push";
+    }
+  ];
+
   # Newton-specific Promtail configuration for Docker logs
   services.promtail.configuration.scrape_configs = lib.mkAfter [
     {
@@ -61,12 +68,7 @@
         {
           host = "unix:///var/run/docker.sock";
           refresh_interval = "5s";
-          filters = [
-            {
-              name = "label";
-              values = [ "logging=promtail" ];
-            }
-          ];
+          # Collect logs from all containers, not just those with specific labels
         }
       ];
       relabel_configs = [
@@ -121,6 +123,9 @@
     isNormalUser = true;
     extraGroups = [ "wheel" "users" ];
   };
+
+  # Grant promtail access to Docker socket for container log collection
+  users.users.promtail.extraGroups = [ "docker" ];
 
   # Configure Twenty CRM service
   services.twenty-crm = {
