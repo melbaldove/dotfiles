@@ -13,6 +13,9 @@
       
       limits_config = {
         allow_structured_metadata = false;
+        retention_period = "168h"; # 7 days
+        reject_old_samples = true;
+        reject_old_samples_max_age = "72h"; # 3 days
       };
       
       ingester = {
@@ -26,6 +29,9 @@
           };
           final_sleep = "0s";
         };
+        chunk_idle_period = "2h";    # Conservative start
+        max_chunk_age = "2h";        # Conservative start  
+        chunk_retain_period = "60s"; # Conservative start
       };
       
       schema_config = {
