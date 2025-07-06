@@ -34,6 +34,7 @@ in
     wireguard-tools
     cmake
     libtool
+    tree
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     go-ios

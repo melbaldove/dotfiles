@@ -29,9 +29,9 @@
           };
           final_sleep = "0s";
         };
-        chunk_idle_period = "2h";    # Conservative start
-        max_chunk_age = "2h";        # Conservative start  
-        chunk_retain_period = "60s"; # Conservative start
+        chunk_idle_period = "5m";    # Flush after 5 minutes idle
+        max_chunk_age = "1h";        # Force flush after 1 hour  
+        chunk_retain_period = "30s"; # Retain for queries
       };
       
       schema_config = {
@@ -49,10 +49,6 @@
       };
       
       storage_config = {
-        boltdb_shipper = {
-          active_index_directory = "/var/lib/loki/index";
-          cache_location = "/var/lib/loki/cache";
-        };
         tsdb_shipper = {
           active_index_directory = "/var/lib/loki/tsdb";
           cache_location = "/var/lib/loki/tsdb-cache";

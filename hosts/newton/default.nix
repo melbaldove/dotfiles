@@ -86,6 +86,14 @@
           source_labels = [ "__meta_docker_container_label_com_docker_compose_service" ];
           target_label = "compose_service";
         }
+        {
+          source_labels = [ "__meta_docker_container_label_com_docker_compose_project" ];
+          target_label = "compose_project";
+        }
+        {
+          source_labels = [ "__meta_docker_container_image" ];
+          target_label = "image";
+        }
       ];
       pipeline_stages = [
         {

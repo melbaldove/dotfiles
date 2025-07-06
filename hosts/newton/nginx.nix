@@ -7,6 +7,14 @@
     recommendedOptimisation = true;
     recommendedGzipSettings = true;
     recommendedProxySettings = true;
+    
+    # Configure nginx to log to systemd journal
+    logError = "stderr";  # Default - logs to systemd journal
+    
+    # Configure access logs to also go to systemd journal
+    commonHttpConfig = ''
+      access_log syslog:server=unix:/dev/log,tag=nginx_access combined;
+    '';
 
     virtualHosts = {
       "crm.workwithnextdesk.com" = {
