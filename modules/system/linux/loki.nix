@@ -52,6 +52,10 @@
           directory = "/var/lib/loki/chunks";
         };
       };
+      
+      compactor = {
+        working_directory = "/var/lib/loki/compactor";
+      };
     };
   };
   
