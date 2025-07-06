@@ -362,6 +362,52 @@ If critical issues arise:
 - Configuration tested locally before deployment when possible
 - Rollback procedures documented for each change
 
+* IMPLEMENTATION STATUS (2025-07-06)
+
+** ✅ COMPLETED
+*** Phase 1: Critical Features
+- ✅ Retention policies: 7 days retention, 3 days reject old samples
+- ✅ Ingester optimization: 2h chunk settings
+- ✅ Deployed and verified working
+
+*** Phase 2: TSDB Migration (FORCED IMMEDIATE)
+- ✅ Backup created: /tmp/loki-backup-20250706-2042.tar.gz (572K)
+- ✅ TSDB backend migration: Forced immediate transition (no gradual)
+- ✅ Schema v13: Single backend, no backward compatibility
+- ✅ Structured metadata: ENABLED and working
+- ✅ All hosts sending logs: Einstein, Newton, Shannon operational
+
+** ⚠️ CURRENT ISSUES
+*** Container Log Collection
+- ❌ Direct container logs not appearing with compose_service labels
+- ⚠️ Container logs going through systemd-journal instead of Docker API
+- ✅ Container discovery: Promtail seeing 6/6 containers
+- ✅ SystemD logs: All Docker service logs present
+
+*** Root Cause
+TSDB migration may have disrupted Docker log collection state. Containers logs are collected via systemd journal forwarding rather than direct Docker API scraping.
+
+** 🔧 IMMEDIATE NEXT STEPS
+
+*** Priority 1: Fix Container Log Collection
+1. Investigate Promtail Docker service discovery configuration
+2. Check if Docker containers need restart after TSDB migration
+3. Verify Docker log driver configuration
+4. Test direct container log API access
+5. Consider restarting Promtail service on Newton
+
+*** Priority 2: Verify TSDB Performance
+1. Monitor TSDB directory growth and performance
+2. Test structured metadata capabilities
+3. Validate query performance improvements
+4. Check retention policy effectiveness
+
+*** Priority 3: Complete Recovery Plan
+1. Implement Phase 3: Analytics (low priority)
+2. Add common path prefix configuration
+3. Monitor system stability over 48 hours
+4. Document lessons learned
+
 ** Future Considerations
 - Consider migrating to object storage (S3/GCS) for scalability
 - Evaluate need for multiple Loki instances for HA
