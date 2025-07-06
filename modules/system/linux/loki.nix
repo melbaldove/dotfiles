@@ -40,6 +40,7 @@
         retention_period = "336h"; # 14 days
         reject_old_samples = true;
         reject_old_samples_max_age = "168h"; # 7 days
+        allow_structured_metadata = false;
       };
     };
   };
