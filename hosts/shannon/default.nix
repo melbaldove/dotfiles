@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/system/shared/core.nix
     ../../modules/system/shared/ssh-keys.nix
+    ../../modules/system/shared/promtail.nix
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/wireguard-server.nix

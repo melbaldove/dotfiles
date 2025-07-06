@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/system/shared/core.nix
     ../../modules/system/shared/ssh-keys.nix
+    ../../modules/system/shared/promtail.nix
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/media-server.nix
@@ -59,6 +60,9 @@
   };
 
   monitoring.nodeExporter.listenAddress = "10.0.0.2";
+
+  # Allow promtail port on VPN interface
+  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9080 ];
 
   system.stateVersion = "24.05";
 }

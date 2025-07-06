@@ -1,0 +1,350 @@
+#+TITLE: Loki Implementation Plan
+#+AUTHOR: Melbourne Baldove
+#+DATE: 2025-07-06
+#+OPTIONS: toc:2 num:t
+
+* Overview
+
+This document outlines the comprehensive plan for implementing Loki log aggregation in the dotfiles infrastructure, integrating with the existing Prometheus/Grafana monitoring stack.
+
+* Architecture Overview
+
+** Centralized Logging Stack
+- *Loki Server*: Deploy on shannon (10.0.0.1:3100) alongside Prometheus/Grafana
+- *Promtail Agents*: Deploy on all hosts for log collection
+- *Network*: Use existing VPN infrastructure for secure log shipping
+- *Storage*: Local filesystem storage with retention policies
+- *Integration*: Add Loki as Grafana datasource for unified observability
+
+** Network Topology
+#+BEGIN_EXAMPLE
+shannon (10.0.0.1) - Loki Server + Grafana
+    ↑
+    ├── newton (10.0.1.2) - Promtail (nginx, docker, systemd)
+    ├── einstein (10.0.0.2) - Promtail (systemd, system logs)
+    └── turing (10.0.0.3) - Promtail (system logs)
+#+END_EXAMPLE
+
+* Implementation Plan
+
+** Phase 1: Core Infrastructure
+
+*** 1. Create Loki Server Module
+File: =modules/system/linux/loki.nix=
+
+#+BEGIN_SRC nix
+{ config, pkgs, ... }:
+{
+  services.loki = {
+    enable = true;
+    configuration = {
+      server = {
+        http_listen_port = 3100;
+        http_listen_address = "10.0.0.1";
+      };
+      auth_enabled = false;
+      ingester = {
+        lifecycler = {
+          address = "10.0.0.1";
+          ring = {
+            kvstore.store = "inmemory";
+            replication_factor = 1;
+          };
+        };
+        chunk_idle_period = "5m";
+        chunk_retain_period = "30s";
+      };
+      schema_config = {
+        configs = [{
+          from = "2024-01-01";
+          store = "boltdb-shipper";
+          object_store = "filesystem";
+          schema = "v11";
+          index = {
+            prefix = "index_";
+            period = "24h";
+          };
+        }];
+      };
+      storage_config = {
+        boltdb_shipper = {
+          active_index_directory = "/var/lib/loki/boltdb-shipper-active";
+          cache_location = "/var/lib/loki/boltdb-shipper-cache";
+          shared_store = "filesystem";
+        };
+        filesystem = {
+          directory = "/var/lib/loki/chunks";
+        };
+      };
+      limits_config = {
+        reject_old_samples = true;
+        reject_old_samples_max_age = "168h";
+        retention_period = "336h"; # 14 days default
+      };
+    };
+  };
+  
+  # Firewall configuration
+  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 3100 ];
+  networking.firewall.interfaces.wg1.allowedTCPPorts = [ 3100 ];
+}
+#+END_SRC
+
+*** 2. Create Promtail Agent Module
+File: =modules/system/shared/promtail.nix=
+
+#+BEGIN_SRC nix
+{ config, pkgs, ... }:
+{
+  services.promtail = {
+    enable = true;
+    configuration = {
+      server = {
+        http_listen_port = 9080;
+        grpc_listen_port = 0;
+      };
+      clients = [{
+        url = "http://10.0.0.1:3100/loki/api/v1/push";
+      }];
+      scrape_configs = [
+        {
+          job_name = "systemd";
+          journal = {
+            max_age = "12h";
+            labels = {
+              job = "systemd";
+              host = config.networking.hostName;
+            };
+          };
+          relabel_configs = [
+            {
+              source_labels = ["__journal__systemd_unit"];
+              target_label = "unit";
+            }
+          ];
+        }
+        {
+          job_name = "nginx";
+          static_configs = [{
+            targets = ["localhost"];
+            labels = {
+              job = "nginx";
+              host = config.networking.hostName;
+              __path__ = "/var/log/nginx/*.log";
+            };
+          }];
+        }
+      ];
+    };
+  };
+}
+#+END_SRC
+
+** Phase 2: Host Configuration
+
+*** 3. Update Monitoring Module
+Add to =modules/system/linux/monitoring.nix=:
+
+#+BEGIN_SRC nix
+{
+  imports = [
+    ./loki.nix
+  ];
+  
+  # Update Grafana to include Loki datasource
+  services.grafana = {
+    enable = true;
+    settings = {
+      server = {
+        http_addr = "10.0.0.1";
+        http_port = 3000;
+      };
+      security = {
+        admin_user = "admin";
+        admin_password = "admin";
+      };
+    };
+    provision = {
+      datasources.settings.datasources = [
+        {
+          name = "Loki";
+          type = "loki";
+          url = "http://localhost:3100";
+          isDefault = false;
+        }
+      ];
+    };
+  };
+}
+#+END_SRC
+
+*** 4. Update Host Configurations
+
+**** Shannon (Loki Server)
+=hosts/shannon/default.nix= - Add Loki server:
+
+#+BEGIN_SRC nix
+{
+  imports = [
+    # ... existing imports
+    ../../modules/system/shared/promtail.nix
+  ];
+}
+#+END_SRC
+
+**** Newton (Business Apps)
+=hosts/newton/default.nix= - Add Promtail with Docker support:
+
+#+BEGIN_SRC nix
+{
+  imports = [
+    # ... existing imports
+    ../../modules/system/shared/promtail.nix
+  ];
+  
+  # Newton-specific Promtail config for Docker logs
+  services.promtail.configuration.scrape_configs = [
+    {
+      job_name = "docker";
+      docker_sd_configs = [{
+        host = "unix:///var/run/docker.sock";
+        refresh_interval = "5s";
+      }];
+      relabel_configs = [
+        {
+          source_labels = ["__meta_docker_container_name"];
+          target_label = "container";
+        }
+      ];
+    }
+  ];
+}
+#+END_SRC
+
+** Phase 3: Log Sources & Retention
+
+*** Key Log Sources by Host
+
+**** Shannon (Monitoring Server)
+- Systemd services: prometheus, grafana, loki, wireguard
+- System logs: auth, network, firewall  
+- SSH access logs
+- *Retention*: 30 days
+
+**** Newton (Business Apps)
+- Nginx access/error logs (critical for web services)
+- Docker container logs: Twenty CRM, Ghost CMS
+- Systemd services: nginx, docker, cadvisor
+- *Retention*: 14 days (high volume), 30 days (errors)
+
+**** Einstein (Home Server)
+- Systemd services and system logs
+- Node exporter logs
+- *Retention*: 14 days
+
+**** Turing (Development)
+- System logs (optional)
+- Development environment logs
+- *Retention*: 7 days
+
+** Phase 4: Dashboards & Alerting
+
+*** Grafana Dashboards
+- *Business Apps Dashboard*: Newton nginx/docker logs
+- *Infrastructure Dashboard*: Shannon system/service logs  
+- *Security Dashboard*: SSH/auth logs across all hosts
+- *VPN Dashboard*: WireGuard connection logs
+
+*** Critical Alerts
+- High error rate in nginx logs (5xx responses)
+- Application startup failures (CRM/CMS containers)
+- SSH brute force attempts
+- VPN disconnections
+- Disk space warnings
+
+* Deployment Strategy
+
+** 1. Deploy Loki Server (shannon)
+#+BEGIN_SRC bash
+# Update shannon configuration
+deploy --dry-activate --remote-build --skip-checks --magic-rollback false --hostname shannon .#shannon
+deploy --remote-build --skip-checks --magic-rollback false --hostname shannon .#shannon
+#+END_SRC
+
+** 2. Deploy Promtail to Newton (Critical Apps)
+#+BEGIN_SRC bash
+# Test newton with business applications
+deploy --dry-activate --remote-build --skip-checks --hostname newton .#newton
+deploy --remote-build --skip-checks --hostname newton .#newton
+#+END_SRC
+
+** 3. Deploy Promtail to Other Hosts
+#+BEGIN_SRC bash
+# Add to einstein and turing
+deploy --dry-activate --remote-build --skip-checks --hostname einstein .#einstein
+deploy --remote-build --skip-checks --hostname einstein .#einstein
+#+END_SRC
+
+** 4. Configure Grafana & Dashboards
+- Access Grafana at shannon:3000
+- Verify Loki datasource connectivity
+- Import/create log dashboards
+- Set up alerting rules
+
+* Storage & Performance
+
+** Storage Configuration
+- Local filesystem storage on shannon
+- Data path: =/var/lib/loki/=
+- Index retention: 24h periods
+- Chunk retention: 14-30 days based on log type
+
+** Performance Considerations
+- Monitor disk usage with existing Prometheus
+- Set ingestion rate limits
+- Use efficient LogQL queries
+- Regular compaction for storage optimization
+
+* Security & Network
+
+** Network Security
+- Port 3100 restricted to VPN networks only
+- Promtail pushes logs over encrypted VPN
+- No external access to Loki server
+
+** Access Control
+- Loki auth disabled for internal network
+- Grafana authentication for log viewing
+- SSH access logs for security monitoring
+
+* Service URLs
+
+After implementation, the following services will be available:
+- *Grafana Dashboard*: =http://shannon:3000= (admin/admin)
+- *Prometheus*: =http://shannon:9090=
+- *Loki*: =http://shannon:3100= (internal only)
+- *Twenty CRM*: =https://crm.workwithnextdesk.com=
+- *Ghost CMS*: =https://cms.workwithnextdesk.com=
+
+* Integration Benefits
+
+This implementation provides:
+- Centralized log aggregation for distributed infrastructure
+- Correlation between metrics (Prometheus) and logs (Loki)
+- Business application monitoring (CRM/CMS)
+- Security monitoring across all hosts
+- Scalable architecture following existing patterns
+- Seamless integration with current monitoring stack
+
+* Next Steps
+
+1. [ ] Create Loki server module
+2. [ ] Create Promtail agent module
+3. [ ] Update monitoring configuration
+4. [ ] Deploy to shannon first
+5. [ ] Add promtail to newton (critical business apps)
+6. [ ] Add promtail to other hosts
+7. [ ] Configure Grafana datasource and dashboards
+8. [ ] Set up alerting rules
+9. [ ] Test log aggregation and querying
+10. [ ] Monitor performance and adjust retention policies

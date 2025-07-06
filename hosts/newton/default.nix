@@ -6,6 +6,7 @@
     ./nginx.nix
     ../../modules/system/shared/core.nix
     ../../modules/system/shared/ssh-keys.nix
+    ../../modules/system/shared/promtail.nix
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/twenty-crm.nix
@@ -50,7 +51,53 @@
   };
 
   # Allow VPN traffic to monitoring ports
-  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 9200 ];
+  networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 9200 9080 ];
+
+  # Newton-specific Promtail configuration for Docker logs
+  services.promtail.configuration.scrape_configs = lib.mkAfter [
+    {
+      job_name = "docker-containers";
+      docker_sd_configs = [
+        {
+          host = "unix:///var/run/docker.sock";
+          refresh_interval = "5s";
+          filters = [
+            {
+              name = "label";
+              values = [ "logging=promtail" ];
+            }
+          ];
+        }
+      ];
+      relabel_configs = [
+        {
+          source_labels = [ "__meta_docker_container_name" ];
+          regex = "/(.*)";
+          target_label = "container";
+          replacement = "\${1}";
+        }
+        {
+          source_labels = [ "__meta_docker_container_log_stream" ];
+          target_label = "stream";
+        }
+        {
+          source_labels = [ "__meta_docker_container_label_com_docker_compose_service" ];
+          target_label = "compose_service";
+        }
+      ];
+      pipeline_stages = [
+        {
+          docker = {};
+        }
+        {
+          timestamp = {
+            source = "timestamp";
+            format = "RFC3339Nano";
+          };
+        }
+      ];
+    }
+  ];
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";

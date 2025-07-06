@@ -60,7 +60,7 @@
   :config
   (load-theme 'monotropic t))
 
-(set-frame-font "Liga SFMono Nerd Font 16")
+(set-frame-font "Liga SFMono Nerd Font 14")
 
 ;; Basic UI settings
 (setq inhibit-splash-screen t)
@@ -101,7 +101,7 @@
 
 (add-hook 'org-mode-hook (lambda ()
                            (org-latex-preview-auto-mode)
-                           (face-remap-add-relative 'default :family "Inter Display")
+                           (face-remap-add-relative 'default :family "Inter Display" :height 140)
                            (set-face-attribute 'org-modern-symbol nil :family "Inter Display")
                            (setq-local line-spacing 0.2)))
 
@@ -263,13 +263,7 @@
 (global-set-key "\C-cf" 'org-roam-node-find)
 (global-set-key "\C-ci" 'org-roam-node-insert)
 (global-set-key "\C-cy" 'org-roam-dailies-goto-yesterday)
-(global-set-key "\C-cj" (lambda ()
-                          (interactive)
-                          (require 'org-roam-dailies)
-                          (split-window-horizontally)
-                          (other-window 1)
-                          (org-roam-dailies-goto-today)
-                          (end-of-buffer)))
+(global-set-key "\C-cj" 'org-roam-dailies-goto-today)
 
 ;; Registers for quick access to important files
 (set-register ?c (cons 'file "~/.config/emacs/init.el"))
