@@ -1,0 +1,369 @@
+#+TITLE: Loki Feature Recovery Plan
+#+AUTHOR: System Administrator
+#+DATE: 2025-07-06
+#+DESCRIPTION: Plan to re-enable Loki features that were disabled during initial deployment
+
+* Overview
+
+During the initial Loki deployment, several features were disabled to achieve a working minimal configuration. This document outlines the disabled features and provides a step-by-step plan to re-enable them once the core system is stable.
+
+** Current Status
+- ✅ Core log ingestion working (Promtail → Loki)
+- ✅ LogQL queries functional
+- ✅ Basic single-node deployment operational
+- ✅ Systemd journal logs being collected
+
+* Disabled Features
+
+** High Impact Features
+*** Retention Policies
+**** What was removed:
+- =retention_period = "336h"= (14 days)
+- =reject_old_samples = true=
+- =reject_old_samples_max_age = "168h"= (7 days)
+
+**** Current impact:
+- Logs will accumulate indefinitely
+- No automatic cleanup of old data
+- Storage will grow continuously
+
+**** Risk level: HIGH (storage will fill up)
+
+*** Advanced Ingester Configuration
+**** What was removed:
+- =chunk_idle_period = "1h"=
+- =max_chunk_age = "1h"=
+- =chunk_retain_period = "30s"=
+
+**** Current impact:
+- Default chunk timing behavior
+- Potentially less optimal memory usage
+- May affect query performance over time
+
+**** Risk level: MEDIUM (performance impact)
+
+** Medium Impact Features
+*** Structured Metadata
+**** What was disabled:
+- =allow_structured_metadata = false= (explicitly disabled)
+- Cannot use schema v13+ features
+- Stuck with boltdb-shipper instead of tsdb
+
+**** Current impact:
+- Cannot store structured metadata with logs
+- No native OTLP ingestion support
+- Limited to older storage backend
+
+**** Risk level: LOW (functionality limitation)
+
+*** Analytics and Monitoring
+**** What was removed:
+- =analytics.reporting_enabled = false= (explicitly disabled)
+
+**** Current impact:
+- No usage analytics sent to Grafana
+- Less telemetry data for debugging
+
+**** Risk level: LOW (operational visibility)
+
+** Low Impact Features
+*** Advanced Clustering
+**** What was removed:
+- =memberlist.join_members = []= (empty clustering)
+- =common.path_prefix= configuration
+
+**** Current impact:
+- Single-node operation only
+- No multi-node clustering capability
+
+**** Risk level: LOW (scalability limitation)
+
+* Recovery Plan
+
+** Phase 1: Critical Features (Week 1)
+*** Priority 1.1: Re-enable Retention Policies
+**** Objective: Prevent storage from filling up
+**** Steps:
+1. Monitor current storage usage: =df -h /var/lib/loki=
+2. Add conservative retention settings:
+   #+begin_src nix
+   limits_config = {
+     allow_structured_metadata = false;
+     retention_period = "168h"; # 7 days (reduced from 14)
+     reject_old_samples = true;
+     reject_old_samples_max_age = "72h"; # 3 days (reduced from 7)
+   };
+   #+end_src
+3. Deploy and verify logs are still flowing
+4. Monitor for 24 hours to ensure no issues
+5. Gradually increase retention as storage allows
+
+**** Success criteria:
+- Logs continue to flow normally
+- Old logs are automatically cleaned up
+- No "rejected samples" errors in Promtail
+
+**** Rollback plan:
+- Remove retention settings if ingestion stops
+- Return to =allow_structured_metadata = false= only
+
+*** Priority 1.2: Re-enable Advanced Ingester Settings
+**** Objective: Optimize memory usage and query performance
+**** Steps:
+1. Add conservative chunk settings:
+   #+begin_src nix
+   ingester = {
+     lifecycler = {
+       address = "10.0.0.1";
+       ring = {
+         kvstore = { store = "inmemory"; };
+         replication_factor = 1;
+       };
+       final_sleep = "0s";
+     };
+     chunk_idle_period = "2h";    # Conservative start
+     max_chunk_age = "2h";        # Conservative start  
+     chunk_retain_period = "60s"; # Conservative start
+   };
+   #+end_src
+2. Deploy and monitor memory usage
+3. Tune settings based on actual usage patterns
+4. Gradually optimize timing values
+
+**** Success criteria:
+- Memory usage remains stable
+- Query performance improves or stays same
+- No chunk-related errors in logs
+
+**** Rollback plan:
+- Remove chunk timing settings
+- Return to default behavior
+
+** Phase 2: Storage Backend Upgrade (Week 2-3)
+*** Priority 2.1: Migrate to TSDB Backend
+**** Objective: Enable modern storage backend and structured metadata
+**** Prerequisites:
+- Phase 1 must be stable for 1 week
+- Backup existing data
+- Plan for potential downtime
+
+**** Steps:
+1. *Backup current data:*
+   #+begin_src bash
+   sudo systemctl stop loki
+   sudo tar -czf /tmp/loki-backup-$(date +%Y%m%d).tar.gz /var/lib/loki/
+   #+end_src
+
+2. *Update schema configuration:*
+   #+begin_src nix
+   schema_config = {
+     configs = [
+       # Keep existing boltdb-shipper period
+       {
+         from = "2020-10-24";
+         store = "boltdb-shipper";
+         object_store = "filesystem";
+         schema = "v11";
+         index = {
+           prefix = "index_";
+           period = "24h";
+         };
+       }
+       # Add new tsdb period for future data
+       {
+         from = "2025-07-15"; # Future date
+         store = "tsdb";
+         object_store = "filesystem";  
+         schema = "v13";
+         index = {
+           prefix = "tsdb_index_";
+           period = "24h";
+         };
+       }
+     ];
+   };
+   #+end_src
+
+3. *Add tsdb_shipper configuration:*
+   #+begin_src nix
+   storage_config = {
+     boltdb_shipper = {
+       active_index_directory = "/var/lib/loki/index";
+       cache_location = "/var/lib/loki/cache";
+     };
+     tsdb_shipper = {
+       active_index_directory = "/var/lib/loki/tsdb";
+       cache_location = "/var/lib/loki/tsdb-cache";
+     };
+     filesystem = {
+       directory = "/var/lib/loki/chunks";
+     };
+   };
+   #+end_src
+
+4. *Deploy and monitor during transition*
+5. *After transition date, enable structured metadata:*
+   #+begin_src nix
+   limits_config = {
+     allow_structured_metadata = true; # Enable after tsdb active
+     retention_period = "168h";
+     reject_old_samples = true;
+     reject_old_samples_max_age = "72h";
+   };
+   #+end_src
+
+**** Success criteria:
+- Logs continue to flow during transition
+- New data uses tsdb backend
+- Structured metadata becomes available
+- Query performance remains stable
+
+**** Rollback plan:
+- Restore from backup
+- Remove tsdb schema period
+- Return to boltdb-shipper only
+
+** Phase 3: Operational Enhancements (Week 4)
+*** Priority 3.1: Re-enable Analytics
+**** Objective: Improve operational visibility
+**** Steps:
+1. Enable analytics reporting:
+   #+begin_src nix
+   analytics = {
+     reporting_enabled = true;
+   };
+   #+end_src
+2. Monitor for any performance impact
+3. Review analytics data in Grafana Cloud (if applicable)
+
+**** Success criteria:
+- No performance degradation
+- Analytics data available for troubleshooting
+
+**** Rollback plan:
+- Set =reporting_enabled = false=
+
+*** Priority 3.2: Add Common Configuration
+**** Objective: Improve configuration organization
+**** Steps:
+1. Add common path prefix:
+   #+begin_src nix
+   common = {
+     path_prefix = "/var/lib/loki";
+   };
+   #+end_src
+2. Verify all components use common paths
+3. Simplify individual component configurations
+
+**** Success criteria:
+- Configuration is cleaner and more maintainable
+- All services continue working normally
+
+** Phase 4: Future Scalability (Month 2)
+*** Priority 4.1: Multi-Node Preparation
+**** Objective: Prepare for potential multi-node deployment
+**** Steps:
+1. Research multi-node Loki architecture
+2. Plan storage backend (S3, GCS, etc.)
+3. Design distributed deployment strategy
+4. Test clustering configuration in development
+
+**** Note: Only pursue if single-node reaches capacity limits
+
+* Monitoring During Recovery
+
+** Key Metrics to Watch
+- =loki_ingester_chunks_created_total= (should continue increasing)
+- =loki_ingester_memory_chunks= (should remain reasonable)
+- Storage usage: =df -h /var/lib/loki=
+- Query response times
+- Promtail error rates
+
+** Alert Conditions
+- Log ingestion stops (chunks_created stops increasing)
+- Storage usage >80%
+- Memory usage >80%
+- Query timeouts increase
+- Promtail connection errors
+
+** Rollback Triggers
+- Any metric degradation >20%
+- Complete ingestion failure
+- Persistent error messages
+- Storage space critically low (<5GB free)
+
+* Testing Strategy
+
+** Before Each Phase
+1. *Backup current configuration and data*
+2. *Test in development environment if possible*
+3. *Have rollback commands ready*
+4. *Notify team of planned changes*
+
+** During Each Phase
+1. *Monitor metrics continuously for first hour*
+2. *Check logs for error messages*
+3. *Verify data flow with test queries*
+4. *Document any issues encountered*
+
+** After Each Phase
+1. *Monitor for 24-48 hours before next phase*
+2. *Update documentation with lessons learned*
+3. *Adjust timeline if issues discovered*
+
+* Emergency Procedures
+
+** Complete Rollback
+If critical issues arise:
+1. Stop Loki service
+2. Restore configuration from git
+3. Restore data from backup if necessary
+4. Restart services
+5. Verify basic functionality
+
+** Contact Information
+- System Administrator: [contact info]
+- Backup Administrator: [contact info]
+- Emergency Escalation: [contact info]
+
+* Success Criteria
+
+** Phase 1 Success
+- Retention working (old logs deleted)
+- Ingester optimization active
+- No degradation in core functionality
+
+** Phase 2 Success  
+- TSDB backend operational
+- Structured metadata available
+- Backward compatibility maintained
+
+** Phase 3 Success
+- Analytics providing useful data
+- Configuration optimized and clean
+
+** Final Success
+- All originally planned features operational
+- System more robust than initial deployment
+- Documentation updated for future maintenance
+
+* Notes
+
+** Lessons Learned from Initial Deployment
+- Loki compactor is a required module (cannot be disabled)
+- =allow_structured_metadata = false= is key for older schemas
+- boltdb-shipper requires =cache_location= setting
+- Ring configuration must be in correct component blocks
+- NixOS Loki module has strict validation
+
+** Configuration Management
+- All changes tracked in git
+- Each phase gets its own commit with clear message
+- Configuration tested locally before deployment when possible
+- Rollback procedures documented for each change
+
+** Future Considerations
+- Consider migrating to object storage (S3/GCS) for scalability
+- Evaluate need for multiple Loki instances for HA
+- Plan for log retention policies based on compliance requirements
+- Consider implementing log routing for different log types
