@@ -143,17 +143,17 @@ with lib;
     age.secrets = {
       ghost-db-password = {
         file = ../../../secrets/ghost-db-password.age;
-        mode = "0444";
+        mode = "0400";
       };
     } // lib.optionalAttrs (config.services.ghost-cms.mail.smtp.userFile != null) {
       ghost-smtp-user = {
         file = ../../../secrets/ghost-smtp-user.age;
-        mode = "0444";
+        mode = "0400";
       };
     } // lib.optionalAttrs (config.services.ghost-cms.mail.smtp.passwordFile != null) {
       ghost-smtp-password = {
         file = ../../../secrets/ghost-smtp-password.age;
-        mode = "0444";
+        mode = "0400";
       };
     };
 

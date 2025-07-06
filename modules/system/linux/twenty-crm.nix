@@ -95,11 +95,11 @@ with lib;
     age.secrets = {
       twenty-app-secret = {
         file = ../../../secrets/twenty-app-secret.age;
-        mode = "0444";
+        mode = "0400";
       };
       twenty-db-password = {
         file = ../../../secrets/twenty-db-password.age;
-        mode = "0444";
+        mode = "0400";
       };
     };
 
