@@ -12,7 +12,7 @@
       auth_enabled = false;
       
       limits_config = {
-        allow_structured_metadata = false;
+        allow_structured_metadata = true; # Enable with TSDB backend
         retention_period = "168h"; # 7 days
         reject_old_samples = true;
         reject_old_samples_max_age = "72h"; # 3 days
@@ -36,22 +36,9 @@
       
       schema_config = {
         configs = [
-          # Keep existing boltdb-shipper period for historical data
           {
-            from = "2020-10-24";
-            store = "boltdb-shipper";
-            object_store = "filesystem";
-            schema = "v11";
-            index = {
-              prefix = "index_";
-              period = "24h";
-            };
-          }
-          # Add new tsdb period for future data
-          {
-            from = "2025-07-07"; # Tomorrow's date for transition
             store = "tsdb";
-            object_store = "filesystem";  
+            object_store = "filesystem";
             schema = "v13";
             index = {
               prefix = "tsdb_index_";
