@@ -46,6 +46,22 @@
       compactor = {
         working_directory = "/var/lib/loki/compactor";
       };
+      
+      ingester = {
+        lifecycler = {
+          address = "10.0.0.1";
+          ring = {
+            kvstore = {
+              store = "inmemory";
+            };
+            replication_factor = 1;
+          };
+          final_sleep = "0s";
+        };
+        chunk_idle_period = "1h";
+        max_chunk_age = "1h";
+        chunk_retain_period = "30s";
+      };
     };
   };
   
