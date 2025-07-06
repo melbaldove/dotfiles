@@ -36,6 +36,7 @@
       
       schema_config = {
         configs = [
+          # Keep existing boltdb-shipper period for historical data
           {
             from = "2020-10-24";
             store = "boltdb-shipper";
@@ -46,6 +47,17 @@
               period = "24h";
             };
           }
+          # Add new tsdb period for future data
+          {
+            from = "2025-07-07"; # Tomorrow's date for transition
+            store = "tsdb";
+            object_store = "filesystem";  
+            schema = "v13";
+            index = {
+              prefix = "tsdb_index_";
+              period = "24h";
+            };
+          }
         ];
       };
       
@@ -53,6 +65,10 @@
         boltdb_shipper = {
           active_index_directory = "/var/lib/loki/index";
           cache_location = "/var/lib/loki/cache";
+        };
+        tsdb_shipper = {
+          active_index_directory = "/var/lib/loki/tsdb";
+          cache_location = "/var/lib/loki/tsdb-cache";
         };
         filesystem = {
           directory = "/var/lib/loki/chunks";
