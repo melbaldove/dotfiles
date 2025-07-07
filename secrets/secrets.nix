@@ -26,4 +26,8 @@ in
 
   # Twenty CRM SMTP secrets
   "twenty-smtp-password.age".publicKeys = [ user newton ];
+  
+  # Twenty CRM Google OAuth secrets
+  "twenty-google-client-id.age".publicKeys = [ user newton ];
+  "twenty-google-client-secret.age".publicKeys = [ user newton ];
 }
