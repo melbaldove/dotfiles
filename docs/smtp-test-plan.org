@@ -1,0 +1,64 @@
+* SMTP Configuration Test Plan
+
+** Overview
+Test SMTP functionality for Ghost CMS and Twenty CRM using Gmail App Password configuration.
+
+** Pre-Deployment Checks
+- [X] Gmail App Password configured in secrets
+- [X] SMTP settings added to both services
+- [X] Firewall rules configured (outbound SMTP allowed)
+
+** Deployment Steps
+1. Deploy shannon (Ghost CMS)
+2. Deploy newton (Twenty CRM)
+
+** Post-Deployment Tests
+
+*** Ghost CMS Tests
+**** Configuration Verification
+- Access Ghost admin panel: https://cms.workwithnextdesk.com/ghost
+- Navigate to Settings → Email
+- Verify SMTP settings are populated
+
+**** Test Email Sending
+- [ ] Send test email from Ghost admin
+- [ ] Create test blog post and publish
+- [ ] Test newsletter subscription
+- [ ] Verify password reset email
+
+**** Monitor Logs
+#+begin_src bash
+ssh shannon
+sudo journalctl -u ghost -f
+#+end_src
+
+*** Twenty CRM Tests
+**** Configuration Verification
+- Access Twenty CRM: https://crm.workwithnextdesk.com
+- Check email configuration in settings
+
+**** Test Email Sending
+- [ ] Send test email from CRM
+- [ ] Test user invitation emails
+- [ ] Test notification emails
+- [ ] Test password reset functionality
+
+**** Monitor Logs
+#+begin_src bash
+ssh newton
+sudo docker logs twenty-server -f
+#+end_src
+
+** Expected Results
+- ✅ Emails sent from noreply@workwithnextdesk.com
+- ✅ Emails delivered to recipients
+- ✅ No authentication errors in logs
+- ✅ Proper email formatting and content
+
+** Troubleshooting
+If emails fail:
+1. Check service logs for SMTP errors
+2. Verify Gmail App Password is correct
+3. Check if Gmail account has 2FA enabled
+4. Verify network connectivity to smtp.gmail.com:587
+5. Check spam folders for test emails

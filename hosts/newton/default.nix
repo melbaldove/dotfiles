@@ -183,7 +183,7 @@
     
     mail = {
       transport = "SMTP";
-      from = "'NextDesk CRM' <noreply@workwithnextdesk.com>";
+      from = "NextDesk <noreply@workwithnextdesk.com>";
       smtp = {
         host = "smtp.gmail.com";
         port = 587;

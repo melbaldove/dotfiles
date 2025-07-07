@@ -141,7 +141,7 @@ with lib;
         file = ../../../secrets/twenty-db-password.age;
         mode = "0400";
       };
-      twenty-smtp-password = mkIf (config.services.twenty-crm.email.smtp.passwordFile != null) {
+      twenty-smtp-password = {
         file = ../../../secrets/twenty-smtp-password.age;
         mode = "0400";
       };
@@ -185,7 +185,7 @@ with lib;
               echo "EMAIL_SMTP_PASSWORD=$(cat ${config.services.twenty-crm.email.smtp.passwordFile})"
             ''}
             echo "EMAIL_FROM_ADDRESS=${config.services.twenty-crm.email.smtp.from}"
-            echo "EMAIL_FROM_NAME=Twenty CRM"
+            echo "EMAIL_FROM_NAME=NextDesk"
           ''}
         } > /run/twenty/env
       '';
