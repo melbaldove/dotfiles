@@ -29,7 +29,7 @@
         }];
       }
       {
-        job_name = "startup-docker";
+        job_name = "cadvisor";
         static_configs = [{
           targets = [ "10.0.1.2:9200" ]; # newton cadvisor
         }];
