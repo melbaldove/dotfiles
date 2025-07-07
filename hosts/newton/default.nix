@@ -152,8 +152,16 @@
       type = "local";
       dataPath = "/mnt/data";
     };
-    auth.google.enabled = false;
+    auth.google = {
+      enabled = true;
+      clientIdFile = config.age.secrets.twenty-google-client-id.path;
+      clientSecretFile = config.age.secrets.twenty-google-client-secret.path;
+      callbackUrl = "https://crm.workwithnextdesk.com/auth/google/redirect";
+      apisCallbackUrl = "https://crm.workwithnextdesk.com/auth/google-apis/get-access-token";
+    };
     auth.microsoft.enabled = false;
+    messagingProviderGmailEnabled = true;
+    calendarProviderGoogleEnabled = true;
     email = {
       driver = "smtp";
       smtp = {
