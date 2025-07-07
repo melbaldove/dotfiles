@@ -22,4 +22,8 @@ in
 
   # Ghost CMS secrets
   "ghost-db-password.age".publicKeys = [ user newton ];
+  "ghost-smtp-password.age".publicKeys = [ user newton ];
+
+  # Twenty CRM SMTP secrets
+  "twenty-smtp-password.age".publicKeys = [ user newton ];
 }

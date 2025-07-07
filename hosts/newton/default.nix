@@ -154,7 +154,17 @@
     };
     auth.google.enabled = false;
     auth.microsoft.enabled = false;
-    email.driver = null;
+    email = {
+      driver = "smtp";
+      smtp = {
+        host = "smtp.gmail.com";
+        port = 587;
+        secure = true;
+        user = "melbourne@workwithnextdesk.com";
+        passwordFile = config.age.secrets.twenty-smtp-password.path;
+        from = "noreply@workwithnextdesk.com";
+      };
+    };
   };
 
   # Configure Ghost CMS service
@@ -172,8 +182,15 @@
     };
     
     mail = {
-      transport = "Direct";
-      from = null;
+      transport = "SMTP";
+      from = "'NextDesk CRM' <noreply@workwithnextdesk.com>";
+      smtp = {
+        host = "smtp.gmail.com";
+        port = 587;
+        secure = false;  # Use STARTTLS
+        user = "melbourne@workwithnextdesk.com";
+        passwordFile = config.age.secrets.ghost-smtp-password.path;
+      };
     };
     
     nodeEnv = "production";

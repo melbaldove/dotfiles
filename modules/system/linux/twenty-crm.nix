@@ -72,10 +72,50 @@ with lib;
       };
     };
 
-    email.driver = mkOption {
-      type = types.nullOr (types.enum [ "smtp" ]);
-      default = null;
-      description = "Email driver";
+    email = {
+      driver = mkOption {
+        type = types.nullOr (types.enum [ "smtp" ]);
+        default = null;
+        description = "Email driver";
+      };
+
+      smtp = {
+        host = mkOption {
+          type = types.str;
+          default = "smtp.gmail.com";
+          description = "SMTP host";
+        };
+
+        port = mkOption {
+          type = types.port;
+          default = 587;
+          description = "SMTP port";
+        };
+
+        secure = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Use TLS/SSL for SMTP";
+        };
+
+        user = mkOption {
+          type = types.str;
+          default = "";
+          description = "SMTP username";
+        };
+
+        passwordFile = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+          description = "Path to file containing SMTP password";
+        };
+
+        from = mkOption {
+          type = types.str;
+          default = "";
+          description = "From email address";
+        };
+      };
     };
   };
 
@@ -99,6 +139,10 @@ with lib;
       };
       twenty-db-password = {
         file = ../../../secrets/twenty-db-password.age;
+        mode = "0400";
+      };
+      twenty-smtp-password = mkIf (config.services.twenty-crm.email.smtp.passwordFile != null) {
+        file = ../../../secrets/twenty-smtp-password.age;
         mode = "0400";
       };
     };
@@ -130,6 +174,19 @@ with lib;
           echo "NODE_PORT=${toString config.services.twenty-crm.port}"
           echo "SERVER_URL=${config.services.twenty-crm.serverUrl}"
           echo "STORAGE_TYPE=${config.services.twenty-crm.storage.type}"
+          
+          # Email configuration
+          ${optionalString (config.services.twenty-crm.email.driver == "smtp") ''
+            echo "EMAIL_DRIVER=smtp"
+            echo "EMAIL_SMTP_HOST=${config.services.twenty-crm.email.smtp.host}"
+            echo "EMAIL_SMTP_PORT=${toString config.services.twenty-crm.email.smtp.port}"
+            echo "EMAIL_SMTP_USER=${config.services.twenty-crm.email.smtp.user}"
+            ${optionalString (config.services.twenty-crm.email.smtp.passwordFile != null) ''
+              echo "EMAIL_SMTP_PASSWORD=$(cat ${config.services.twenty-crm.email.smtp.passwordFile})"
+            ''}
+            echo "EMAIL_FROM_ADDRESS=${config.services.twenty-crm.email.smtp.from}"
+            echo "EMAIL_FROM_NAME=Twenty CRM"
+          ''}
         } > /run/twenty/env
       '';
       
