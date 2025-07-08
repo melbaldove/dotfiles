@@ -242,6 +242,12 @@
       fromEmail = "noreply@workwithnextdesk.com";
       replyEmail = "noreply@workwithnextdesk.com";
     };
+    
+    slack = {
+      enabled = true;
+      appId = "A0W3UMKBQ";
+      messageActions = true;
+    };
   };
 
   home-manager = {

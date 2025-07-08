@@ -138,6 +138,26 @@ with lib;
         description = "Reply-to email address";
       };
     };
+
+    slack = {
+      enabled = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable Slack integration";
+      };
+
+      appId = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Slack App ID";
+      };
+
+      messageActions = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable 'Post to Channel' button in search results";
+      };
+    };
   };
 
   config = mkIf config.services.outline-wiki.enable {
@@ -185,6 +205,18 @@ with lib;
         file = ../../../secrets/outline-linear-client-secret.age;
         mode = "0400";
       };
+      outline-slack-client-id = mkIf config.services.outline-wiki.slack.enabled {
+        file = ../../../secrets/outline-slack-client-id.age;
+        mode = "0400";
+      };
+      outline-slack-client-secret = mkIf config.services.outline-wiki.slack.enabled {
+        file = ../../../secrets/outline-slack-client-secret.age;
+        mode = "0400";
+      };
+      outline-slack-verification-token = mkIf config.services.outline-wiki.slack.enabled {
+        file = ../../../secrets/outline-slack-verification-token.age;
+        mode = "0400";
+      };
     };
 
     # Configure Outline service with secrets handling
@@ -220,6 +252,13 @@ with lib;
           # Linear OAuth
           echo "LINEAR_CLIENT_ID=$(cat ${config.age.secrets.outline-linear-client-id.path})"
           echo "LINEAR_CLIENT_SECRET=$(cat ${config.age.secrets.outline-linear-client-secret.path})"
+          
+          # Slack OAuth if enabled
+          ${optionalString config.services.outline-wiki.slack.enabled ''
+            echo "SLACK_CLIENT_ID=$(cat ${config.age.secrets.outline-slack-client-id.path})"
+            echo "SLACK_CLIENT_SECRET=$(cat ${config.age.secrets.outline-slack-client-secret.path})"
+            echo "SLACK_VERIFICATION_TOKEN=$(cat ${config.age.secrets.outline-slack-verification-token.path})"
+          ''}
           
           # SMTP configuration if enabled
           ${optionalString config.services.outline-wiki.smtp.enabled ''

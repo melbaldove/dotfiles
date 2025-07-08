@@ -40,4 +40,7 @@ in
   "outline-google-client-secret.age".publicKeys = [ user newton ];
   "outline-linear-client-id.age".publicKeys = [ user newton ];
   "outline-linear-client-secret.age".publicKeys = [ user newton ];
+  "outline-slack-client-id.age".publicKeys = [ user newton ];
+  "outline-slack-client-secret.age".publicKeys = [ user newton ];
+  "outline-slack-verification-token.age".publicKeys = [ user newton ];
 }
