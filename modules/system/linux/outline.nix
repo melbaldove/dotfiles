@@ -3,7 +3,7 @@
 with lib;
 
 {
-  options.services.outline = {
+  options.services.outline-wiki = {
     enable = mkEnableOption "Outline Wiki";
 
     url = mkOption {
@@ -140,7 +140,7 @@ with lib;
     };
   };
 
-  config = mkIf config.services.outline.enable {
+  config = mkIf config.services.outline-wiki.enable {
     # Enable container runtime for Arion
     virtualisation.docker.enable = true;
     virtualisation.podman.enable = false;
@@ -165,15 +165,15 @@ with lib;
         file = ../../../secrets/outline-db-password.age;
         mode = "0400";
       };
-      outline-smtp-password = mkIf config.services.outline.smtp.enabled {
+      outline-smtp-password = mkIf config.services.outline-wiki.smtp.enabled {
         file = ../../../secrets/outline-smtp-password.age;
         mode = "0400";
       };
-      outline-google-client-id = mkIf config.services.outline.auth.google.enabled {
+      outline-google-client-id = mkIf config.services.outline-wiki.auth.google.enabled {
         file = ../../../secrets/outline-google-client-id.age;
         mode = "0400";
       };
-      outline-google-client-secret = mkIf config.services.outline.auth.google.enabled {
+      outline-google-client-secret = mkIf config.services.outline-wiki.auth.google.enabled {
         file = ../../../secrets/outline-google-client-secret.age;
         mode = "0400";
       };
@@ -193,23 +193,23 @@ with lib;
           echo "# Generated environment file for Outline"
           
           # Database URL with password from file
-          DB_PASSWORD=$(cat ${config.services.outline.database.passwordFile})
-          echo "DATABASE_URL=postgres://${config.services.outline.database.user}:$DB_PASSWORD@${config.services.outline.database.host}:${toString config.services.outline.database.port}/${config.services.outline.database.database}"
+          DB_PASSWORD=$(cat ${config.services.outline-wiki.database.passwordFile})
+          echo "DATABASE_URL=postgres://${config.services.outline-wiki.database.user}:$DB_PASSWORD@${config.services.outline-wiki.database.host}:${toString config.services.outline-wiki.database.port}/${config.services.outline-wiki.database.database}"
           
           # Secret keys
-          echo "SECRET_KEY=$(cat ${config.services.outline.secretKeyFile})"
-          echo "UTILS_SECRET=$(cat ${config.services.outline.utilsSecretFile})"
+          echo "SECRET_KEY=$(cat ${config.services.outline-wiki.secretKeyFile})"
+          echo "UTILS_SECRET=$(cat ${config.services.outline-wiki.utilsSecretFile})"
           
           # Google OAuth if enabled
-          ${optionalString config.services.outline.auth.google.enabled ''
-            echo "GOOGLE_CLIENT_ID=$(cat ${config.services.outline.auth.google.clientIdFile})"
-            echo "GOOGLE_CLIENT_SECRET=$(cat ${config.services.outline.auth.google.clientSecretFile})"
+          ${optionalString config.services.outline-wiki.auth.google.enabled ''
+            echo "GOOGLE_CLIENT_ID=$(cat ${config.services.outline-wiki.auth.google.clientIdFile})"
+            echo "GOOGLE_CLIENT_SECRET=$(cat ${config.services.outline-wiki.auth.google.clientSecretFile})"
           ''}
           
           # SMTP configuration if enabled
-          ${optionalString config.services.outline.smtp.enabled ''
-            ${optionalString (config.services.outline.smtp.passwordFile != null) ''
-              echo "SMTP_PASSWORD=$(cat ${config.services.outline.smtp.passwordFile})"
+          ${optionalString config.services.outline-wiki.smtp.enabled ''
+            ${optionalString (config.services.outline-wiki.smtp.passwordFile != null) ''
+              echo "SMTP_PASSWORD=$(cat ${config.services.outline-wiki.smtp.passwordFile})"
             ''}
           ''}
         } > /run/outline/env
@@ -223,7 +223,7 @@ with lib;
         imports = [ 
           (import "${inputs.outline}/arion-compose.nix" {
             inherit pkgs lib;
-            config = config.services.outline;
+            config = config.services.outline-wiki;
           })
         ];
       };

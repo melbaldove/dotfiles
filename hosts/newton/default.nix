@@ -206,7 +206,7 @@
   };
 
   # Configure Outline Wiki service
-  services.outline = {
+  services.outline-wiki = {
     enable = true;
     url = "https://wiki.workwithnextdesk.com";
     port = 3001;
