@@ -38,4 +38,6 @@ in
   "outline-smtp-password.age".publicKeys = [ user newton ];
   "outline-google-client-id.age".publicKeys = [ user newton ];
   "outline-google-client-secret.age".publicKeys = [ user newton ];
+  "outline-linear-client-id.age".publicKeys = [ user newton ];
+  "outline-linear-client-secret.age".publicKeys = [ user newton ];
 }

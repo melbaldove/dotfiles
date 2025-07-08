@@ -177,6 +177,14 @@ with lib;
         file = ../../../secrets/outline-google-client-secret.age;
         mode = "0400";
       };
+      outline-linear-client-id = {
+        file = ../../../secrets/outline-linear-client-id.age;
+        mode = "0400";
+      };
+      outline-linear-client-secret = {
+        file = ../../../secrets/outline-linear-client-secret.age;
+        mode = "0400";
+      };
     };
 
     # Configure Outline service with secrets handling
@@ -208,6 +216,10 @@ with lib;
             echo "GOOGLE_CLIENT_ID=$(cat ${config.services.outline-wiki.auth.google.clientIdFile})"
             echo "GOOGLE_CLIENT_SECRET=$(cat ${config.services.outline-wiki.auth.google.clientSecretFile})"
           ''}
+          
+          # Linear OAuth
+          echo "LINEAR_CLIENT_ID=$(cat ${config.age.secrets.outline-linear-client-id.path})"
+          echo "LINEAR_CLIENT_SECRET=$(cat ${config.age.secrets.outline-linear-client-secret.path})"
           
           # SMTP configuration if enabled
           ${optionalString config.services.outline-wiki.smtp.enabled ''

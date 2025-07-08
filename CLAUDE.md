@@ -46,6 +46,7 @@ deploy --dry-activate .#<host>
 - Loki: `http://shannon:3100`
 - Twenty CRM: `https://crm.workwithnextdesk.com`
 - Ghost CMS: `https://cms.workwithnextdesk.com`
+- Outline Wiki: `https://wiki.workwithnextdesk.com`
 
 ## Network
 - Personal: 10.0.0.0/24 (shannon:1, einstein:2, turing:3)
