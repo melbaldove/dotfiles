@@ -315,6 +315,22 @@
     },
     "nixpkgs_4": {
       "locked": {
+        "lastModified": 1751792365,
+        "narHash": "sha256-J1kI6oAj25IG4EdVlg2hQz8NZTBNYvIS0l4wpr9KcUo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "1fd8bada0b6117e6c7eb54aad5813023eed37ccb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_5": {
+      "locked": {
         "lastModified": 1751271578,
         "narHash": "sha256-P/SQmKDu06x8yv7i0s8bvnnuJYkxVGBWLWHaU+tt4YY=",
         "owner": "NixOS",
@@ -326,6 +342,24 @@
         "owner": "NixOS",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "outline": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
+      },
+      "locked": {
+        "lastModified": 1751951367,
+        "narHash": "sha256-aIWLIVXeqi8m0vvUCQ+MhFhjD5Oh23uxqo+gTDkTcC8=",
+        "owner": "next-desk-business-solutions",
+        "repo": "outline",
+        "rev": "5a31a5b1d4ba6eb322e60321d47e3db7b3c76f24",
+        "type": "github"
+      },
+      "original": {
+        "owner": "next-desk-business-solutions",
+        "repo": "outline",
         "type": "github"
       }
     },
@@ -341,6 +375,7 @@
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs_3",
+        "outline": "outline",
         "sf-mono-nerd-font": "sf-mono-nerd-font",
         "twenty": "twenty"
       }
@@ -393,7 +428,7 @@
     },
     "twenty": {
       "inputs": {
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": "nixpkgs_5"
       },
       "locked": {
         "lastModified": 1751729233,
