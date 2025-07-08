@@ -196,6 +196,9 @@ with lib;
           DB_PASSWORD=$(cat ${config.services.outline-wiki.database.passwordFile})
           echo "DATABASE_URL=postgres://${config.services.outline-wiki.database.user}:$DB_PASSWORD@${config.services.outline-wiki.database.host}:${toString config.services.outline-wiki.database.port}/${config.services.outline-wiki.database.database}?sslmode=disable"
           
+          # Disable SSL for database connection
+          echo 'DATABASE_SSL=false'
+          
           # Secret keys
           echo "SECRET_KEY=$(cat ${config.services.outline-wiki.secretKeyFile})"
           echo "UTILS_SECRET=$(cat ${config.services.outline-wiki.utilsSecretFile})"
