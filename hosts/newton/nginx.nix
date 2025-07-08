@@ -51,9 +51,23 @@
         };
       };
 
-      # Add more virtual hosts here for other services
-      # "api.workwithnextdesk.com" = { ... };
-      # "docs.workwithnextdesk.com" = { ... };
+      "wiki.workwithnextdesk.com" = {
+        enableACME = true;
+        forceSSL = true;
+        
+        locations."/" = {
+          proxyPass = "http://localhost:3001";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_buffering off;
+          '';
+        };
+      };
     };
   };
 

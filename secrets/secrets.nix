@@ -30,4 +30,12 @@ in
   # Twenty CRM Google OAuth secrets
   "twenty-google-client-id.age".publicKeys = [ user newton ];
   "twenty-google-client-secret.age".publicKeys = [ user newton ];
+  
+  # Outline Wiki secrets
+  "outline-secret-key.age".publicKeys = [ user newton ];
+  "outline-utils-secret.age".publicKeys = [ user newton ];
+  "outline-db-password.age".publicKeys = [ user newton ];
+  "outline-smtp-password.age".publicKeys = [ user newton ];
+  "outline-google-client-id.age".publicKeys = [ user newton ];
+  "outline-google-client-secret.age".publicKeys = [ user newton ];
 }

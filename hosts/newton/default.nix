@@ -11,6 +11,7 @@
     ../../modules/system/linux/agenix.nix
     ../../modules/system/linux/twenty-crm.nix
     ../../modules/system/linux/ghost-cms.nix
+    ../../modules/system/linux/outline.nix
     ../../modules/system/shared/node-exporter.nix
     inputs.home-manager.nixosModules.home-manager
   ];
@@ -202,6 +203,45 @@
     };
     
     nodeEnv = "production";
+  };
+
+  # Configure Outline Wiki service
+  services.outline = {
+    enable = true;
+    url = "https://wiki.workwithnextdesk.com";
+    port = 3001;
+    
+    secretKeyFile = config.age.secrets.outline-secret-key.path;
+    utilsSecretFile = config.age.secrets.outline-utils-secret.path;
+    
+    database = {
+      host = "twenty-db-1";
+      port = 5432;
+      user = "postgres";
+      passwordFile = config.age.secrets.outline-db-password.path;
+      database = "outline";
+    };
+    
+    redis = {
+      host = "twenty-redis-1";
+      port = 6379;
+    };
+    
+    auth.google = {
+      enabled = true;
+      clientIdFile = config.age.secrets.outline-google-client-id.path;
+      clientSecretFile = config.age.secrets.outline-google-client-secret.path;
+    };
+    
+    smtp = {
+      enabled = true;
+      host = "smtp.gmail.com";
+      port = 587;
+      user = "melbourne@workwithnextdesk.com";
+      passwordFile = config.age.secrets.outline-smtp-password.path;
+      fromEmail = "noreply@workwithnextdesk.com";
+      replyEmail = "noreply@workwithnextdesk.com";
+    };
   };
 
   home-manager = {

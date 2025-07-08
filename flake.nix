@@ -15,6 +15,7 @@
 
     twenty.url = "github:next-desk-business-solutions/twenty";
     ghost.url = "github:next-desk-business-solutions/Ghost";
+    outline.url = "github:next-desk-business-solutions/outline";
 
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
