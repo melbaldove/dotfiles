@@ -194,7 +194,7 @@ with lib;
           
           # Database URL with password from file
           DB_PASSWORD=$(cat ${config.services.outline-wiki.database.passwordFile})
-          echo "DATABASE_URL=postgres://${config.services.outline-wiki.database.user}:$DB_PASSWORD@${config.services.outline-wiki.database.host}:${toString config.services.outline-wiki.database.port}/${config.services.outline-wiki.database.database}"
+          echo "DATABASE_URL=postgres://${config.services.outline-wiki.database.user}:$DB_PASSWORD@${config.services.outline-wiki.database.host}:${toString config.services.outline-wiki.database.port}/${config.services.outline-wiki.database.database}?sslmode=disable"
           
           # Secret keys
           echo "SECRET_KEY=$(cat ${config.services.outline-wiki.secretKeyFile})"
