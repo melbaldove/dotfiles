@@ -350,11 +350,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1751951367,
-        "narHash": "sha256-aIWLIVXeqi8m0vvUCQ+MhFhjD5Oh23uxqo+gTDkTcC8=",
+        "lastModified": 1751973664,
+        "narHash": "sha256-7wHatnjRq9FPew+/JT5kA29vdqen/KFj9ALAyQ4PUbQ=",
         "owner": "next-desk-business-solutions",
         "repo": "outline",
-        "rev": "5a31a5b1d4ba6eb322e60321d47e3db7b3c76f24",
+        "rev": "0eb1cc7afd9dd86482bf0938f4c0be083e74513d",
         "type": "github"
       },
       "original": {
