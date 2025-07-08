@@ -1,0 +1,17 @@
+#+TITLE: Technical Debt
+#+DATE: 2025-07-08
+
+* TODO Rename shared database containers
+  :PROPERTIES:
+  :CREATED: [2025-07-08 Tue]
+  :END:
+
+** Problem
+PostgreSQL and Redis containers are named =twenty-db-1= and =twenty-redis-1= but are shared by multiple services (Twenty, Outline).
+
+** Solution
+Create new containers with generic names:
+- =shared-postgres-1=
+- =shared-redis-1=
+
+Migrate services one by one during maintenance windows.
