@@ -217,6 +217,25 @@ with lib;
           ''}
         } > /run/outline/env
       '';
+      
+      postStart = ''
+        # Wait for containers to be ready
+        echo "Waiting for Outline container to be ready..."
+        for i in {1..30}; do
+          if ${pkgs.docker}/bin/docker ps | grep outline-outline-1 | grep -q "Up"; then
+            echo "Outline container is running, running database setup..."
+            break
+          fi
+          echo "Attempt $i/30: Outline container not ready yet, waiting..."
+          sleep 5
+        done
+        
+        # Run database migrations (idempotent operation)
+        echo "Running database migrations..."
+        ${pkgs.docker}/bin/docker exec outline-outline-1 yarn db:migrate || echo "Migration failed or already applied"
+        
+        echo "Outline post-deployment setup completed"
+      '';
     };
 
     # Configure Arion project for Outline
