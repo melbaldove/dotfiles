@@ -195,22 +195,30 @@
 
 ;; Development tools
 
-;; Terminal emulator - using Nix-provided vterm
-(when (require 'vterm nil t)
-  (setq vterm-max-scrollback 10000)
-  (setq vterm-shell "zsh"))
+;; Terminal emulator - using eat
+(use-package eat
+  :config
+  (setq eat-kill-buffer-on-exit t)
+  (setq eat-enable-shell-prompt-annotation t))
 
 ;; Syntax checking
 (use-package flycheck
   :init (global-flycheck-mode))
 
-;; Claude Code IDE integration
-(use-package claude-code-ide
-  :straight (:host github :repo "manzaltu/claude-code-ide.el")
-  :after flycheck
+;; Claude Code integration
+(use-package claude-code
+  :straight (:host github :repo "stevemolitor/claude-code.el")
   :config
-  ;; Add any claude-code-ide specific configuration here
-  )
+  (claude-code-mode)
+  ;; Configure Claude to split to the right
+  (add-to-list 'display-buffer-alist
+               '("^\\*claude"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (window-width . 90)))
+  ;; Enable notifications
+  (setq claude-code-enable-notifications t)
+  :bind-keymap ("C-c c" . claude-code-command-map))
 
 ;; .editorconfig file support
 (use-package editorconfig
@@ -257,9 +265,7 @@
 ;; Global keybindings
 (global-set-key (kbd "C-x C-r") 'recentf-open-files)
 (global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cc" 'claude-code-ide)
-(global-set-key "\C-cr" 'claude-code-ide-resume)
-(global-set-key "\C-cl" 'claude-code-ide-list-sessions)
+;; Claude Code keybindings are now handled by the keymap
 (global-set-key "\C-cf" 'org-roam-node-find)
 (global-set-key "\C-ci" 'org-roam-node-insert)
 (global-set-key "\C-cy" 'org-roam-dailies-goto-yesterday)
