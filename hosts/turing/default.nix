@@ -38,6 +38,9 @@
   # Set the hostname
   networking.hostName = "turing";
 
+  # Enable TouchID for sudo
+  security.pam.services.sudo_local.touchIdAuth = true;
+
   # Enable Linux emulation for cross-platform builds
   nix.settings.extra-platforms = [ "x86_64-linux" "aarch64-linux" ];
   

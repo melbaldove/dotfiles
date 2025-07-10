@@ -16,8 +16,10 @@ local apps = {
     s = "Dia",
     e = "Emacs",
     t = "Ghostty",
-    x = "Xcode-beta",
+    x = "Xcode",
     c = "Claude",
+    m = "Slack",
+    l = "Linear",
 }
 
 -- Create hyper key bindings
