@@ -199,7 +199,10 @@
 (use-package eat
   :config
   (setq eat-kill-buffer-on-exit t)
-  (setq eat-enable-shell-prompt-annotation t))
+  (setq eat-enable-shell-prompt-annotation t)
+  ;; Bind M-o directly in eat-mode to ace-window
+  :bind (:map eat-semi-char-mode-map
+              ("M-o" . ace-window)))
 
 ;; Syntax checking
 (use-package flycheck
