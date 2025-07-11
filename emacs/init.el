@@ -200,6 +200,7 @@
   :config
   (setq eat-kill-buffer-on-exit t)
   (setq eat-enable-shell-prompt-annotation t)
+  (setq eat-term-scrollback-size 500000)
   ;; Bind M-o directly in eat-mode to ace-window
   :bind (:map eat-semi-char-mode-map
               ("M-o" . ace-window)))
