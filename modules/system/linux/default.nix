@@ -2,7 +2,7 @@
 {
 
   # Set time zone
-  time.timeZone = "Asia/Manila";
+  time.timeZone = "UTC";
 
   # Select internationalisation properties
   i18n.defaultLocale = "en_US.UTF-8";
