@@ -42,28 +42,28 @@ curl -s http://newton:9100/metrics | grep restic_
 *** Basic Repository Check
 #+BEGIN_SRC bash
 # Quick repository verification
-ssh newton sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic check --repo /var/lib/restic-backups/newton
 
 # Read repository data verification (slower)
-ssh newton sudo -u restic restic check --read-data --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic check --read-data --repo /var/lib/restic-backups/newton
 #+END_SRC
 
 *** List Recent Snapshots
 #+BEGIN_SRC bash
 # Show last 10 snapshots
-ssh newton sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic | tail -10
+ssh newton sudo -u backup restic snapshots --repo /var/lib/restic-backups/newton | tail -10
 
 # Show snapshots in JSON format
-ssh newton sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic --json
+ssh newton sudo -u backup restic snapshots --repo /var/lib/restic-backups/newton --json
 #+END_SRC
 
 *** Repository Statistics
 #+BEGIN_SRC bash
 # Repository stats
-ssh newton sudo -u restic restic stats --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic stats --repo /var/lib/restic-backups/newton
 
 # Storage usage by snapshot
-ssh newton sudo -u restic restic stats --repo sftp:backup@einstein:/mnt/media/backups/newton-restic --mode raw-data
+ssh newton sudo -u backup restic stats --repo /var/lib/restic-backups/newton --mode raw-data
 #+END_SRC
 
 * Manual Backup Operations
@@ -82,17 +82,17 @@ ssh newton journalctl -u restic-backup.service -f
 *** Selective Backup
 #+BEGIN_SRC bash
 # Backup specific paths
-ssh newton sudo -u restic restic backup \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
-  /var/lib/ghost/content \
+ssh newton sudo -u backup restic backup \
+  --repo /var/lib/restic-backups/newton \
+  /var/lib/docker/volumes/ghost_ghost-content \
   --tag manual-selective
 #+END_SRC
 
 *** Service-Specific Backup
 #+BEGIN_SRC bash
 # Backup specific service volumes
-ssh newton sudo -u restic restic backup \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic backup \
+  --repo /var/lib/restic-backups/newton \
   /var/lib/docker/volumes/ghost_ghost-content \
   /var/lib/docker/volumes/ghost_db-data \
   --tag ghost-only
@@ -103,8 +103,8 @@ ssh newton sudo -u restic restic backup \
 *** Prune Old Snapshots
 #+BEGIN_SRC bash
 # Apply retention policy
-ssh newton sudo -u restic restic forget \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic forget \
+  --repo /var/lib/restic-backups/newton \
   --keep-daily 7 \
   --keep-weekly 4 \
   --keep-monthly 12 \
@@ -112,16 +112,16 @@ ssh newton sudo -u restic restic forget \
   --prune
 
 # Verify after pruning
-ssh newton sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic check --repo /var/lib/restic-backups/newton
 #+END_SRC
 
 *** Repository Cleanup
 #+BEGIN_SRC bash
 # Remove unused data
-ssh newton sudo -u restic restic prune --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic prune --repo /var/lib/restic-backups/newton
 
 # Rebuild repository index
-ssh newton sudo -u restic restic rebuild-index --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic rebuild-index --repo /var/lib/restic-backups/newton
 #+END_SRC
 
 * Restore Procedures
@@ -132,8 +132,8 @@ ssh newton sudo -u restic restic rebuild-index --repo sftp:backup@einstein:/mnt/
 #+BEGIN_SRC bash
 # Mount latest snapshot
 ssh newton sudo mkdir -p /mnt/restic-mount
-ssh newton sudo -u restic restic mount \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic mount \
+  --repo /var/lib/restic-backups/newton \
   /mnt/restic-mount
 
 # Browse files
@@ -146,13 +146,13 @@ ssh newton sudo umount /mnt/restic-mount
 *** List Files in Snapshot
 #+BEGIN_SRC bash
 # List files in latest snapshot
-ssh newton sudo -u restic restic ls \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic ls \
+  --repo /var/lib/restic-backups/newton \
   latest
 
 # List files in specific snapshot
-ssh newton sudo -u restic restic ls \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic ls \
+  --repo /var/lib/restic-backups/newton \
   abc123def
 #+END_SRC
 
@@ -161,14 +161,14 @@ ssh newton sudo -u restic restic ls \
 *** Restore Single File
 #+BEGIN_SRC bash
 # Restore specific file to original location
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target / \
-  --include /var/lib/ghost/content/settings.json
+  --include /var/lib/docker/volumes/ghost_ghost-content/data/settings.json
 
 # Restore to different location
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target /tmp/restore \
   --include /var/lib/docker/volumes/ghost_ghost-content
 #+END_SRC
@@ -176,8 +176,8 @@ ssh newton sudo -u restic restic restore latest \
 *** Restore Directory
 #+BEGIN_SRC bash
 # Restore entire directory
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target /tmp/restore \
   --include /var/lib/docker/volumes/ghost_ghost-content
 
@@ -193,8 +193,8 @@ ssh newton sudo chown -R root:root /tmp/restore/var/lib/docker/volumes/
 ssh newton docker stop twenty-server-1 twenty-worker-1 outline-outline-1
 
 # Restore database volume
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target / \
   --include /var/lib/docker/volumes/twenty_db-data
 
@@ -209,8 +209,8 @@ ssh newton docker start twenty-server-1 twenty-worker-1 outline-outline-1
 ssh newton docker stop ghost-ghost-1
 
 # Restore database volume
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target / \
   --include /var/lib/docker/volumes/ghost_db-data
 
@@ -225,8 +225,8 @@ ssh newton docker start ghost-ghost-1
 ssh newton docker restart twenty-redis-1
 
 # If critical data needs restoration, restore the whole volume
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target / \
   --include /var/lib/docker/volumes/twenty_redis-data
 #+END_SRC
@@ -241,8 +241,8 @@ ssh newton docker compose -f /etc/arion/compositions/ghost.nix stop
 ssh newton docker compose -f /etc/arion/compositions/outline.nix stop
 
 # Restore all data
-ssh newton sudo -u restic restic restore latest \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic restore latest \
+  --repo /var/lib/restic-backups/newton \
   --target / \
   --include /var/lib/docker/volumes/ghost_ghost-content \
   --include /var/lib/docker/volumes/ghost_db-data \
@@ -265,34 +265,34 @@ ssh newton systemctl restart outline
 
 ** Common Issues
 
-*** Backup Fails with SSH Connection Error
+*** Backup Fails with Local Volume Access Error
 #+BEGIN_SRC bash
-# Check SSH connectivity
-ssh newton sudo -u restic ssh -o ConnectTimeout=10 backup@einstein echo "Connection OK"
+# Check local volume accessibility
+ssh newton sudo -u backup ls -la /var/lib/restic-backups/newton/
 
-# Verify SSH key
-ssh newton sudo -u restic cat /var/lib/restic/.ssh/id_backup.pub
+# Verify volume permissions
+ssh newton ls -la /var/lib/restic-backups/
 
-# Check Einstein SSH logs
-ssh einstein journalctl -u sshd -f
+# Check available disk space
+ssh newton df -h /var/lib/restic-backups/
 #+END_SRC
 
 *** Repository Lock Issues
 #+BEGIN_SRC bash
 # List locks
-ssh newton sudo -u restic restic list locks --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic list locks --repo /var/lib/restic-backups/newton
 
 # Remove stale locks (use with caution)
-ssh newton sudo -u restic restic unlock --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic unlock --repo /var/lib/restic-backups/newton
 #+END_SRC
 
 *** Storage Space Issues
 #+BEGIN_SRC bash
-# Check Einstein storage
-ssh einstein df -h /mnt/media
+# Check local storage
+ssh newton df -h /var/lib/restic-backups/
 
 # Check repository size
-ssh newton sudo -u restic restic stats --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic stats --repo /var/lib/restic-backups/newton
 
 # Check Docker volume sizes
 ssh newton sudo du -sh /var/lib/docker/volumes/ghost_*
@@ -300,8 +300,8 @@ ssh newton sudo du -sh /var/lib/docker/volumes/twenty_*
 ssh newton sudo du -sh /var/lib/docker/volumes/outline_*
 
 # Emergency cleanup (remove oldest snapshots)
-ssh newton sudo -u restic restic forget \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic forget \
+  --repo /var/lib/restic-backups/newton \
   --keep-last 3 \
   --prune
 #+END_SRC
@@ -324,26 +324,26 @@ ssh newton docker volume inspect ghost_ghost-content
 *** Slow Backup Operations
 #+BEGIN_SRC bash
 # Monitor backup progress
-ssh newton sudo -u restic restic backup \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic backup \
+  --repo /var/lib/restic-backups/newton \
   --verbose \
   /var/lib/docker/volumes
 
-# Check network bandwidth during backup
-ssh newton iftop -i wg0
-ssh einstein iftop -i wg0
+# Check local disk I/O during backup
+ssh newton iostat -x 1
+ssh newton iotop
 #+END_SRC
 
 *** Repository Corruption
 #+BEGIN_SRC bash
 # Full repository check with repair
-ssh newton sudo -u restic restic check \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+ssh newton sudo -u backup restic check \
+  --repo /var/lib/restic-backups/newton \
   --read-data
 
 # Rebuild repository index
-ssh newton sudo -u restic restic rebuild-index \
-  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic rebuild-index \
+  --repo /var/lib/restic-backups/newton
 
 # Last resort: create new repository and start fresh
 # (Document and approve before executing)
@@ -364,10 +364,10 @@ ssh newton sudo -u restic restic rebuild-index \
 - Repository growth rate
 - Number of snapshots retained
 
-*** Network Health
-- VPN connectivity between networks
-- SSH connection reliability
-- Backup transfer speeds
+*** Storage Health
+- Local volume mount status
+- Disk I/O performance
+- Filesystem health
 
 ** Alert Thresholds
 
@@ -375,7 +375,7 @@ ssh newton sudo -u restic restic rebuild-index \
 - No successful backup in 48 hours
 - Repository corruption detected
 - Storage space below 10GB free
-- SSH authentication failures
+- Local volume mount failures
 
 *** Warning Alerts
 - Backup duration exceeds 2 hours
@@ -386,7 +386,7 @@ ssh newton sudo -u restic restic rebuild-index \
 
 *** Backup Failure Response
 1. Check systemd service status and logs
-2. Verify network connectivity and SSH access
+2. Verify local volume accessibility and permissions
 3. Check repository health and storage space
 4. Attempt manual backup to isolate issue
 5. Escalate if manual backup fails

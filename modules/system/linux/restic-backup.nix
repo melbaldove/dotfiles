@@ -5,7 +5,6 @@ with lib;
 let
   cfg = config.services.restic-backup;
   backupUser = "backup";
-  sshKeyPath = "/var/lib/${backupUser}/.ssh/id_backup";
 in {
   options.services.restic-backup = {
     enable = mkEnableOption "restic backup service";
@@ -20,10 +19,6 @@ in {
       description = "Path to repository password file";
     };
     
-    sshKeyFile = mkOption {
-      type = types.str;
-      description = "Path to SSH private key file";
-    };
     
     paths = mkOption {
       type = types.listOf types.str;
@@ -50,10 +45,6 @@ in {
         message = "restic-backup: passwordFile must be specified";
       }
       {
-        assertion = cfg.sshKeyFile != "";
-        message = "restic-backup: sshKeyFile must be specified";
-      }
-      {
         assertion = cfg.paths != [];
         message = "restic-backup: at least one path must be specified";
       }
@@ -72,28 +63,12 @@ in {
     
     users.groups.${backupUser} = {};
     
-    # SSH configuration for backup user
-    system.activationScripts.backup-ssh-config = ''
-      mkdir -p /var/lib/${backupUser}/.ssh
-      chown ${backupUser}:${backupUser} /var/lib/${backupUser}/.ssh
-      chmod 700 /var/lib/${backupUser}/.ssh
-      
-      # Create SSH config
-      cat > /var/lib/${backupUser}/.ssh/config <<'EOF'
-      Host *
-        StrictHostKeyChecking accept-new
-        UserKnownHostsFile /var/lib/${backupUser}/.ssh/known_hosts
-        IdentityFile ${sshKeyPath}
-      EOF
-      chown ${backupUser}:${backupUser} /var/lib/${backupUser}/.ssh/config
-      chmod 600 /var/lib/${backupUser}/.ssh/config
-    '';
 
     systemd.services.restic-backup = {
       description = "Restic backup";
       after = [ "network.target" ];
       wants = [ "network-online.target" ];
-      path = with pkgs; [ restic openssh ];
+      path = with pkgs; [ restic ];
       
       serviceConfig = {
         Type = "oneshot";
@@ -101,12 +76,6 @@ in {
         Group = backupUser;
         ExecStart = pkgs.writeShellScript "restic-backup" ''
           set -euo pipefail
-          
-          # Validate SSH key exists
-          if [[ ! -f "${sshKeyPath}" ]]; then
-            echo "ERROR: SSH key not found at ${sshKeyPath}"
-            exit 1
-          fi
           
           # Initialize repository if it doesn't exist
           if ! restic snapshots &>/dev/null; then

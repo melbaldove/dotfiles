@@ -71,8 +71,8 @@
 (show-paren-mode 1)
 (global-visual-line-mode)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
-(setq split-height-threshold nil)
-(setq split-width-threshold 0)
+(setq split-height-threshold 80)
+(setq split-width-threshold 160)
 (global-visual-wrap-prefix-mode)
 
 ;; Disable file backups

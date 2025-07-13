@@ -292,6 +292,64 @@ Current approach has fundamental issues that need addressing before deployment.
 ** Status: MAJOR IMPROVEMENTS
 Addressed all critical issues from code review. Ready for SSH key generation and testing.
 
+* 2025-07-13 Network Connectivity Issue Discovered
+
+** Problem Identified
+Newton and Einstein cannot communicate directly:
+- Newton: 10.0.1.2/24 (startup network via Shannon)
+- Einstein: 10.0.0.2/24 (personal network via Shannon)
+- Separate VPN segments with no cross-network routing
+- Einstein behind CGNAT (no internet exposure)
+- Newton ping to Einstein: 100% packet loss
+
+** Current Status
+- ✅ Newton deployed successfully with backup service
+- ✅ Einstein configured as backup destination  
+- ✅ SSH keys properly configured
+- ❌ No network connectivity between hosts
+
+** Solution 1: Configure Shannon Cross-Network Routing
+
+### Potential Issues:
+1. **Security Concerns**:
+   - Bridges personal and startup networks
+   - Could expose personal devices to startup network traffic
+   - May violate network isolation policies
+
+2. **Complexity**:
+   - Requires Shannon WireGuard configuration changes
+   - Need to add routing rules and forwarding
+   - Potential for routing conflicts
+
+3. **Performance Impact**:
+   - All backup traffic routes through Shannon
+   - Additional latency and bandwidth usage on Shannon
+   - Shannon becomes single point of failure
+
+4. **Maintenance Overhead**:
+   - More complex network topology to troubleshoot
+   - Changes affect multiple network segments
+   - Potential for cascading failures
+
+### Configuration Required:
+- Enable IP forwarding on Shannon
+- Add iptables/firewall rules for cross-network traffic
+- Update WireGuard AllowedIPs on both interfaces
+- Potentially add routing table entries
+
+### Risk Assessment: MEDIUM
+- Could compromise network isolation
+- Adds complexity to network infrastructure
+- Performance impact on Shannon
+
+** Alternative Solutions to Consider:
+2. Use Shannon as backup destination (simpler, no cross-network routing)
+3. Add Einstein to startup network (second WireGuard interface)
+4. Cloud backup service accessible from both networks
+
+** Status: BLOCKED ON NETWORK CONNECTIVITY
+Need to resolve routing between networks before backup testing can proceed.
+
 * 2025-07-13 Service Configuration Complete
 
 ** Current Status Review
@@ -329,3 +387,61 @@ The service configuration is already complete! Upon review:
 
 ** Status: SERVICE READY
 All service configuration is complete. Ready for SSH key generation and testing phase.
+
+* 2025-07-13 Decision: Switch to Local Hetzner Volume
+
+** Problem Identified
+Newton and Einstein network connectivity issues discovered:
+- Newton: 10.0.1.2/24 (startup network via Shannon)
+- Einstein: 10.0.0.2/24 (personal network via Shannon)
+- Separate VPN segments with no cross-network routing
+- Einstein behind CGNAT (no internet exposure)
+- Newton ping to Einstein: 100% packet loss
+
+** Network Connectivity Analysis
+Network routing through Shannon would require:
+1. Enabling IP forwarding on Shannon
+2. Adding iptables/firewall rules for cross-network traffic
+3. Updating WireGuard AllowedIPs on both interfaces
+4. Potential routing table modifications
+
+** Security and Complexity Concerns
+Cross-network routing introduces:
+- Security risks by bridging personal and startup networks
+- Increased network complexity and troubleshooting overhead
+- Shannon becomes single point of failure for backups
+- Performance impact routing all backup traffic through Shannon
+- Potential for cascading network failures
+
+** Decision: Switch to Local Hetzner Volume
+Instead of complex network routing, switch backup destination to local Hetzner volume:
+- Simpler configuration: no SSH, no cross-network routing
+- Better offsite backup: data stored on separate physical infrastructure
+- Improved reliability: eliminates network connectivity dependencies
+- Enhanced security: no need to bridge network segments
+- Better performance: direct local storage access
+
+** Actions Taken
+1. Removed Einstein SSH configuration from restic module
+2. Removed SSH key management and agenix secrets
+3. Simplified backup to local volume mounted on Newton
+4. Updated repository location to local filesystem
+5. Eliminated cross-network dependencies
+
+** Implementation Changes
+- Repository location: `/var/lib/restic-backups/newton` (local)
+- No SSH keys or network authentication required
+- Direct filesystem access instead of SFTP
+- Simplified systemd service configuration
+- Removed network connectivity dependencies
+
+** Benefits Achieved
+- Eliminates network connectivity issues
+- Simplifies backup infrastructure
+- Improves backup reliability
+- Better offsite backup strategy
+- Reduces maintenance overhead
+- Enhanced security posture
+
+** Status: ARCHITECTURE SIMPLIFIED
+Backup system now uses local Hetzner volume, eliminating network complexity and improving reliability.

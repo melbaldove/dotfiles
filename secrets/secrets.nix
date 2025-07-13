@@ -45,6 +45,5 @@ in
   "outline-slack-verification-token.age".publicKeys = [ user newton ];
   
   # Restic backup secrets
-  "restic-password.age".publicKeys = [ user newton einstein ];
-  "newton-backup-ssh-key.age".publicKeys = [ user newton ];
+  "restic-password.age".publicKeys = [ user newton ];
 }

@@ -35,58 +35,12 @@
     extraGroups = [ "wheel" "users" ];
   };
 
-  # Backup storage validation
-  assertions = [
-    {
-      assertion = config.fileSystems."/mnt/media".device != null;
-      message = "Media mount required for backup storage at /mnt/media";
-    }
-  ];
 
   # Add ntfs-3g for NTFS support
   environment.systemPackages = with pkgs; [
     ntfs3g
   ];
 
-  # Backup repository configuration
-  users.users.backup = {
-    isSystemUser = true;
-    group = "backup";
-    home = "/var/lib/backup";
-    createHome = true;
-    extraGroups = [ "users" ];  # Add to users group for NTFS access
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnMg5Par0DrgIG8UAWFi+YD4aJgCHGZK8zWy8OlBHlK newton-backup"
-    ];
-  };
-
-  users.groups.backup = {};
-
-  # Create backup directory with validation
-  systemd.tmpfiles.rules = [
-    "d /mnt/media/backups 0750 backup backup -"
-    "d /mnt/media/backups/newton-restic 0750 backup backup -"
-  ];
-
-  # Validate backup storage is accessible
-  systemd.services.backup-storage-check = {
-    description = "Validate backup storage accessibility";
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = pkgs.writeShellScript "backup-storage-check" ''
-        if [[ ! -d /mnt/media ]]; then
-          echo "ERROR: /mnt/media is not mounted"
-          exit 1
-        fi
-        if [[ ! -w /mnt/media ]]; then
-          echo "ERROR: /mnt/media is not writable"
-          exit 1
-        fi
-        echo "Backup storage validation successful"
-      '';
-    };
-  };
 
   # Configure as remote builder
   nix.settings = {

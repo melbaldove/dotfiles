@@ -164,37 +164,32 @@ age.secrets.restic-password = {
 
 * Phase 3: Repository Setup
 
-** Einstein Configuration
+** Local Volume Configuration
 
-Add to =hosts/einstein/default.nix=:
+Add to =hosts/newton/default.nix=:
 
 #+BEGIN_SRC nix
 {
   # Create backup storage directory
   systemd.tmpfiles.rules = [
-    "d /mnt/media/backups 0750 backup backup -"
-    "d /mnt/media/backups/newton-restic 0750 backup backup -"
+    "d /var/lib/restic-backups 0750 backup backup -"
+    "d /var/lib/restic-backups/newton 0750 backup backup -"
   ];
   
-  # Backup user for SSH access
+  # Backup user for local operations
   users.users.backup = {
     isSystemUser = true;
     group = "backup";
     home = "/var/lib/backup";
     createHome = true;
-    openssh.authorizedKeys.keys = [
-      # Newton's backup SSH key (to be generated)
-    ];
+    extraGroups = [ "docker" ]; # Access to Docker volumes
   };
   
   users.groups.backup = {};
-  
-  # SSH server configuration
-  services.openssh.enable = true;
 }
 #+END_SRC
 
-** Newton Configuration
+** Newton Backup Configuration
 
 Add to =hosts/newton/default.nix=:
 
@@ -204,7 +199,7 @@ Add to =hosts/newton/default.nix=:
     enable = true;
     
     repositories.newton-primary = {
-      repository = "sftp:backup@einstein:/mnt/media/backups/newton-restic";
+      repository = "/var/lib/restic-backups/newton";
       passwordFile = config.age.secrets.restic-password.path;
     };
     
@@ -274,35 +269,25 @@ systemd.services.restic-backup = {
 };
 #+END_SRC
 
-* Phase 5: SSH Key Setup
+* Phase 5: Local Volume Setup
 
-** Generate Backup SSH Key
+** Verify Local Volume Mount
 
 On Newton:
 #+BEGIN_SRC bash
-# Generate dedicated backup SSH key
-ssh-keygen -t ed25519 -f /var/lib/restic/.ssh/id_backup -N "" -C "newton-backup"
-
-# Set proper permissions
-chown restic:restic /var/lib/restic/.ssh/id_backup*
-chmod 600 /var/lib/restic/.ssh/id_backup
-chmod 644 /var/lib/restic/.ssh/id_backup.pub
+# Verify backup directory exists and is writable
+ls -la /var/lib/restic-backups/
+sudo -u backup touch /var/lib/restic-backups/newton/test-write
+sudo -u backup rm /var/lib/restic-backups/newton/test-write
 #+END_SRC
 
-** Configure SSH Client
+** Configure Local Permissions
 
-Create =/var/lib/restic/.ssh/config=:
-#+BEGIN_SRC
-Host einstein
-    HostName 10.0.0.2
-    User backup
-    IdentityFile /var/lib/restic/.ssh/id_backup
-    StrictHostKeyChecking yes
+#+BEGIN_SRC bash
+# Ensure proper ownership
+sudo chown -R backup:backup /var/lib/restic-backups/
+sudo chmod -R 750 /var/lib/restic-backups/
 #+END_SRC
-
-** Add Public Key to Einstein
-
-Copy Newton's public key to Einstein's backup user authorized_keys.
 
 * Phase 6: Repository Initialization
 
@@ -311,14 +296,14 @@ Copy Newton's public key to Einstein's backup user authorized_keys.
 On Newton:
 #+BEGIN_SRC bash
 # Initialize restic repository
-sudo -u restic restic init --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+sudo -u backup restic init --repo /var/lib/restic-backups/newton
 #+END_SRC
 
 ** Verify Repository
 
 #+BEGIN_SRC bash
 # Check repository
-sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+sudo -u backup restic check --repo /var/lib/restic-backups/newton
 #+END_SRC
 
 * Phase 7: Testing and Validation
@@ -338,10 +323,10 @@ journalctl -u restic-backup.service
 
 #+BEGIN_SRC bash
 # List snapshots
-sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+sudo -u backup restic snapshots --repo /var/lib/restic-backups/newton
 
 # Test restore
-sudo -u restic restic restore latest --repo sftp:backup@einstein:/mnt/media/backups/newton-restic --target /tmp/restore-test
+sudo -u backup restic restore latest --repo /var/lib/restic-backups/newton --target /tmp/restore-test
 #+END_SRC
 
 * Phase 8: Monitoring Integration
@@ -367,10 +352,10 @@ Create script to export backup metrics:
 # /usr/local/bin/restic-metrics
 
 METRICS_FILE="/var/lib/prometheus-node-exporter/restic.prom"
-REPO="sftp:backup@einstein:/mnt/media/backups/newton-restic"
+REPO="/var/lib/restic-backups/newton"
 
 # Get latest snapshot info
-LATEST_SNAPSHOT=$(sudo -u restic restic snapshots --repo "$REPO" --json | jq -r '.[0]')
+LATEST_SNAPSHOT=$(sudo -u backup restic snapshots --repo "$REPO" --json | jq -r '.[0]')
 SNAPSHOT_TIME=$(echo "$LATEST_SNAPSHOT" | jq -r '.time')
 SNAPSHOT_SIZE=$(echo "$LATEST_SNAPSHOT" | jq -r '.size // 0')
 
@@ -403,12 +388,9 @@ EOF
 # Deploy to Newton
 deploy .#newton
 
-# Deploy to Einstein
-deploy .#einstein
-
 # Verify services
 ssh newton systemctl status restic-backup.timer
-ssh einstein systemctl status sshd
+ssh newton ls -la /var/lib/restic-backups/
 #+END_SRC
 
 ** Manual Operations
@@ -418,8 +400,8 @@ ssh einstein systemctl status sshd
 ssh newton sudo systemctl start restic-backup.service
 
 # Check repository
-ssh newton sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic check --repo /var/lib/restic-backups/newton
 
 # List snapshots
-ssh newton sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+ssh newton sudo -u backup restic snapshots --repo /var/lib/restic-backups/newton
 #+END_SRC

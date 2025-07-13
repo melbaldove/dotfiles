@@ -4,7 +4,7 @@
 
 * Overview
 
-This document outlines the restic backup architecture for the dotfiles infrastructure, providing automated, encrypted, and deduplicated backups from Newton (production server) to Einstein (backup destination).
+This document outlines the restic backup architecture for the dotfiles infrastructure, providing automated, encrypted, and deduplicated backups from Newton (production server) to local Hetzner volume storage.
 
 * Architecture
 
@@ -18,16 +18,11 @@ This document outlines the restic backup architecture for the dotfiles infrastru
   - SSL certificates
   - Configuration secrets
 
-** Destination: Einstein (10.0.0.2)
-- Backup server on personal network segment
-- Media server with external storage at =/mnt/media=
-- VPN gateway with cross-network connectivity
-- Backup repository storage location
-
-** Network Connectivity
-- VPN connection via WireGuard through Shannon
-- Cross-network routing: 10.0.1.0/24 ↔ 10.0.0.0/24
-- SSH-based repository access over encrypted tunnel
+** Destination: Local Hetzner Volume
+- Local storage mounted on Newton server
+- Dedicated volume for backup repository
+- Direct filesystem access for optimal performance
+- No network dependencies or cross-host connectivity required
 
 * Data Classification
 
@@ -75,20 +70,20 @@ This document outlines the restic backup architecture for the dotfiles infrastru
 * Repository Configuration
 
 ** Repository Location
-- Einstein: =/mnt/media/backups/newton-restic/=
-- Repository type: Local filesystem (over SSH)
+- Local: =/var/lib/restic-backups/newton/=
+- Repository type: Local filesystem
 - Encryption: AES-256 with repository password
 
 ** Access Method
-- SSH connection from Newton to Einstein
-- Dedicated SSH key for backup operations
-- Repository path: =einstein:/mnt/media/backups/newton-restic=
+- Direct filesystem access on Newton
+- No network connectivity required
+- Repository path: =/var/lib/restic-backups/newton=
 
 ** Security
 - Repository password stored in agenix secrets
-- SSH key dedicated to backup user
-- Network access restricted to VPN
+- Local filesystem permissions for access control
 - Backup repository encrypted at rest
+- Data stored on separate Hetzner infrastructure for offsite backup
 - Note: agenix secrets in =/run/agenix.d/= are runtime-only (ramfs) and don't need backup
 
 * Retention Policy
@@ -116,7 +111,7 @@ This document outlines the restic backup architecture for the dotfiles infrastru
 - Backup failure or timeout
 - Repository corruption detected
 - Storage space below threshold
-- Network connectivity issues
+- Local volume mount issues
 
 ** Integration
 - Prometheus metrics via node exporter
@@ -151,5 +146,5 @@ This document outlines the restic backup architecture for the dotfiles infrastru
 
 ** Configuration
 - Host-specific backup settings in =hosts/newton/=
-- Repository setup in =hosts/einstein/=
+- Local volume mount configuration
 - Systemd services and timers for automation
