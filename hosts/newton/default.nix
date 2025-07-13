@@ -140,7 +140,12 @@
   users.users.promtail.extraGroups = [ "docker" ];
 
   # Configure agenix secrets for backup
-  age.secrets.restic-password.file = ../../secrets/restic-password.age;
+  age.secrets.restic-password = {
+    file = ../../secrets/restic-password.age;
+    owner = "backup";
+    group = "backup";
+    mode = "0400";
+  };
 
   # Configure restic backup service
   services.restic-backup = {
