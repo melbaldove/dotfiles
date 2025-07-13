@@ -122,6 +122,11 @@
     options = [ "defaults" "noatime" ];
   };
 
+  # Create backup directories with proper ownership
+  systemd.tmpfiles.rules = [
+    "d /var/lib/restic-backups/newton-restic 0750 backup backup -"
+  ];
+
 
   environment.systemPackages = with pkgs; [
     inetutils
