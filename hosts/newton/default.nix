@@ -113,12 +113,6 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
 
-  # Mount /dev/sdb to /mnt/data
-  fileSystems."/mnt/data" = {
-    device = "/dev/sdb";
-    fsType = "ext4";
-    options = [ "defaults" "rw" ];
-  };
 
   environment.systemPackages = with pkgs; [
     inetutils
@@ -149,10 +143,6 @@
     
     appSecretFile = config.age.secrets.twenty-app-secret.path;
     
-    storage = {
-      type = "local";
-      dataPath = "/mnt/data";
-    };
     auth.google = {
       enabled = true;
       clientIdFile = config.age.secrets.twenty-google-client-id.path;

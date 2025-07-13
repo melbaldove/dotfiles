@@ -13,6 +13,7 @@ let
       dvisvgm dvipng # for preview and export as html
       wrapfig amsmath ulem hyperref capt-of;
   });
+
   
 in
 {
@@ -35,6 +36,10 @@ in
     cmake
     libtool
     tree
+    fzf
+(pkgs.writeShellScriptBin "opencode" ''
+      exec ${pkgs.nodejs}/bin/npx opencode-ai@latest "$@"
+    '')
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     go-ios

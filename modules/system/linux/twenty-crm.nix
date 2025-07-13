@@ -51,12 +51,6 @@ with lib;
         default = "local";
         description = "Storage backend type";
       };
-      
-      dataPath = mkOption {
-        type = types.str;
-        default = "/var/lib/twenty";
-        description = "Base path for Twenty data storage";
-      };
     };
 
     auth = {
