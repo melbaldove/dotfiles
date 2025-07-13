@@ -52,17 +52,6 @@ in {
 
     environment.systemPackages = [ pkgs.restic ];
     
-    # Create backup user with consistent name
-    users.users.${backupUser} = {
-      isSystemUser = true;
-      group = backupUser;
-      home = "/var/lib/${backupUser}";
-      createHome = true;
-      extraGroups = [ "docker" ];
-    };
-    
-    users.groups.${backupUser} = {};
-    
 
     systemd.services.restic-backup = {
       description = "Restic backup";
@@ -72,8 +61,6 @@ in {
       
       serviceConfig = {
         Type = "oneshot";
-        User = backupUser;
-        Group = backupUser;
         ExecStart = pkgs.writeShellScript "restic-backup" ''
           set -euo pipefail
           

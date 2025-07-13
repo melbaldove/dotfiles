@@ -124,7 +124,7 @@
 
   # Create backup directories with proper ownership
   systemd.tmpfiles.rules = [
-    "d /var/lib/restic-backups/newton-restic 0750 backup backup -"
+    "d /var/lib/restic-backups/newton-restic 0755 root root -"
   ];
 
 
@@ -145,12 +145,7 @@
   users.users.promtail.extraGroups = [ "docker" ];
 
   # Configure agenix secrets for backup
-  age.secrets.restic-password = {
-    file = ../../secrets/restic-password.age;
-    owner = "backup";
-    group = "backup";
-    mode = "0400";
-  };
+  age.secrets.restic-password.file = ../../secrets/restic-password.age;
 
   # Configure restic backup service
   services.restic-backup = {
