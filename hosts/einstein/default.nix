@@ -54,6 +54,7 @@
     group = "backup";
     home = "/var/lib/backup";
     createHome = true;
+    extraGroups = [ "users" ];  # Add to users group for NTFS access
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnMg5Par0DrgIG8UAWFi+YD4aJgCHGZK8zWy8OlBHlK newton-backup"
     ];
