@@ -132,6 +132,7 @@
   users.users.promtail.extraGroups = [ "docker" ];
 
   # Configure agenix secrets for backup
+  age.secrets.restic-password.file = ../../secrets/restic-password.age;
   age.secrets.newton-backup-ssh-key = {
     file = ../../secrets/newton-backup-ssh-key.age;
     owner = "backup";
