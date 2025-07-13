@@ -20,6 +20,7 @@
   networking.hostName = "newton";
   networking.extraHosts = ''
     172.236.148.68 shannon
+    10.0.0.2 einstein
   '';
 
   # WireGuard VPN client configuration
