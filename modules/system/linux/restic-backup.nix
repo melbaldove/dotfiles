@@ -58,7 +58,7 @@ in {
       group = backupUser;
       home = "/var/lib/${backupUser}";
       createHome = true;
-      extraGroups = [ "docker" ];
+      extraGroups = [ "docker" "acme" ];
     };
     
     users.groups.${backupUser} = {};
