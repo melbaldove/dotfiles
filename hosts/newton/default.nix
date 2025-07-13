@@ -163,7 +163,6 @@
       "/var/lib/docker/volumes/twenty_db-data"
       "/var/lib/docker/volumes/twenty_server-local-data"
       "/var/lib/docker/volumes/outline_outline-data"
-      "/var/lib/acme"
     ];
   };
 
