@@ -1,0 +1,425 @@
+#+TITLE: Restic Implementation Guide
+#+DATE: 2025-07-13
+#+AUTHOR: Infrastructure Documentation
+
+* Implementation Overview
+
+This guide provides step-by-step instructions for implementing the restic backup system across the dotfiles infrastructure.
+
+* Phase 1: Module Development
+
+** Create Restic Backup Module
+
+Create =modules/system/linux/restic-backup.nix= with the following structure:
+
+#+BEGIN_SRC nix
+{ config, lib, pkgs, ... }:
+
+with lib;
+
+let
+  cfg = config.services.restic-backup;
+in {
+  options.services.restic-backup = {
+    enable = mkEnableOption "restic backup service";
+    
+    repositories = mkOption {
+      type = types.attrsOf (types.submodule {
+        options = {
+          repository = mkOption {
+            type = types.str;
+            description = "Repository location";
+          };
+          passwordFile = mkOption {
+            type = types.str;
+            description = "Path to repository password file";
+          };
+        };
+      });
+      default = {};
+      description = "Backup repositories";
+    };
+    
+    backupPaths = mkOption {
+      type = types.listOf types.str;
+      default = [];
+      description = "Paths to backup";
+    };
+    
+    excludes = mkOption {
+      type = types.listOf types.str;
+      default = [];
+      description = "Patterns to exclude";
+    };
+    
+    schedule = mkOption {
+      type = types.str;
+      default = "02:00";
+      description = "Backup schedule (systemd timer format)";
+    };
+    
+    retention = mkOption {
+      type = types.attrs;
+      default = {
+        keep-daily = 7;
+        keep-weekly = 4;
+        keep-monthly = 12;
+        keep-yearly = 2;
+      };
+      description = "Retention policy";
+    };
+  };
+  
+  config = mkIf cfg.enable {
+    # Implementation details follow...
+  };
+}
+#+END_SRC
+
+** Module Components
+
+*** Package Installation
+#+BEGIN_SRC nix
+environment.systemPackages = with pkgs; [
+  restic
+];
+#+END_SRC
+
+*** User and Group
+#+BEGIN_SRC nix
+users.users.restic = {
+  isSystemUser = true;
+  group = "restic";
+  home = "/var/lib/restic";
+  createHome = true;
+};
+
+users.groups.restic = {};
+#+END_SRC
+
+*** Systemd Services
+#+BEGIN_SRC nix
+systemd.services.restic-backup = {
+  description = "Restic backup service";
+  wants = [ "network-online.target" ];
+  after = [ "network-online.target" ];
+  
+  serviceConfig = {
+    Type = "oneshot";
+    User = "restic";
+    Group = "restic";
+    ExecStart = "${pkgs.writeShellScript "restic-backup" ''
+      # Backup script implementation
+    ''}";
+  };
+};
+
+systemd.timers.restic-backup = {
+  description = "Restic backup timer";
+  wantedBy = [ "timers.target" ];
+  
+  timerConfig = {
+    OnCalendar = cfg.schedule;
+    Persistent = true;
+    RandomizedDelaySec = "5m";
+  };
+};
+#+END_SRC
+
+* Phase 2: Secret Management
+
+** Add Repository Password Secret
+
+Update =secrets/secrets.nix=:
+
+#+BEGIN_SRC nix
+{
+  "restic-password.age".publicKeys = [
+    newton-key
+    einstein-key
+    user-key
+  ];
+}
+#+END_SRC
+
+** Create Encrypted Password File
+
+#+BEGIN_SRC bash
+# Generate strong repository password
+openssl rand -base64 32 | agenix -e secrets/restic-password.age
+#+END_SRC
+
+** Configure Secret Access
+
+In the restic module:
+
+#+BEGIN_SRC nix
+age.secrets.restic-password = {
+  file = ../../../secrets/restic-password.age;
+  owner = "restic";
+  group = "restic";
+  mode = "0400";
+};
+#+END_SRC
+
+* Phase 3: Repository Setup
+
+** Einstein Configuration
+
+Add to =hosts/einstein/default.nix=:
+
+#+BEGIN_SRC nix
+{
+  # Create backup storage directory
+  systemd.tmpfiles.rules = [
+    "d /mnt/media/backups 0750 backup backup -"
+    "d /mnt/media/backups/newton-restic 0750 backup backup -"
+  ];
+  
+  # Backup user for SSH access
+  users.users.backup = {
+    isSystemUser = true;
+    group = "backup";
+    home = "/var/lib/backup";
+    createHome = true;
+    openssh.authorizedKeys.keys = [
+      # Newton's backup SSH key (to be generated)
+    ];
+  };
+  
+  users.groups.backup = {};
+  
+  # SSH server configuration
+  services.openssh.enable = true;
+}
+#+END_SRC
+
+** Newton Configuration
+
+Add to =hosts/newton/default.nix=:
+
+#+BEGIN_SRC nix
+{
+  services.restic-backup = {
+    enable = true;
+    
+    repositories.newton-primary = {
+      repository = "sftp:backup@einstein:/mnt/media/backups/newton-restic";
+      passwordFile = config.age.secrets.restic-password.path;
+    };
+    
+    backupPaths = [
+      "/var/lib/docker/volumes/ghost_ghost-content"
+      "/var/lib/docker/volumes/ghost_db-data"
+      "/var/lib/docker/volumes/twenty_db-data"
+      "/var/lib/docker/volumes/twenty_server-local-data"
+      "/var/lib/docker/volumes/outline_outline-data"
+      "/var/lib/acme"
+    ];
+    
+    excludes = [
+      "/var/lib/docker/volumes/*/lost+found"
+      "*.log"
+      "*.tmp"
+    ];
+    
+    schedule = "02:00";
+  };
+}
+#+END_SRC
+
+* Phase 4: Service Configuration
+
+** Backup Service Script
+
+The restic backup service will directly backup Docker volumes:
+
+#+BEGIN_SRC nix
+systemd.services.restic-backup = {
+  description = "Restic backup service";
+  wants = [ "network-online.target" ];
+  after = [ "network-online.target" "docker.service" ];
+  
+  serviceConfig = {
+    Type = "oneshot";
+    User = "restic";
+    Group = "restic";
+    ExecStart = "${pkgs.writeShellScript "restic-backup" ''
+      set -euo pipefail
+      
+      # Run restic backup
+      ${pkgs.restic}/bin/restic backup \
+        --repo $RESTIC_REPOSITORY \
+        --password-file $RESTIC_PASSWORD_FILE \
+        --verbose \
+        --tag automated \
+        ${concatStringsSep " " cfg.backupPaths}
+      
+      # Prune old snapshots
+      ${pkgs.restic}/bin/restic forget \
+        --repo $RESTIC_REPOSITORY \
+        --password-file $RESTIC_PASSWORD_FILE \
+        --keep-daily ${toString cfg.retention.keep-daily} \
+        --keep-weekly ${toString cfg.retention.keep-weekly} \
+        --keep-monthly ${toString cfg.retention.keep-monthly} \
+        --keep-yearly ${toString cfg.retention.keep-yearly} \
+        --prune
+    ''}";
+    
+    Environment = [
+      "RESTIC_REPOSITORY=${cfg.repositories.primary.repository}"
+      "RESTIC_PASSWORD_FILE=${cfg.repositories.primary.passwordFile}"
+    ];
+  };
+};
+#+END_SRC
+
+* Phase 5: SSH Key Setup
+
+** Generate Backup SSH Key
+
+On Newton:
+#+BEGIN_SRC bash
+# Generate dedicated backup SSH key
+ssh-keygen -t ed25519 -f /var/lib/restic/.ssh/id_backup -N "" -C "newton-backup"
+
+# Set proper permissions
+chown restic:restic /var/lib/restic/.ssh/id_backup*
+chmod 600 /var/lib/restic/.ssh/id_backup
+chmod 644 /var/lib/restic/.ssh/id_backup.pub
+#+END_SRC
+
+** Configure SSH Client
+
+Create =/var/lib/restic/.ssh/config=:
+#+BEGIN_SRC
+Host einstein
+    HostName 10.0.0.2
+    User backup
+    IdentityFile /var/lib/restic/.ssh/id_backup
+    StrictHostKeyChecking yes
+#+END_SRC
+
+** Add Public Key to Einstein
+
+Copy Newton's public key to Einstein's backup user authorized_keys.
+
+* Phase 6: Repository Initialization
+
+** Initialize Repository
+
+On Newton:
+#+BEGIN_SRC bash
+# Initialize restic repository
+sudo -u restic restic init --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC
+
+** Verify Repository
+
+#+BEGIN_SRC bash
+# Check repository
+sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC
+
+* Phase 7: Testing and Validation
+
+** Test Backup Operation
+
+#+BEGIN_SRC bash
+# Manual backup test
+systemctl start restic-backup.service
+
+# Check backup status
+systemctl status restic-backup.service
+journalctl -u restic-backup.service
+#+END_SRC
+
+** Test Restore Operation
+
+#+BEGIN_SRC bash
+# List snapshots
+sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Test restore
+sudo -u restic restic restore latest --repo sftp:backup@einstein:/mnt/media/backups/newton-restic --target /tmp/restore-test
+#+END_SRC
+
+* Phase 8: Monitoring Integration
+
+** Prometheus Metrics
+
+Add backup metrics collection:
+
+#+BEGIN_SRC nix
+# Add to monitoring configuration
+services.prometheus.exporters.node = {
+  enabledCollectors = [ "textfile" ];
+  extraFlags = [ "--collector.textfile.directory=/var/lib/prometheus-node-exporter" ];
+};
+#+END_SRC
+
+** Backup Status Script
+
+Create script to export backup metrics:
+
+#+BEGIN_SRC bash
+#!/usr/bin/env bash
+# /usr/local/bin/restic-metrics
+
+METRICS_FILE="/var/lib/prometheus-node-exporter/restic.prom"
+REPO="sftp:backup@einstein:/mnt/media/backups/newton-restic"
+
+# Get latest snapshot info
+LATEST_SNAPSHOT=$(sudo -u restic restic snapshots --repo "$REPO" --json | jq -r '.[0]')
+SNAPSHOT_TIME=$(echo "$LATEST_SNAPSHOT" | jq -r '.time')
+SNAPSHOT_SIZE=$(echo "$LATEST_SNAPSHOT" | jq -r '.size // 0')
+
+# Convert to Unix timestamp
+TIMESTAMP=$(date -d "$SNAPSHOT_TIME" +%s)
+CURRENT_TIME=$(date +%s)
+AGE=$((CURRENT_TIME - TIMESTAMP))
+
+# Export metrics
+cat > "$METRICS_FILE" << EOF
+# HELP restic_last_backup_timestamp Unix timestamp of last backup
+# TYPE restic_last_backup_timestamp gauge
+restic_last_backup_timestamp $TIMESTAMP
+
+# HELP restic_last_backup_age_seconds Age of last backup in seconds
+# TYPE restic_last_backup_age_seconds gauge
+restic_last_backup_age_seconds $AGE
+
+# HELP restic_last_backup_size_bytes Size of last backup in bytes
+# TYPE restic_last_backup_size_bytes gauge
+restic_last_backup_size_bytes $SNAPSHOT_SIZE
+EOF
+#+END_SRC
+
+* Deployment Commands
+
+** Deploy Changes
+
+#+BEGIN_SRC bash
+# Deploy to Newton
+deploy .#newton
+
+# Deploy to Einstein
+deploy .#einstein
+
+# Verify services
+ssh newton systemctl status restic-backup.timer
+ssh einstein systemctl status sshd
+#+END_SRC
+
+** Manual Operations
+
+#+BEGIN_SRC bash
+# Manual backup
+ssh newton sudo systemctl start restic-backup.service
+
+# Check repository
+ssh newton sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# List snapshots
+ssh newton sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC

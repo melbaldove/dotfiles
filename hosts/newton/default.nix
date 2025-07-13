@@ -9,6 +9,7 @@
     ../../modules/system/shared/promtail.nix
     ../../modules/system/linux/default.nix
     ../../modules/system/linux/agenix.nix
+    ../../modules/system/linux/restic-backup.nix
     ../../modules/system/linux/twenty-crm.nix
     ../../modules/system/linux/ghost-cms.nix
     ../../modules/system/linux/outline.nix
@@ -129,6 +130,31 @@
 
   # Grant promtail access to Docker socket for container log collection
   users.users.promtail.extraGroups = [ "docker" ];
+
+  # Configure agenix secrets for backup
+  age.secrets.newton-backup-ssh-key = {
+    file = ../../secrets/newton-backup-ssh-key.age;
+    owner = "backup";
+    group = "backup";
+    mode = "0400";
+    path = "/var/lib/backup/.ssh/id_backup";
+  };
+
+  # Configure restic backup service
+  services.restic-backup = {
+    enable = true;
+    repository = "sftp:backup@einstein:/mnt/media/backups/newton-restic";
+    passwordFile = config.age.secrets.restic-password.path;
+    sshKeyFile = config.age.secrets.newton-backup-ssh-key.path;
+    paths = [
+      "/var/lib/docker/volumes/ghost_ghost-content"
+      "/var/lib/docker/volumes/ghost_db-data"
+      "/var/lib/docker/volumes/twenty_db-data"
+      "/var/lib/docker/volumes/twenty_server-local-data"
+      "/var/lib/docker/volumes/outline_outline-data"
+      "/var/lib/acme"
+    ];
+  };
 
   # Configure Twenty CRM service
   services.twenty-crm = {

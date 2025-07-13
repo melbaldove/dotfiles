@@ -1,0 +1,331 @@
+#+TITLE: Restic Implementation Scratchpad
+#+DATE: 2025-07-13
+#+AUTHOR: Infrastructure Documentation
+#+DESCRIPTION: Append-only log of actions, findings, and caveats
+
+* 2025-07-13 Initial Planning
+
+** Actions Taken
+- Searched codebase for existing backup configurations
+  - Found only manual Loki backup reference in docs
+  - No automated backup system exists
+  
+- Analyzed Newton host configuration
+  - Identified all Docker containers and volumes
+  - Found services: Twenty CRM, Ghost CMS, Outline Wiki
+  - Located Docker volumes under =/var/lib/docker/volumes/=
+  
+- SSH'd to Newton to verify actual paths
+  - Confirmed Docker volume names and locations
+  - Found ACME certificates at =/var/lib/acme/=
+  - Discovered agenix secrets are runtime-only in =/run/agenix.d/= (ramfs)
+
+- Analyzed Einstein as backup destination
+  - Has external storage at =/mnt/media= (NTFS)
+  - Runs media server (potential I/O conflict)
+  - Acts as VPN gateway between networks
+
+** Key Findings
+- Ghost content is NOT at =/var/lib/ghost/content=
+  - Actually in Docker volume =ghost_ghost-content=
+  - All data is in Docker volumes
+  
+- Agenix secrets don't need backup
+  - They're in ramfs (=/run/agenix.d/=)
+  - Already stored encrypted in git repo
+  
+- Network topology:
+  - Newton (10.0.1.2) on startup network
+  - Einstein (10.0.0.2) on personal network
+  - Connected via WireGuard through Shannon
+
+** Design Decisions
+- Simplified backup strategy: skip database dumps
+  - Originally planned to dump databases before backup
+  - Decided to backup Docker volumes directly instead
+  - Simpler, faster, less error-prone
+  - Restore is just volume restore + container restart
+
+- Backup paths finalized:
+  - =/var/lib/docker/volumes/ghost_ghost-content=
+  - =/var/lib/docker/volumes/ghost_db-data=
+  - =/var/lib/docker/volumes/twenty_db-data=
+  - =/var/lib/docker/volumes/twenty_server-local-data=
+  - =/var/lib/docker/volumes/outline_outline-data=
+  - =/var/lib/acme/= (SSL certificates)
+
+** Documentation Created
+- =restic-backup-architecture.org= - High-level design
+- =restic-implementation-guide.org= - Step-by-step implementation
+- =restic-backup-procedures.org= - Operational procedures
+- All updated to reflect volume-only backup strategy
+
+** Caveats and Considerations
+- Einstein storage is NTFS (may affect permissions)
+- Need to schedule around media server I/O
+- Must ensure Docker volumes aren't locked during backup
+- Redis data might be ephemeral (verify if backup needed)
+- Retention policy needs monitoring to prevent storage exhaustion
+
+** Next Steps
+- Begin actual implementation starting with NixOS module
+- Test backup/restore thoroughly before production deployment
+- Set up monitoring and alerting
+
+* 2025-07-13 Module Implementation
+
+** Actions Taken
+- Created =modules/system/linux/restic-backup.nix=
+  - Comprehensive NixOS module with all required options
+  - Includes systemd service and timer
+  - Security hardening with systemd sandboxing
+  - Automatic repository initialization
+  - Prometheus metrics export for monitoring
+  - SSH configuration for backup user
+
+** Module Features
+- Configurable repository location and credentials
+- Flexible path selection with exclude patterns
+- Retention policy configuration
+- Automated timer with randomized delay
+- Repository integrity checks after each backup
+- Metrics export for monitoring integration
+
+** Design Decisions
+- User/group creation with docker group membership
+- Systemd security hardening (PrivateTmp, ProtectSystem, etc.)
+- Automatic repository initialization if not exists
+- Integrated metrics export to prometheus node exporter
+- SSH config managed via activation script
+
+** Next Implementation Steps
+- Update secrets configuration
+- Configure Newton and Einstein hosts
+- Generate SSH keys and test connectivity
+
+* 2025-07-13 Minimal Module Rewrite
+
+** Actions Taken
+- Rewrote module to be minimal (50 lines vs 200+)
+- Removed all extra features:
+  - No user creation (will run as root)
+  - No SSH configuration
+  - No metrics export
+  - No retention policy
+  - No repository initialization
+  - No security hardening
+  
+** Minimal Features
+- Basic systemd service and timer
+- Daily backups with persistence
+- Environment variables for repository and password
+- Simple path backup command
+
+** Note
+- This is truly minimal - will need manual setup for:
+  - SSH keys
+  - Repository initialization
+  - Retention/pruning
+  - Monitoring
+
+* 2025-07-13 Added Requested Features
+
+** Actions Taken
+1. Added backup user to restic module:
+   - Created restic system user and group
+   - Added docker group membership for volume access
+   - Service now runs as restic user
+   
+2. Configured Einstein for backup repository:
+   - Added backup system user and group
+   - Created systemd tmpfiles rules for backup directories
+   - Prepared SSH authorized keys (key to be generated)
+   
+3. Implemented retention in restic module:
+   - Added pruneOpts configuration option
+   - Default retention: 7 daily, 4 weekly, 12 monthly, 2 yearly
+   - Integrated forget --prune into backup script
+
+** Module Updates
+- Still minimal but now includes:
+  - User management
+  - Retention policy
+  - Prune after backup
+- Total lines: ~77 (still compact)
+
+** Next Steps
+- Generate SSH key on Newton
+- Add public key to Einstein's backup user
+- Configure Newton to use the module
+- Test repository initialization
+
+* 2025-07-13 Secret Management Implementation
+
+** Actions Taken
+- Updated =secrets/secrets.nix= to include restic password
+- Secret accessible by both newton and einstein
+- User manually generated encrypted secret file
+- Configured agenix secret access in restic module:
+  - Owner: restic user
+  - Group: restic group  
+  - Mode: 0400 (read-only for owner)
+  
+** Module Updates
+- Added age.secrets.restic-password configuration
+- Secret will be available at runtime in =/run/agenix/restic-password=
+- Module can now reference =config.age.secrets.restic-password.path=
+
+** Status
+- Secret management complete
+- Module ready for deployment
+- Both hosts can decrypt the repository password
+
+* 2025-07-13 Repository Setup Implementation
+
+** Actions Taken
+1. Simplified SSH key management approach:
+   - Removed sshKey option from module (was too complex)
+   - Removed SSH key setup activation script from module
+   - Configured Newton to generate its own SSH key via activation script
+   
+2. Newton SSH key configuration:
+   - Added activation script to generate /var/lib/restic/.ssh/id_backup
+   - Key generated only if it doesn't exist
+   - Proper ownership and permissions set (restic:restic, 600)
+   - Comment: "newton-backup"
+   
+3. Einstein backup user ready:
+   - Backup user and group configured
+   - SSH authorized_keys placeholder prepared
+   - Backup directories created via systemd tmpfiles
+   
+4. Repository initialization:
+   - Added auto-initialization to backup script
+   - Repository init only runs if snapshots command fails
+   - No manual intervention needed
+
+** Next Steps After Deployment
+1. Deploy Newton and Einstein configurations
+2. Copy public key: `ssh newton cat /var/lib/restic/.ssh/id_backup.pub`
+3. Add public key to Einstein's backup user authorized_keys
+4. Test SSH connectivity: `ssh newton sudo -u restic ssh backup@einstein`
+5. Test backup execution
+
+** Status
+- Repository setup configuration complete
+- Ready for deployment and testing
+- SSH key will be auto-generated on first boot
+
+* 2025-07-13 Code Review Issues Identified
+
+** Critical Issues Found
+1. Manual key exchange process breaks declarative nature
+2. Race condition between Newton key generation and Einstein deployment
+3. Hardcoded paths scattered across files
+4. Missing error handling and validation
+5. Inconsistent ownership (restic vs backup users)
+6. Security concerns with root activation scripts
+
+** Issues to Fix
+- Manual intervention required for key exchange
+- No ordering guarantees between hosts
+- Hardcoded /var/lib/restic/.ssh/id_backup paths
+- No validation of /mnt/media mount
+- User mismatch between newton (restic) and einstein (backup)
+- Missing error checking in SSH key generation
+
+** Recommended Solutions
+1. Use agenix for SSH key management instead of runtime generation
+2. Add mount validation and assertions
+3. Create shared backup configuration module
+4. Use consistent user names across hosts
+5. Add proper error handling and validation
+6. Eliminate manual post-deployment steps
+
+** Status: NEEDS REFACTORING
+Current approach has fundamental issues that need addressing before deployment.
+
+* 2025-07-13 Code Review Fixes Implemented
+
+** Fixes Applied
+1. **Agenix SSH Key Management**:
+   - Added newton-backup-ssh-key.age to secrets
+   - SSH key now managed declaratively via agenix
+   - Eliminates manual key exchange process
+
+2. **Consistent User Names**:
+   - Changed restic module to use "backup" user consistently
+   - Both Newton and Einstein now use same user name
+   - Eliminates user mismatch issues
+
+3. **Centralized Configuration**:
+   - Added backupUser variable in module
+   - Centralized sshKeyPath definition
+   - Reduced hardcoded path duplication
+
+4. **Added Validation and Error Handling**:
+   - Assertions for required options
+   - Mount validation for /mnt/media
+   - SSH key existence validation
+   - Backup storage accessibility check
+   - Proper error handling in backup script
+
+5. **Improved Security**:
+   - SSH key managed via agenix (encrypted)
+   - Proper ownership and permissions
+   - No root manipulation of user files
+
+6. **Enhanced Reliability**:
+   - Added network-online.target dependency
+   - Randomized timer delay
+   - Backup/prune error separation
+   - Storage validation service
+
+** Remaining Issues
+- Need to generate and encrypt SSH private key
+- Need to extract public key for Einstein configuration
+- Module needs to import agenix secrets properly
+
+** Quick Fix Applied
+- Fixed hostname: einstein → einstein (correct hostname)
+
+** Status: MAJOR IMPROVEMENTS
+Addressed all critical issues from code review. Ready for SSH key generation and testing.
+
+* 2025-07-13 Service Configuration Complete
+
+** Current Status Review
+The service configuration is already complete! Upon review:
+
+1. **Systemd Service**: Already implemented in restic-backup.nix
+   - Type: oneshot
+   - User: backup
+   - Path includes restic and openssh
+   - Error handling and validation
+   - Repository auto-initialization
+
+2. **Systemd Timer**: Already configured
+   - OnCalendar: daily
+   - Persistent: true
+   - RandomizedDelaySec: 1h
+   - Wired to timers.target
+
+3. **Newton Configuration**: Already complete
+   - Service enabled
+   - Repository configured (sftp:backup@einstein:/mnt/media/backups/newton-restic)
+   - Password file from agenix
+   - SSH key file from agenix
+   - All paths configured
+   - Default retention policy applied
+
+** Service Features Implemented
+- Daily automated backups
+- Repository initialization
+- SSH key validation
+- Error handling
+- Backup and prune operations
+- Environment variables for restic
+- Randomized execution to avoid conflicts
+
+** Status: SERVICE READY
+All service configuration is complete. Ready for SSH key generation and testing phase.

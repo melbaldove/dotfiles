@@ -1,0 +1,155 @@
+#+TITLE: Restic Backup Architecture
+#+DATE: 2025-07-13
+#+AUTHOR: Infrastructure Documentation
+
+* Overview
+
+This document outlines the restic backup architecture for the dotfiles infrastructure, providing automated, encrypted, and deduplicated backups from Newton (production server) to Einstein (backup destination).
+
+* Architecture
+
+** Source: Newton (10.0.1.2)
+- Production server hosting critical business applications
+- Startup network segment
+- Services requiring backup:
+  - Twenty CRM (PostgreSQL + Redis)
+  - Ghost CMS (MySQL)
+  - Outline Wiki (shared PostgreSQL)
+  - SSL certificates
+  - Configuration secrets
+
+** Destination: Einstein (10.0.0.2)
+- Backup server on personal network segment
+- Media server with external storage at =/mnt/media=
+- VPN gateway with cross-network connectivity
+- Backup repository storage location
+
+** Network Connectivity
+- VPN connection via WireGuard through Shannon
+- Cross-network routing: 10.0.1.0/24 ↔ 10.0.0.0/24
+- SSH-based repository access over encrypted tunnel
+
+* Data Classification
+
+** Critical Data (Daily Backup)
+*** Databases
+- PostgreSQL: Twenty CRM customer data, Outline wiki content
+- MySQL: Ghost CMS blog posts and media
+- Redis: Session data and background job queues
+
+*** Application Data
+- Docker volumes - All persistent application data:
+  - =ghost_ghost-content= - Ghost CMS uploads, themes, and media
+  - =ghost_db-data= - Ghost MySQL database files
+  - =twenty_db-data= - PostgreSQL database for Twenty CRM and Outline
+  - =twenty_server-local-data= - Twenty CRM local file uploads
+  - =outline_outline-data= - Outline wiki attachments and data
+- =/var/lib/acme/= - SSL certificates (auto-renewed by ACME)
+
+*** Docker Volumes Location
+- =/var/lib/docker/volumes/= - All Docker named volumes listed above
+
+** System Data (Weekly Backup)
+- System configurations
+- Docker compose states
+- Nginx configurations
+
+* Backup Strategy
+
+** Backup Approach
+- Direct backup of Docker volumes containing database files
+- No intermediate SQL dumps - simpler and faster
+- Consistent snapshots via restic's deduplication
+- Backup during low-traffic hours (2 AM)
+
+** Backup Execution
+1. Restic snapshots all Docker volumes directly
+2. Verify backup integrity
+3. No temporary files or cleanup needed
+
+** Post-Backup Operations
+1. Backup verification via =restic check=
+2. Prune old snapshots per retention policy
+3. Report backup status to monitoring
+
+* Repository Configuration
+
+** Repository Location
+- Einstein: =/mnt/media/backups/newton-restic/=
+- Repository type: Local filesystem (over SSH)
+- Encryption: AES-256 with repository password
+
+** Access Method
+- SSH connection from Newton to Einstein
+- Dedicated SSH key for backup operations
+- Repository path: =einstein:/mnt/media/backups/newton-restic=
+
+** Security
+- Repository password stored in agenix secrets
+- SSH key dedicated to backup user
+- Network access restricted to VPN
+- Backup repository encrypted at rest
+- Note: agenix secrets in =/run/agenix.d/= are runtime-only (ramfs) and don't need backup
+
+* Retention Policy
+
+** Snapshot Retention
+- Keep last 7 daily backups
+- Keep last 4 weekly backups (Sundays)
+- Keep last 12 monthly backups (1st of month)
+- Keep last 2 yearly backups (January 1st)
+
+** Pruning Schedule
+- Daily after backup completion
+- Remove snapshots not matching retention rules
+- Verify repository integrity after pruning
+
+* Monitoring and Alerting
+
+** Success Metrics
+- Backup completion status
+- Backup duration and size
+- Repository integrity status
+- Available storage space
+
+** Alert Conditions
+- Backup failure or timeout
+- Repository corruption detected
+- Storage space below threshold
+- Network connectivity issues
+
+** Integration
+- Prometheus metrics via node exporter
+- Log shipping to Loki via promtail
+- Status notifications via configured channels
+
+* Disaster Recovery
+
+** Recovery Scenarios
+1. Single file/directory restoration
+2. Database point-in-time recovery
+3. Full system restoration
+4. Cross-platform restoration
+
+** Recovery Procedures
+1. List available snapshots: =restic snapshots=
+2. Mount snapshot for browsing: =restic mount=
+3. Restore specific paths: =restic restore=
+4. Database restoration from dumps
+
+** Testing
+- Monthly restore tests of critical data
+- Quarterly full restore simulation
+- Annual disaster recovery drill
+
+* Implementation Files
+
+** Module Structure
+- =modules/system/linux/restic-backup.nix= - Main NixOS module
+- =secrets/restic-password.age= - Encrypted repository password
+- =secrets/secrets.nix= - Secret configuration
+
+** Configuration
+- Host-specific backup settings in =hosts/newton/=
+- Repository setup in =hosts/einstein/=
+- Systemd services and timers for automation

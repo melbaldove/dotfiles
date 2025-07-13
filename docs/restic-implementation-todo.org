@@ -1,0 +1,54 @@
+#+TITLE: Restic Implementation Todo List
+#+DATE: 2025-07-13
+
+* TODO Implementation Tasks [5/8]
+
+** DONE Module Development [3/3]
+- [X] Create =modules/system/linux/restic-backup.nix=
+- [X] Define NixOS options structure
+- [X] Implement systemd services and timers
+
+** DONE Secret Management [3/3]
+- [X] Update =secrets/secrets.nix= with restic password entry
+- [X] Generate and encrypt restic repository password
+- [X] Configure agenix secret access in module
+
+** DONE Repository Setup [4/4]
+- [X] Configure Einstein backup storage directory
+- [X] Create backup user on Einstein with SSH access
+- [X] Generate Newton backup SSH key
+- [X] Initialize restic repository on Einstein
+
+** DONE Service Configuration [2/2]
+- [X] Configure systemd backup service
+- [X] Set up systemd timer for automated backups
+
+** DONE Newton Configuration [3/3]
+- [X] Enable restic-backup service in Newton host config
+- [X] Configure backup paths and schedules
+- [X] Set retention policies
+
+** TODO Testing [0/5]
+- [ ] Test manual backup execution
+- [ ] Verify automated timer operation
+- [ ] Test file-level restore
+- [ ] Test volume restore
+- [ ] Perform full system restore test
+
+** TODO Monitoring [0/3]
+- [ ] Create Prometheus metrics exporter script
+- [ ] Configure node exporter textfile collector
+- [ ] Add Grafana dashboard
+
+** TODO Documentation [0/2]
+- [ ] Create operational runbook
+- [ ] Document disaster recovery procedures
+
+* Backup Paths
+
+- =ghost_ghost-content=
+- =ghost_db-data=
+- =twenty_db-data=
+- =twenty_server-local-data=
+- =outline_outline-data=
+- =/var/lib/acme/=

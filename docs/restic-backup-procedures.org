@@ -1,0 +1,429 @@
+#+TITLE: Restic Backup Procedures
+#+DATE: 2025-07-13
+#+AUTHOR: Infrastructure Documentation
+
+* Operational Procedures
+
+This document provides day-to-day operational procedures for managing the restic backup system.
+
+* Daily Operations
+
+** Check Backup Status
+
+*** View Last Backup
+#+BEGIN_SRC bash
+# Check last backup via systemd
+ssh newton systemctl status restic-backup.service
+
+# View detailed logs
+ssh newton journalctl -u restic-backup.service --since "1 day ago"
+#+END_SRC
+
+*** Verify Backup Timer
+#+BEGIN_SRC bash
+# Check timer status
+ssh newton systemctl status restic-backup.timer
+
+# List next scheduled runs
+ssh newton systemctl list-timers restic-backup.timer
+#+END_SRC
+
+*** Monitor Backup Metrics
+#+BEGIN_SRC bash
+# Check Prometheus metrics
+curl -s http://newton:9100/metrics | grep restic_
+
+# View in Grafana
+# Navigate to http://shannon:3000/d/restic-backups
+#+END_SRC
+
+** Repository Health Check
+
+*** Basic Repository Check
+#+BEGIN_SRC bash
+# Quick repository verification
+ssh newton sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Read repository data verification (slower)
+ssh newton sudo -u restic restic check --read-data --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC
+
+*** List Recent Snapshots
+#+BEGIN_SRC bash
+# Show last 10 snapshots
+ssh newton sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic | tail -10
+
+# Show snapshots in JSON format
+ssh newton sudo -u restic restic snapshots --repo sftp:backup@einstein:/mnt/media/backups/newton-restic --json
+#+END_SRC
+
+*** Repository Statistics
+#+BEGIN_SRC bash
+# Repository stats
+ssh newton sudo -u restic restic stats --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Storage usage by snapshot
+ssh newton sudo -u restic restic stats --repo sftp:backup@einstein:/mnt/media/backups/newton-restic --mode raw-data
+#+END_SRC
+
+* Manual Backup Operations
+
+** Trigger Manual Backup
+
+*** Full Backup
+#+BEGIN_SRC bash
+# Start backup immediately
+ssh newton sudo systemctl start restic-backup.service
+
+# Monitor progress
+ssh newton journalctl -u restic-backup.service -f
+#+END_SRC
+
+*** Selective Backup
+#+BEGIN_SRC bash
+# Backup specific paths
+ssh newton sudo -u restic restic backup \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  /var/lib/ghost/content \
+  --tag manual-selective
+#+END_SRC
+
+*** Service-Specific Backup
+#+BEGIN_SRC bash
+# Backup specific service volumes
+ssh newton sudo -u restic restic backup \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  /var/lib/docker/volumes/ghost_ghost-content \
+  /var/lib/docker/volumes/ghost_db-data \
+  --tag ghost-only
+#+END_SRC
+
+** Repository Maintenance
+
+*** Prune Old Snapshots
+#+BEGIN_SRC bash
+# Apply retention policy
+ssh newton sudo -u restic restic forget \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --keep-daily 7 \
+  --keep-weekly 4 \
+  --keep-monthly 12 \
+  --keep-yearly 2 \
+  --prune
+
+# Verify after pruning
+ssh newton sudo -u restic restic check --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC
+
+*** Repository Cleanup
+#+BEGIN_SRC bash
+# Remove unused data
+ssh newton sudo -u restic restic prune --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Rebuild repository index
+ssh newton sudo -u restic restic rebuild-index --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC
+
+* Restore Procedures
+
+** Explore Backup Contents
+
+*** Mount Snapshot for Browsing
+#+BEGIN_SRC bash
+# Mount latest snapshot
+ssh newton sudo mkdir -p /mnt/restic-mount
+ssh newton sudo -u restic restic mount \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  /mnt/restic-mount
+
+# Browse files
+ssh newton ls -la /mnt/restic-mount/snapshots/latest/
+
+# Unmount when done
+ssh newton sudo umount /mnt/restic-mount
+#+END_SRC
+
+*** List Files in Snapshot
+#+BEGIN_SRC bash
+# List files in latest snapshot
+ssh newton sudo -u restic restic ls \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  latest
+
+# List files in specific snapshot
+ssh newton sudo -u restic restic ls \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  abc123def
+#+END_SRC
+
+** File-Level Restore
+
+*** Restore Single File
+#+BEGIN_SRC bash
+# Restore specific file to original location
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target / \
+  --include /var/lib/ghost/content/settings.json
+
+# Restore to different location
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target /tmp/restore \
+  --include /var/lib/docker/volumes/ghost_ghost-content
+#+END_SRC
+
+*** Restore Directory
+#+BEGIN_SRC bash
+# Restore entire directory
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target /tmp/restore \
+  --include /var/lib/docker/volumes/ghost_ghost-content
+
+# Fix permissions after restore (Docker volumes need root ownership)
+ssh newton sudo chown -R root:root /tmp/restore/var/lib/docker/volumes/
+#+END_SRC
+
+** Database Restore
+
+*** PostgreSQL Restore
+#+BEGIN_SRC bash
+# Stop services using the database
+ssh newton docker stop twenty-server-1 twenty-worker-1 outline-outline-1
+
+# Restore database volume
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target / \
+  --include /var/lib/docker/volumes/twenty_db-data
+
+# Start database and services
+ssh newton docker start twenty-db-1
+ssh newton docker start twenty-server-1 twenty-worker-1 outline-outline-1
+#+END_SRC
+
+*** MySQL Restore
+#+BEGIN_SRC bash
+# Stop Ghost service
+ssh newton docker stop ghost-ghost-1
+
+# Restore database volume
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target / \
+  --include /var/lib/docker/volumes/ghost_db-data
+
+# Start services
+ssh newton docker start ghost-db-1
+ssh newton docker start ghost-ghost-1
+#+END_SRC
+
+*** Redis Restore
+#+BEGIN_SRC bash
+# Redis data is ephemeral - just restart if needed
+ssh newton docker restart twenty-redis-1
+
+# If critical data needs restoration, restore the whole volume
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target / \
+  --include /var/lib/docker/volumes/twenty_redis-data
+#+END_SRC
+
+** Full System Restore
+
+*** Complete Service Restore
+#+BEGIN_SRC bash
+# Stop all services
+ssh newton docker compose -f /etc/arion/compositions/twenty-crm.nix stop
+ssh newton docker compose -f /etc/arion/compositions/ghost.nix stop
+ssh newton docker compose -f /etc/arion/compositions/outline.nix stop
+
+# Restore all data
+ssh newton sudo -u restic restic restore latest \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --target / \
+  --include /var/lib/docker/volumes/ghost_ghost-content \
+  --include /var/lib/docker/volumes/ghost_db-data \
+  --include /var/lib/docker/volumes/twenty_db-data \
+  --include /var/lib/docker/volumes/twenty_server-local-data \
+  --include /var/lib/docker/volumes/outline_outline-data \
+  --include /var/lib/acme
+
+# Fix permissions
+ssh newton sudo chown -R root:root /var/lib/docker/volumes/
+
+# Restart services
+ssh newton systemctl restart docker
+ssh newton systemctl restart ghost
+ssh newton systemctl restart twenty-crm
+ssh newton systemctl restart outline
+#+END_SRC
+
+* Troubleshooting
+
+** Common Issues
+
+*** Backup Fails with SSH Connection Error
+#+BEGIN_SRC bash
+# Check SSH connectivity
+ssh newton sudo -u restic ssh -o ConnectTimeout=10 backup@einstein echo "Connection OK"
+
+# Verify SSH key
+ssh newton sudo -u restic cat /var/lib/restic/.ssh/id_backup.pub
+
+# Check Einstein SSH logs
+ssh einstein journalctl -u sshd -f
+#+END_SRC
+
+*** Repository Lock Issues
+#+BEGIN_SRC bash
+# List locks
+ssh newton sudo -u restic restic list locks --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Remove stale locks (use with caution)
+ssh newton sudo -u restic restic unlock --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+#+END_SRC
+
+*** Storage Space Issues
+#+BEGIN_SRC bash
+# Check Einstein storage
+ssh einstein df -h /mnt/media
+
+# Check repository size
+ssh newton sudo -u restic restic stats --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Check Docker volume sizes
+ssh newton sudo du -sh /var/lib/docker/volumes/ghost_*
+ssh newton sudo du -sh /var/lib/docker/volumes/twenty_*
+ssh newton sudo du -sh /var/lib/docker/volumes/outline_*
+
+# Emergency cleanup (remove oldest snapshots)
+ssh newton sudo -u restic restic forget \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --keep-last 3 \
+  --prune
+#+END_SRC
+
+*** Docker Volume Access Issues
+#+BEGIN_SRC bash
+# Check Docker container status
+ssh newton docker ps | grep -E "(twenty-db|ghost-db|twenty-redis)"
+
+# Verify volume permissions
+ssh newton sudo ls -la /var/lib/docker/volumes/
+
+# Check if volumes are in use
+ssh newton docker volume ls
+ssh newton docker volume inspect ghost_ghost-content
+#+END_SRC
+
+** Performance Issues
+
+*** Slow Backup Operations
+#+BEGIN_SRC bash
+# Monitor backup progress
+ssh newton sudo -u restic restic backup \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --verbose \
+  /var/lib/docker/volumes
+
+# Check network bandwidth during backup
+ssh newton iftop -i wg0
+ssh einstein iftop -i wg0
+#+END_SRC
+
+*** Repository Corruption
+#+BEGIN_SRC bash
+# Full repository check with repair
+ssh newton sudo -u restic restic check \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic \
+  --read-data
+
+# Rebuild repository index
+ssh newton sudo -u restic restic rebuild-index \
+  --repo sftp:backup@einstein:/mnt/media/backups/newton-restic
+
+# Last resort: create new repository and start fresh
+# (Document and approve before executing)
+#+END_SRC
+
+* Monitoring and Alerting
+
+** Key Metrics to Monitor
+
+*** Backup Health
+- Last successful backup timestamp
+- Backup duration trends
+- Backup size trends
+- Repository integrity status
+
+*** Storage Health
+- Available storage on Einstein
+- Repository growth rate
+- Number of snapshots retained
+
+*** Network Health
+- VPN connectivity between networks
+- SSH connection reliability
+- Backup transfer speeds
+
+** Alert Thresholds
+
+*** Critical Alerts
+- No successful backup in 48 hours
+- Repository corruption detected
+- Storage space below 10GB free
+- SSH authentication failures
+
+*** Warning Alerts
+- Backup duration exceeds 2 hours
+- Repository size growth exceeds 20% week-over-week
+- Storage space below 50GB free
+
+** Response Procedures
+
+*** Backup Failure Response
+1. Check systemd service status and logs
+2. Verify network connectivity and SSH access
+3. Check repository health and storage space
+4. Attempt manual backup to isolate issue
+5. Escalate if manual backup fails
+
+*** Storage Full Response
+1. Check Einstein storage capacity
+2. Run emergency pruning to free space
+3. Evaluate retention policy adjustments
+4. Consider additional storage or archival
+
+*** Repository Corruption Response
+1. Stop all backup operations immediately
+2. Run comprehensive repository check
+3. Attempt index rebuild if feasible
+4. Restore from secondary backup if available
+5. Initialize new repository as last resort
+
+* Maintenance Schedule
+
+** Daily
+- Automated backup execution (02:00)
+- Backup status verification (08:00)
+- Basic health check via monitoring
+
+** Weekly
+- Repository integrity check
+- Storage utilization review
+- Performance metrics analysis
+
+** Monthly
+- Full repository verification with read-data check
+- Retention policy effectiveness review
+- Test restore of critical data
+- Documentation updates
+
+** Quarterly
+- Disaster recovery drill
+- Backup strategy review
+- Performance optimization
+- Security audit of backup access
