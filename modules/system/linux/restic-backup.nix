@@ -57,7 +57,7 @@ in {
       description = "Restic backup";
       after = [ "network.target" ];
       wants = [ "network-online.target" ];
-      path = with pkgs; [ restic bc ];
+      path = with pkgs; [ restic bc gawk coreutils ];
       
       serviceConfig = {
         Type = "oneshot";
