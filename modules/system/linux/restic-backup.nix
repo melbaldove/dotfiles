@@ -57,7 +57,7 @@ in {
       description = "Restic backup";
       after = [ "network.target" ];
       wants = [ "network-online.target" ];
-      path = with pkgs; [ restic bc gawk coreutils ];
+      path = with pkgs; [ restic gawk coreutils ];
       
       serviceConfig = {
         Type = "oneshot";
@@ -117,13 +117,13 @@ in {
             SIZE_VALUE=$(echo "$SIZE_LINE" | awk '{print $3}')
             SIZE_UNIT=$(echo "$SIZE_LINE" | awk '{print $4}')
             
-            # Convert to bytes
+            # Convert to bytes using awk (more reliable than bc)
             case "$SIZE_UNIT" in
-              "B") RESTORE_SIZE="$SIZE_VALUE" ;;
-              "KiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1024" | bc -l | cut -d. -f1) ;;
-              "MiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1048576" | bc -l | cut -d. -f1) ;;
-              "GiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1073741824" | bc -l | cut -d. -f1) ;;
-              "TiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1099511627776" | bc -l | cut -d. -f1) ;;
+              "B") RESTORE_SIZE=$(printf "%.0f" "$SIZE_VALUE") ;;
+              "KiB") RESTORE_SIZE=$(awk "BEGIN {printf \"%.0f\", $SIZE_VALUE * 1024}") ;;
+              "MiB") RESTORE_SIZE=$(awk "BEGIN {printf \"%.0f\", $SIZE_VALUE * 1048576}") ;;
+              "GiB") RESTORE_SIZE=$(awk "BEGIN {printf \"%.0f\", $SIZE_VALUE * 1073741824}") ;;
+              "TiB") RESTORE_SIZE=$(awk "BEGIN {printf \"%.0f\", $SIZE_VALUE * 1099511627776}") ;;
               *) RESTORE_SIZE="0" ;;
             esac
             
