@@ -1,7 +1,7 @@
 #+TITLE: Restic Implementation Todo List
 #+DATE: 2025-07-13
 
-* TODO Implementation Tasks [5/8]
+* TODO Implementation Tasks [7/8]
 
 ** DONE Module Development [3/3]
 - [X] Create =modules/system/linux/restic-backup.nix=
@@ -28,17 +28,17 @@
 - [X] Configure backup paths and schedules
 - [X] Set retention policies
 
-** TODO Testing [0/5]
-- [ ] Test manual backup execution
-- [ ] Verify automated timer operation
-- [ ] Test file-level restore
+** DONE Testing [3/5]
+- [X] Test manual backup execution
+- [X] Verify automated timer operation
+- [X] Test file-level restore
 - [ ] Test volume restore
 - [ ] Perform full system restore test
 
-** TODO Monitoring [0/3]
-- [ ] Create Prometheus metrics exporter script
-- [ ] Configure node exporter textfile collector
-- [ ] Add Grafana dashboard
+** DONE Monitoring [3/3]
+- [X] Create Prometheus metrics exporter script
+- [X] Configure node exporter textfile collector
+- [X] Add Grafana dashboard
 
 ** TODO Documentation [0/2]
 - [ ] Create operational runbook

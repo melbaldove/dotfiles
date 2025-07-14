@@ -11,6 +11,40 @@
     listenAddress = "localhost";
     retentionTime = "30d";
     
+    ruleFiles = [
+      (pkgs.writeText "restic-alerts.yml" ''
+        groups:
+          - name: restic.rules
+            rules:
+              - alert: ResticBackupFailed
+                expr: restic_backup_success == 0
+                for: 0m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Restic backup failed"
+                  description: "Restic backup failed for repository {{ $labels.repository }}"
+              
+              - alert: ResticBackupStale
+                expr: time() - restic_backup_timestamp_seconds > 86400 * 2
+                for: 0m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Restic backup is stale"
+                  description: "Restic backup for {{ $labels.repository }} hasn't run in over 2 days"
+              
+              - alert: ResticBackupLong
+                expr: restic_backup_duration_seconds > 3600
+                for: 0m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Restic backup taking too long"
+                  description: "Restic backup for {{ $labels.repository }} took {{ $value }}s to complete"
+      '')
+    ];
+    
     scrapeConfigs = [
       {
         job_name = "personal";
@@ -150,6 +184,23 @@
           }
         ];
       };
+      dashboards.settings = {
+        apiVersion = 1;
+        providers = [
+          {
+            name = "default";
+            orgId = 1;
+            folder = "";
+            type = "file";
+            disableDeletion = false;
+            updateIntervalSeconds = 10;
+            allowUiUpdates = true;
+            options = {
+              path = "/var/lib/grafana/dashboards";
+            };
+          }
+        ];
+      };
     };
   };
 
@@ -182,4 +233,10 @@
               insecure_skip_verify: false
     '';
   };
+
+  # Symlink dashboard files for Grafana provisioning
+  systemd.tmpfiles.rules = [
+    "d /var/lib/grafana/dashboards 0755 grafana grafana -"
+    "L+ /var/lib/grafana/dashboards/restic-backup.json - - - - ${./dashboards/restic-backup.json}"
+  ];
 }

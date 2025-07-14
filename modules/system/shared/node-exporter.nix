@@ -11,6 +11,13 @@
       enable = true;
       port = 9100;
       listenAddress = config.monitoring.nodeExporter.listenAddress;
+      enabledCollectors = [ "textfile" ];
+      extraFlags = [ "--collector.textfile.directory=/var/lib/node_exporter/textfile_collector" ];
     };
+    
+    # Create textfile collector directory
+    systemd.tmpfiles.rules = [
+      "d /var/lib/node_exporter/textfile_collector 0755 root root -"
+    ];
   };
 }
