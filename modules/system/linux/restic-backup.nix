@@ -112,10 +112,17 @@ in {
             
             # Get repository stats
             restic stats --mode restore-size > /tmp/restic_stats.$$
+            echo "DEBUG: restic stats output:" >&2
+            cat /tmp/restic_stats.$$ >&2
+            
             # Parse size and convert to bytes
             SIZE_LINE=$(grep "Total Size:" /tmp/restic_stats.$$ || echo "0 B")
             SIZE_VALUE=$(echo "$SIZE_LINE" | awk '{print $3}')
             SIZE_UNIT=$(echo "$SIZE_LINE" | awk '{print $4}')
+            
+            echo "DEBUG: SIZE_LINE='$SIZE_LINE'" >&2
+            echo "DEBUG: SIZE_VALUE='$SIZE_VALUE'" >&2
+            echo "DEBUG: SIZE_UNIT='$SIZE_UNIT'" >&2
             
             # Convert to bytes using awk (more reliable than bc)
             case "$SIZE_UNIT" in
@@ -127,6 +134,7 @@ in {
               *) RESTORE_SIZE="0" ;;
             esac
             
+            echo "DEBUG: RESTORE_SIZE='$RESTORE_SIZE'" >&2
             rm -f /tmp/restic_stats.$$
             
             # Prune old snapshots
