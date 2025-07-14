@@ -57,7 +57,7 @@ in {
       description = "Restic backup";
       after = [ "network.target" ];
       wants = [ "network-online.target" ];
-      path = with pkgs; [ restic ];
+      path = with pkgs; [ restic bc ];
       
       serviceConfig = {
         Type = "oneshot";
@@ -112,7 +112,21 @@ in {
             
             # Get repository stats
             restic stats --mode restore-size > /tmp/restic_stats.$$
-            RESTORE_SIZE=$(grep "Total Size:" /tmp/restic_stats.$$ | awk '{print $3}' | sed 's/[^0-9]//g' || echo "0")
+            # Parse size and convert to bytes
+            SIZE_LINE=$(grep "Total Size:" /tmp/restic_stats.$$ || echo "0 B")
+            SIZE_VALUE=$(echo "$SIZE_LINE" | awk '{print $3}')
+            SIZE_UNIT=$(echo "$SIZE_LINE" | awk '{print $4}')
+            
+            # Convert to bytes
+            case "$SIZE_UNIT" in
+              "B") RESTORE_SIZE="$SIZE_VALUE" ;;
+              "KiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1024" | bc -l | cut -d. -f1) ;;
+              "MiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1048576" | bc -l | cut -d. -f1) ;;
+              "GiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1073741824" | bc -l | cut -d. -f1) ;;
+              "TiB") RESTORE_SIZE=$(echo "$SIZE_VALUE * 1099511627776" | bc -l | cut -d. -f1) ;;
+              *) RESTORE_SIZE="0" ;;
+            esac
+            
             rm -f /tmp/restic_stats.$$
             
             # Prune old snapshots
