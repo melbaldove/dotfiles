@@ -305,51 +305,6 @@
     enable = true;
     openFirewall = false; # We use nginx proxy
     webhookUrl = "https://n8n.workwithnextdesk.com";
-    
-    settings = {
-      # Basic n8n configuration
-      port = 5678;
-      host = "0.0.0.0";
-      
-      # Database configuration with password file
-      database = {
-        type = "postgresdb";
-        postgresdb = {
-          host = "localhost";
-          port = 5432;
-          database = "n8n";
-          user = "postgres";
-          password = {
-            file = config.age.secrets.n8n-db-password.path;
-          };
-        };
-      };
-      
-      # Security/Authentication with password file
-      security = {
-        basicAuth = {
-          active = true;
-          user = "admin";
-          password = {
-            file = config.age.secrets.n8n-basic-auth-password.path;
-          };
-        };
-      };
-      
-      
-      # Other settings
-      diagnostics = {
-        enabled = false;
-      };
-      
-      versionNotifications = {
-        enabled = false;
-      };
-      
-      generic = {
-        timezone = "UTC";
-      };
-    };
   };
 
   # Ensure n8n database exists
@@ -379,6 +334,29 @@
   systemd.services.n8n = {
     after = [ "n8n-db-init.service" ];
     requires = [ "n8n-db-init.service" ];
+    environment = {
+      # Database configuration
+      DB_TYPE = "postgresdb";
+      DB_POSTGRESDB_HOST = "localhost";
+      DB_POSTGRESDB_PORT = "5432";
+      DB_POSTGRESDB_DATABASE = "n8n";
+      DB_POSTGRESDB_USER = "postgres";
+      DB_POSTGRESDB_PASSWORD_FILE = config.age.secrets.n8n-db-password.path;
+      
+      # Basic authentication
+      N8N_BASIC_AUTH_ACTIVE = "true";
+      N8N_BASIC_AUTH_USER = "admin";
+      N8N_BASIC_AUTH_PASSWORD_FILE = config.age.secrets.n8n-basic-auth-password.path;
+      
+      # Network configuration
+      N8N_HOST = "0.0.0.0";
+      N8N_PORT = "5678";
+      
+      # Other settings
+      N8N_DIAGNOSTICS_ENABLED = "false";
+      N8N_VERSION_NOTIFICATIONS_ENABLED = "false";
+      GENERIC_TIMEZONE = "UTC";
+    };
     serviceConfig = {
       User = "n8n";
       Group = "n8n";
