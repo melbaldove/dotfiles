@@ -13,6 +13,7 @@
     ../../modules/system/linux/twenty-crm.nix
     ../../modules/system/linux/ghost-cms.nix
     ../../modules/system/linux/outline.nix
+    ../../modules/system/linux/n8n.nix
     ../../modules/system/shared/node-exporter.nix
     inputs.home-manager.nixosModules.home-manager
   ];
@@ -269,6 +270,35 @@
       appId = "A0W3UMKBQ";
       messageActions = true;
     };
+  };
+
+  # Configure n8n service
+  services.n8n = {
+    enable = true;
+    url = "https://n8n.workwithnextdesk.com";
+    port = 5678;
+    
+    encryptionKeyFile = config.age.secrets.n8n-encryption-key.path;
+    
+    database = {
+      host = "twenty-db-1";
+      port = 5432;
+      user = "postgres";
+      passwordFile = config.age.secrets.n8n-db-password.path;
+      database = "n8n";
+    };
+    
+    redis = {
+      host = "twenty-redis-1";
+      port = 6379;
+    };
+    
+    basicAuth = {
+      enabled = true;
+      user = "admin";
+      passwordFile = config.age.secrets.n8n-basic-auth-password.path;
+    };
+    
   };
 
   home-manager = {

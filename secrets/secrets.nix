@@ -46,4 +46,9 @@ in
   
   # Restic backup secrets
   "restic-password.age".publicKeys = [ user newton ];
+  
+  # n8n secrets
+  "n8n-encryption-key.age".publicKeys = [ user newton ];
+  "n8n-db-password.age".publicKeys = [ user newton ];
+  "n8n-basic-auth-password.age".publicKeys = [ user newton ];
 }
