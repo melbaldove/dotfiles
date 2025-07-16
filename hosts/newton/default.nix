@@ -348,8 +348,33 @@
     };
   };
 
+  # Ensure n8n database exists
+  systemd.services.n8n-db-init = {
+    description = "Initialize n8n database";
+    after = [ "docker.service" ];
+    requires = [ "docker.service" ];
+    wantedBy = [ "n8n.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      # Wait for PostgreSQL container to be ready
+      until ${pkgs.docker}/bin/docker exec twenty-db-1 pg_isready -U postgres; do
+        echo "Waiting for PostgreSQL to be ready..."
+        sleep 2
+      done
+      
+      # Create n8n database if it doesn't exist
+      ${pkgs.docker}/bin/docker exec twenty-db-1 psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'n8n'" | grep -q 1 || \
+      ${pkgs.docker}/bin/docker exec twenty-db-1 psql -U postgres -c "CREATE DATABASE n8n;"
+    '';
+  };
+
   # Configure n8n service with secrets and pulse access
   systemd.services.n8n = {
+    after = [ "n8n-db-init.service" ];
+    requires = [ "n8n-db-init.service" ];
     serviceConfig = {
       EnvironmentFile = "/run/n8n/env";
       # Create runtime directory for environment file
