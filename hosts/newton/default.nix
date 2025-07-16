@@ -367,25 +367,11 @@
   systemd.services.n8n = {
     after = [ "n8n-db-init.service" ];
     requires = [ "n8n-db-init.service" ];
-    script = ''
-      export DB_POSTGRESDB_PASSWORD=$(cat ${config.age.secrets.n8n-db-password.path})
-      export N8N_BASIC_AUTH_PASSWORD=$(cat ${config.age.secrets.n8n-basic-auth-password.path})
-      export N8N_ENCRYPTION_KEY=$(cat ${config.age.secrets.n8n-encryption-key.path})
-      export NODE_FUNCTION_ALLOW_EXTERNAL=axios,fs,path,child_process,util
-      
-      # Create pulse workspace directory and copy pulse project
-      mkdir -p /var/lib/n8n/workspace
-      cp -r ${inputs.pulse}/* /var/lib/n8n/workspace/pulse/ || mkdir -p /var/lib/n8n/workspace/pulse
-      chown -R n8n:n8n /var/lib/n8n/workspace
-      
-      # Start n8n
-      exec ${pkgs.n8n}/bin/n8n
-    '';
-    serviceConfig = {
-      User = "n8n";
-      Group = "n8n";
-      WorkingDirectory = "/var/lib/n8n";
-      StateDirectory = "n8n";
+    environment = {
+      DB_POSTGRESDB_PASSWORD_FILE = config.age.secrets.n8n-db-password.path;
+      N8N_BASIC_AUTH_PASSWORD_FILE = config.age.secrets.n8n-basic-auth-password.path;
+      N8N_ENCRYPTION_KEY_FILE = config.age.secrets.n8n-encryption-key.path;
+      NODE_FUNCTION_ALLOW_EXTERNAL = "axios,fs,path,child_process,util";
     };
   };
 
