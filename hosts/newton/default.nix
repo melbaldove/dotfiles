@@ -305,6 +305,43 @@
     enable = true;
     openFirewall = false; # We use nginx proxy
     webhookUrl = "https://n8n.workwithnextdesk.com";
+    
+    # Configure settings to generate proper schema for _FILE variables
+    settings = {
+      # Database configuration - these keys need to exist for _FILE to work
+      database = {
+        type = "postgresdb";
+        postgresdb = {
+          host = "localhost";
+          port = 5432;
+          database = "n8n";
+          user = "postgres";
+          password = ""; # Will be overridden by _FILE
+        };
+      };
+      
+      # Basic authentication - these keys need to exist for _FILE to work
+      credentials = {
+        overwrite = {
+          data = "{}";
+        };
+      };
+      
+      # Network configuration
+      host = "0.0.0.0";
+      port = 5678;
+      
+      # Other settings
+      diagnostics = {
+        enabled = false;
+      };
+      versionNotifications = {
+        enabled = false;
+      };
+      generic = {
+        timezone = "UTC";
+      };
+    };
   };
 
   # Ensure n8n database exists
