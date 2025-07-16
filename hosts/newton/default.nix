@@ -148,9 +148,24 @@
   age.secrets.restic-password.file = ../../secrets/restic-password.age;
   
   # Configure n8n secrets
-  age.secrets.n8n-encryption-key.file = ../../secrets/n8n-encryption-key.age;
-  age.secrets.n8n-db-password.file = ../../secrets/n8n-db-password.age;
-  age.secrets.n8n-basic-auth-password.file = ../../secrets/n8n-basic-auth-password.age;
+  age.secrets.n8n-encryption-key = {
+    file = ../../secrets/n8n-encryption-key.age;
+    mode = "0400";
+    owner = "n8n";
+    group = "n8n";
+  };
+  age.secrets.n8n-db-password = {
+    file = ../../secrets/n8n-db-password.age;
+    mode = "0400";
+    owner = "n8n";
+    group = "n8n";
+  };
+  age.secrets.n8n-basic-auth-password = {
+    file = ../../secrets/n8n-basic-auth-password.age;
+    mode = "0400";
+    owner = "n8n";
+    group = "n8n";
+  };
 
   # Configure restic backup service
   services.restic-backup = {
