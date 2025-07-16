@@ -13,7 +13,6 @@
     ../../modules/system/linux/twenty-crm.nix
     ../../modules/system/linux/ghost-cms.nix
     ../../modules/system/linux/outline.nix
-    ../../modules/system/linux/n8n.nix
     ../../modules/system/shared/node-exporter.nix
     inputs.home-manager.nixosModules.home-manager
   ];
@@ -272,33 +271,99 @@
     };
   };
 
-  # Configure n8n service
+  # Configure n8n service using built-in NixOS module
   services.n8n = {
     enable = true;
-    url = "https://n8n.workwithnextdesk.com";
-    port = 5678;
+    openFirewall = false; # We use nginx proxy
+    webhookUrl = "https://n8n.workwithnextdesk.com";
     
-    encryptionKeyFile = config.age.secrets.n8n-encryption-key.path;
-    
-    database = {
-      host = "twenty-db-1";
-      port = 5432;
-      user = "postgres";
-      passwordFile = config.age.secrets.n8n-db-password.path;
-      database = "n8n";
+    settings = {
+      # Network configuration
+      host = "0.0.0.0";
+      port = 5678;
+      
+      # Database configuration
+      database = {
+        type = "postgresdb";
+        postgresdb = {
+          host = "twenty-db-1";
+          port = 5432;
+          database = "n8n";
+          user = "postgres";
+          # Password will be set via environment variable
+        };
+      };
+      
+      # Redis configuration
+      redis = {
+        host = "twenty-redis-1";
+        port = 6379;
+      };
+      
+      # Basic authentication
+      security = {
+        basicAuth = {
+          active = true;
+          user = "admin";
+          # Password will be set via environment variable
+        };
+      };
+      
+      # External modules for Function nodes
+      nodes = {
+        exclude = [];
+        include = [];
+      };
+      
+      # Disable diagnostics and version notifications
+      diagnostics = {
+        enabled = false;
+      };
+      
+      versionNotifications = {
+        enabled = false;
+      };
+      
+      # Timezone
+      generic = {
+        timezone = "UTC";
+      };
+      
+      # Execution settings
+      executions = {
+        saveDataOnError = "all";
+        saveDataOnSuccess = "all";
+        saveDataMaxAge = 168; # 7 days
+      };
+      
+      # Workflow settings
+      workflows = {
+        defaultName = "Pulse Workflow";
+      };
+    };
+  };
+
+  # Configure n8n service with secrets and pulse access
+  systemd.services.n8n = {
+    serviceConfig = {
+      EnvironmentFile = "/run/n8n/env";
+      # Create runtime directory for environment file
+      RuntimeDirectory = "n8n";
+      RuntimeDirectoryMode = "0700";
+      # Allow access to pulse project
+      BindReadOnlyPaths = [ "${inputs.pulse}:/workspace/pulse" ];
     };
     
-    redis = {
-      host = "twenty-redis-1";
-      port = 6379;
-    };
-    
-    basicAuth = {
-      enabled = true;
-      user = "admin";
-      passwordFile = config.age.secrets.n8n-basic-auth-password.path;
-    };
-    
+    preStart = ''
+      # Create environment file with secrets
+      {
+        echo "DB_POSTGRESDB_PASSWORD=$(cat ${config.age.secrets.n8n-db-password.path})"
+        echo "N8N_BASIC_AUTH_PASSWORD=$(cat ${config.age.secrets.n8n-basic-auth-password.path})"
+        echo "N8N_ENCRYPTION_KEY=$(cat ${config.age.secrets.n8n-encryption-key.path})"
+        echo "NODE_FUNCTION_ALLOW_EXTERNAL=axios,fs,path,child_process,util"
+        echo "PATH=/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin"
+      } > /run/n8n/env
+    '';
   };
 
   home-manager = {

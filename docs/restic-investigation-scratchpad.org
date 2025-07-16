@@ -1,0 +1,58 @@
+#+TITLE: Restic Backup Investigation - Discrepancy Analysis
+#+DATE: 2025-07-15
+#+AUTHOR: Infrastructure Investigation
+
+* Investigation Overview
+Investigating discrepancy between restic stats and actual repository usage on Newton server.
+
+* Investigation Steps
+** TODO 1. SSH to Newton and run restic stats
+** TODO 2. Check actual disk usage of repository
+** TODO 3. Analyze exported metrics
+** TODO 4. Identify discrepancy source
+
+* Current Configuration (from code analysis)
+** Repository Location: /var/lib/restic-backups/newton-restic
+** Backup Paths:
+   - /var/lib/docker/volumes/ghost_ghost-content
+   - /var/lib/docker/volumes/ghost_db-data
+   - /var/lib/docker/volumes/twenty_db-data
+   - /var/lib/docker/volumes/twenty_server-local-data
+   - /var/lib/docker/volumes/outline_outline-data
+
+** Metrics Exported:
+   - restic_backup_success
+   - restic_backup_exit_code
+   - restic_backup_duration_seconds
+   - restic_backup_timestamp_seconds
+   - restic_backup_restore_size_bytes
+
+* Commands to Execute
+** Get restic stats
+: ssh newton
+: sudo -i
+: export RESTIC_REPOSITORY=/var/lib/restic-backups/newton-restic
+: export RESTIC_PASSWORD_FILE=/run/agenix.d/restic-password
+: restic stats --mode restore-size
+: restic stats --mode raw-data
+: restic stats --mode blobs-per-file
+
+** Check actual disk usage
+: du -sh /var/lib/restic-backups/newton-restic
+: du -sh /var/lib/restic-backups/newton-restic/*
+: df -h /var/lib/restic-backups
+
+** Check metrics
+: cat /var/lib/node_exporter/textfile_collector/restic.prom
+
+** Check backup logs
+: journalctl -u restic-backup -n 50
+
+* Investigation Results
+[To be filled as we execute commands]
+
+* Analysis
+[To be filled after gathering data]
+
+* Conclusion
+[To be filled after analysis]
