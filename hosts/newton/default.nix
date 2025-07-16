@@ -355,8 +355,6 @@
       # Create runtime directory for environment file
       RuntimeDirectory = "n8n";
       RuntimeDirectoryMode = "0700";
-      # Allow access to pulse project
-      BindReadOnlyPaths = [ "${inputs.pulse}:/workspace/pulse" ];
     };
     
     preStart = ''
@@ -368,6 +366,11 @@
         echo "NODE_FUNCTION_ALLOW_EXTERNAL=axios,fs,path,child_process,util"
         echo "PATH=/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin"
       } > /run/n8n/env
+      
+      # Create pulse workspace directory and copy pulse project
+      mkdir -p /var/lib/n8n/workspace
+      cp -r ${inputs.pulse}/* /var/lib/n8n/workspace/pulse/ || mkdir -p /var/lib/n8n/workspace/pulse
+      chown -R n8n:n8n /var/lib/n8n/workspace
     '';
   };
 
