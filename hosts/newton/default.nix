@@ -287,7 +287,7 @@
       host = "0.0.0.0";
       port = 5678;
       
-      # Database configuration
+      # Database configuration - using environment variables for secrets
       database = {
         type = "postgresdb";
         postgresdb = {
@@ -295,7 +295,6 @@
           port = 5432;
           database = "n8n";
           user = "postgres";
-          # Password will be set via environment variable
         };
       };
       
@@ -305,19 +304,12 @@
         port = 6379;
       };
       
-      # Basic authentication
+      # Basic authentication - using environment variables for secrets
       security = {
         basicAuth = {
           active = true;
           user = "admin";
-          # Password will be set via environment variable
         };
-      };
-      
-      # External modules for Function nodes
-      nodes = {
-        exclude = [];
-        include = [];
       };
       
       # Disable diagnostics and version notifications
@@ -371,32 +363,30 @@
     '';
   };
 
-  # Configure n8n service with secrets and pulse access
+  # Configure n8n service with secrets
   systemd.services.n8n = {
     after = [ "n8n-db-init.service" ];
     requires = [ "n8n-db-init.service" ];
-    serviceConfig = {
-      EnvironmentFile = "/run/n8n/env";
-      # Create runtime directory for environment file
-      RuntimeDirectory = "n8n";
-      RuntimeDirectoryMode = "0700";
-    };
-    
-    preStart = ''
-      # Create environment file with secrets
-      {
-        echo "DB_POSTGRESDB_PASSWORD=$(cat ${config.age.secrets.n8n-db-password.path})"
-        echo "N8N_BASIC_AUTH_PASSWORD=$(cat ${config.age.secrets.n8n-basic-auth-password.path})"
-        echo "N8N_ENCRYPTION_KEY=$(cat ${config.age.secrets.n8n-encryption-key.path})"
-        echo "NODE_FUNCTION_ALLOW_EXTERNAL=axios,fs,path,child_process,util"
-        echo "PATH=/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin"
-      } > /run/n8n/env
+    script = ''
+      export DB_POSTGRESDB_PASSWORD=$(cat ${config.age.secrets.n8n-db-password.path})
+      export N8N_BASIC_AUTH_PASSWORD=$(cat ${config.age.secrets.n8n-basic-auth-password.path})
+      export N8N_ENCRYPTION_KEY=$(cat ${config.age.secrets.n8n-encryption-key.path})
+      export NODE_FUNCTION_ALLOW_EXTERNAL=axios,fs,path,child_process,util
       
       # Create pulse workspace directory and copy pulse project
       mkdir -p /var/lib/n8n/workspace
       cp -r ${inputs.pulse}/* /var/lib/n8n/workspace/pulse/ || mkdir -p /var/lib/n8n/workspace/pulse
       chown -R n8n:n8n /var/lib/n8n/workspace
+      
+      # Start n8n
+      exec ${pkgs.n8n}/bin/n8n
     '';
+    serviceConfig = {
+      User = "n8n";
+      Group = "n8n";
+      WorkingDirectory = "/var/lib/n8n";
+      StateDirectory = "n8n";
+    };
   };
 
   home-manager = {
