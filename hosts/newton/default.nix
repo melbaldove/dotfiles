@@ -141,6 +141,15 @@
     extraGroups = [ "wheel" "users" ];
   };
 
+  # Create n8n user and group for service
+  users.users.n8n = {
+    isSystemUser = true;
+    group = "n8n";
+    description = "n8n workflow automation user";
+  };
+
+  users.groups.n8n = {};
+
   # Grant promtail access to Docker socket for container log collection
   users.users.promtail.extraGroups = [ "docker" ];
 
@@ -298,36 +307,37 @@
     webhookUrl = "https://n8n.workwithnextdesk.com";
     
     settings = {
-      # Network configuration
-      host = "0.0.0.0";
+      # Basic n8n configuration
       port = 5678;
+      host = "0.0.0.0";
       
-      # Database configuration - using environment variables for secrets
+      # Database configuration with password file
       database = {
         type = "postgresdb";
         postgresdb = {
-          host = "twenty-db-1";
+          host = "localhost";
           port = 5432;
           database = "n8n";
           user = "postgres";
+          password = {
+            file = config.age.secrets.n8n-db-password.path;
+          };
         };
       };
       
-      # Redis configuration
-      redis = {
-        host = "twenty-redis-1";
-        port = 6379;
-      };
-      
-      # Basic authentication - using environment variables for secrets
+      # Security/Authentication with password file
       security = {
         basicAuth = {
           active = true;
           user = "admin";
+          password = {
+            file = config.age.secrets.n8n-basic-auth-password.path;
+          };
         };
       };
       
-      # Disable diagnostics and version notifications
+      
+      # Other settings
       diagnostics = {
         enabled = false;
       };
@@ -336,21 +346,8 @@
         enabled = false;
       };
       
-      # Timezone
       generic = {
         timezone = "UTC";
-      };
-      
-      # Execution settings
-      executions = {
-        saveDataOnError = "all";
-        saveDataOnSuccess = "all";
-        saveDataMaxAge = 168; # 7 days
-      };
-      
-      # Workflow settings
-      workflows = {
-        defaultName = "Pulse Workflow";
       };
     };
   };
@@ -378,15 +375,14 @@
     '';
   };
 
-  # Configure n8n service with secrets
+  # Configure n8n service with static user and database dependency
   systemd.services.n8n = {
     after = [ "n8n-db-init.service" ];
     requires = [ "n8n-db-init.service" ];
-    environment = {
-      DB_POSTGRESDB_PASSWORD_FILE = config.age.secrets.n8n-db-password.path;
-      N8N_BASIC_AUTH_PASSWORD_FILE = config.age.secrets.n8n-basic-auth-password.path;
-      N8N_ENCRYPTION_KEY_FILE = config.age.secrets.n8n-encryption-key.path;
-      NODE_FUNCTION_ALLOW_EXTERNAL = "axios,fs,path,child_process,util";
+    serviceConfig = {
+      User = "n8n";
+      Group = "n8n";
+      DynamicUser = lib.mkForce false;
     };
   };
 
