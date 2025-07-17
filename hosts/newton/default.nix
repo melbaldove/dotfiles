@@ -332,8 +332,6 @@
       N8N_VERSION_NOTIFICATIONS_ENABLED = "false";
       GENERIC_TIMEZONE = "Etc/UTC";
       
-      # Set PATH to include system binaries for Execute Command nodes
-      PATH = "/run/current-system/sw/bin:/usr/bin:/bin";
     };
     preStart = ''
       # Read secrets from credentials directory and write to environment file
