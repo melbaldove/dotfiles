@@ -135,7 +135,6 @@
     arion
     docker-compose
     bun
-    chromium
   ];
 
   users.users.melbournebaldove = {
@@ -390,7 +389,7 @@ EOF
       EnvironmentFile = "/tmp/n8n-env";
       WorkingDirectory = "/var/lib/private/n8n";
     };
-    path = with pkgs; [ bun chromium ];
+    path = with pkgs; [ bun ];
   };
 
   home-manager = {
