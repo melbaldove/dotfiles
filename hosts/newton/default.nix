@@ -341,6 +341,7 @@
       ln -sf ${inputs.pulse}/scripts /var/lib/n8n/pulse/scripts
       ln -sf ${inputs.pulse}/package.json /var/lib/n8n/pulse/package.json
       chown -R n8n:n8n /var/lib/n8n/pulse
+      chmod 755 /var/lib/n8n/pulse
     '';
     serviceConfig = {
       # Load credentials from secret files
