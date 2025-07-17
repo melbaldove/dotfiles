@@ -330,7 +330,7 @@
       # Other settings
       N8N_DIAGNOSTICS_ENABLED = "false";
       N8N_VERSION_NOTIFICATIONS_ENABLED = "false";
-      GENERIC_TIMEZONE = "Etc/UTC";
+      GENERIC_TIMEZONE = "UTC";
       
     };
     preStart = ''
