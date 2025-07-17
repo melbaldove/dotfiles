@@ -309,10 +309,25 @@
     '';
   };
 
+  # Service to create n8n environment file
+  systemd.services.n8n-env-setup = {
+    description = "Create n8n environment file";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      LoadCredential = [
+        "n8n-db-password:${config.age.secrets.n8n-db-password.path}"
+      ];
+    };
+    script = ''
+      echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
+    '';
+  };
+
   # Configure n8n service with database dependency
   systemd.services.n8n = {
-    after = [ "n8n-db-init.service" ];
-    requires = [ "n8n-db-init.service" ];
+    after = [ "n8n-db-init.service" "n8n-env-setup.service" ];
+    requires = [ "n8n-db-init.service" "n8n-env-setup.service" ];
     environment = {
       # Database configuration
       DB_TYPE = "postgresdb";
@@ -340,9 +355,6 @@
       
     };
     preStart = ''
-      # Read secrets from credentials directory and write to environment file
-      echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
-      
       # Create writable copy of pulse in working directory
       rm -rf pulse
       cp -r ${inputs.pulse} pulse
@@ -382,11 +394,7 @@ EOF
       done
     '';
     serviceConfig = {
-      # Load credentials from secret files
-      LoadCredential = [
-        "n8n-db-password:${config.age.secrets.n8n-db-password.path}"
-      ];
-      # Use the environment file created by preStart
+      # Use the environment file created by n8n-env-setup service
       EnvironmentFile = "/tmp/n8n-env";
       WorkingDirectory = "/var/lib/private/n8n";
     };
