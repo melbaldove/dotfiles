@@ -356,6 +356,9 @@
         END
         \$\$;
         GRANT ALL PRIVILEGES ON DATABASE pulse TO pulse;
+        \\c pulse
+        GRANT CREATE ON SCHEMA public TO pulse;
+        GRANT ALL ON SCHEMA public TO pulse;
 EOF
       
       # Run migrations on pulse database
