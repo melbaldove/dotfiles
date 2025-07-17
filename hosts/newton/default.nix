@@ -336,7 +336,7 @@
       
       # Puppeteer configuration
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true";
-      PUPPETEER_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+      PUPPETEER_EXECUTABLE_PATH = "/run/current-system/sw/bin/chromium";
       
     };
     preStart = ''
