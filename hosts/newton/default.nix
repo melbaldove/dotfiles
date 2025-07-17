@@ -135,6 +135,7 @@
     arion
     docker-compose
     bun
+    google-chrome
   ];
 
   users.users.melbournebaldove = {
@@ -333,8 +334,9 @@
       GENERIC_TIMEZONE = "Etc/UTC";
       TZ = "Etc/UTC";
       
-      # Puppeteer configuration - let puppeteer manage its own Chrome
-      PUPPETEER_CACHE_DIR = "/var/lib/private/n8n/.cache/puppeteer";
+      # Puppeteer configuration - use system Chrome
+      PUPPETEER_SKIP_DOWNLOAD = "true";
+      PUPPETEER_EXECUTABLE_PATH = "${pkgs.google-chrome}/bin/google-chrome-stable";
       
     };
     preStart = ''
@@ -350,8 +352,7 @@
       cd pulse
       ${pkgs.bun}/bin/bun install
       
-      # Install Chrome for puppeteer
-      ${pkgs.bun}/bin/bunx puppeteer browsers install chrome
+      # Chrome is provided by system packages, no need to install
       cd ..
       
       # Run database migrations for pulse database
@@ -389,7 +390,7 @@ EOF
       EnvironmentFile = "/tmp/n8n-env";
       WorkingDirectory = "/var/lib/private/n8n";
     };
-    path = with pkgs; [ bun ];
+    path = with pkgs; [ bun google-chrome ];
   };
 
   home-manager = {
