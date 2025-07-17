@@ -332,8 +332,8 @@
       N8N_VERSION_NOTIFICATIONS_ENABLED = "false";
       GENERIC_TIMEZONE = "Etc/UTC";
       
-      # Set PATH for Execute Command nodes to include bun
-      N8N_PATH_EXECUTIONS = "${pkgs.bun}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin";
+      # Set PATH to include system binaries for Execute Command nodes
+      PATH = "/run/current-system/sw/bin:/usr/bin:/bin";
     };
     preStart = ''
       # Read secrets from credentials directory and write to environment file
