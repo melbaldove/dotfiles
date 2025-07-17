@@ -125,8 +125,7 @@
   # Create backup directories with proper ownership
   systemd.tmpfiles.rules = [
     "d /var/lib/restic-backups/newton-restic 0755 root root -"
-    "d /var/lib/n8n 0755 n8n n8n -"
-    "d /var/lib/n8n/pulse 0755 n8n n8n -"
+    "d /var/lib/n8n/pulse 0755 - - -"
     "L+ /var/lib/n8n/pulse/scripts - - - - ${inputs.pulse}/scripts"
     "L+ /var/lib/n8n/pulse/package.json - - - - ${inputs.pulse}/package.json"
   ];
