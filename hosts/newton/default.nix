@@ -135,6 +135,7 @@
     arion
     docker-compose
     bun
+    chromium
   ];
 
   users.users.melbournebaldove = {
