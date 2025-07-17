@@ -337,7 +337,7 @@
       echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
       
       # Create symlink to pulse in working directory
-      rm -f pulse
+      rm -rf pulse
       ln -sf ${inputs.pulse} pulse
     '';
     serviceConfig = {
