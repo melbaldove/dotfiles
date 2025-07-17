@@ -338,6 +338,7 @@
       
       # Create pulse directory and symlink scripts
       mkdir -p /var/lib/n8n/pulse
+      rm -f /var/lib/n8n/pulse/scripts /var/lib/n8n/pulse/package.json
       ln -sf ${inputs.pulse}/scripts /var/lib/n8n/pulse/scripts
       ln -sf ${inputs.pulse}/package.json /var/lib/n8n/pulse/package.json
       chown -R n8n:n8n /var/lib/n8n/pulse
