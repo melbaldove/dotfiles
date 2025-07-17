@@ -334,6 +334,10 @@
       GENERIC_TIMEZONE = "Etc/UTC";
       TZ = "Etc/UTC";
       
+      # Puppeteer configuration
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true";
+      PUPPETEER_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+      
     };
     preStart = ''
       # Read secrets from credentials directory and write to environment file
