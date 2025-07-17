@@ -134,6 +134,7 @@
     sysstat
     arion
     docker-compose
+    bun
   ];
 
   users.users.melbournebaldove = {
@@ -334,6 +335,12 @@
     preStart = ''
       # Read secrets from credentials directory and write to environment file
       echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
+      
+      # Create pulse directory and symlink scripts
+      mkdir -p /var/lib/n8n/pulse
+      ln -sf ${inputs.pulse}/scripts /var/lib/n8n/pulse/scripts
+      ln -sf ${inputs.pulse}/package.json /var/lib/n8n/pulse/package.json
+      chown -R n8n:n8n /var/lib/n8n/pulse
     '';
     serviceConfig = {
       # Load credentials from secret files
@@ -342,6 +349,7 @@
       ];
       # Use the environment file created by preStart
       EnvironmentFile = "/tmp/n8n-env";
+      WorkingDirectory = "/var/lib/n8n";
     };
   };
 
