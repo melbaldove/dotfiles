@@ -341,6 +341,29 @@
       # Create symlink to pulse in working directory
       rm -rf pulse
       ln -sf ${inputs.pulse} pulse
+      
+      # Run database migrations for pulse database
+      export PGPASSWORD="$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)"
+      
+      # Create pulse database and user if they don't exist
+      ${pkgs.postgresql_15}/bin/psql -h localhost -U postgres <<EOF || true
+        SELECT 'CREATE DATABASE pulse' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'pulse')\\gexec
+        DO \$\$
+        BEGIN
+          IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'pulse') THEN
+            CREATE USER pulse WITH PASSWORD '$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)';
+          END IF;
+        END
+        \$\$;
+        GRANT ALL PRIVILEGES ON DATABASE pulse TO pulse;
+EOF
+      
+      # Run migrations on pulse database
+      cd pulse/migrations
+      for migration in $(ls *.up.sql | sort); do
+        echo "Running migration: $migration"
+        ${pkgs.postgresql_15}/bin/psql -h localhost -U pulse -d pulse -f "$migration" || true
+      done
     '';
     serviceConfig = {
       # Load credentials from secret files
