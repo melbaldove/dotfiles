@@ -343,9 +343,10 @@
       # Read secrets from credentials directory and write to environment file
       echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
       
-      # Create symlink to pulse in working directory
+      # Create writable copy of pulse in working directory
       rm -rf pulse
-      ln -sf ${inputs.pulse} pulse
+      cp -r ${inputs.pulse} pulse
+      chmod -R u+w pulse
       
       # Install pulse dependencies
       cd pulse
