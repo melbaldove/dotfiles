@@ -388,7 +388,7 @@ EOF
       EnvironmentFile = "/tmp/n8n-env";
       WorkingDirectory = "/var/lib/private/n8n";
     };
-    path = with pkgs; [ bun ];
+    path = with pkgs; [ bun chromium ];
   };
 
   home-manager = {
