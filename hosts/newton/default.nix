@@ -125,9 +125,9 @@
   # Create backup directories with proper ownership
   systemd.tmpfiles.rules = [
     "d /var/lib/restic-backups/newton-restic 0755 root root -"
-    "d /var/lib/n8n/pulse 0755 - - -"
-    "L+ /var/lib/n8n/pulse/scripts - - - - ${inputs.pulse}/scripts"
-    "L+ /var/lib/n8n/pulse/package.json - - - - ${inputs.pulse}/package.json"
+    "d /var/lib/private/n8n/pulse 0755 - - -"
+    "L+ /var/lib/private/n8n/pulse/scripts - - - - ${inputs.pulse}/scripts"
+    "L+ /var/lib/private/n8n/pulse/package.json - - - - ${inputs.pulse}/package.json"
   ];
 
 
@@ -346,7 +346,7 @@
       ];
       # Use the environment file created by preStart
       EnvironmentFile = "/tmp/n8n-env";
-      WorkingDirectory = "/var/lib/n8n";
+      WorkingDirectory = "/var/lib/private/n8n";
     };
   };
 
