@@ -269,10 +269,9 @@ with lib;
     # Separate service to register Twenty CRM background jobs
     systemd.services.twenty-cron-setup = mkIf (config.services.twenty-crm.messagingProviderGmailEnabled || config.services.twenty-crm.calendarProviderGoogleEnabled) {
       description = "Register Twenty CRM background jobs";
-      after = [ "twenty.service" ];
+      after = [ "twenty.service" "multi-user.target" ];
       wants = [ "twenty.service" ];
-      # Temporarily disabled due to hanging issues
-      # wantedBy = [ "multi-user.target" ];
+      wantedBy = [ "default.target" ];
       
       serviceConfig = {
         Type = "oneshot";
