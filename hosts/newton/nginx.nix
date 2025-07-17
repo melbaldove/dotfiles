@@ -97,7 +97,7 @@
             
             # WebSocket support for n8n
             proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Connection "upgrade";
             proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions;
             proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key;
             proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version;
