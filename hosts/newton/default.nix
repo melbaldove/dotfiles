@@ -331,6 +331,9 @@
       N8N_DIAGNOSTICS_ENABLED = "false";
       N8N_VERSION_NOTIFICATIONS_ENABLED = "false";
       GENERIC_TIMEZONE = "UTC";
+      
+      # Set PATH for Execute Command nodes to include bun
+      N8N_PATH_EXECUTIONS = "${pkgs.bun}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin";
     };
     preStart = ''
       # Read secrets from credentials directory and write to environment file
@@ -349,7 +352,6 @@
       EnvironmentFile = "/tmp/n8n-env";
       WorkingDirectory = "/var/lib/private/n8n";
     };
-    path = with pkgs; [ bun ];
   };
 
   home-manager = {
