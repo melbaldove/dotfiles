@@ -141,14 +141,6 @@
     extraGroups = [ "wheel" "users" ];
   };
 
-  # Create n8n user and group for service
-  users.users.n8n = {
-    isSystemUser = true;
-    group = "n8n";
-    description = "n8n workflow automation user";
-  };
-
-  users.groups.n8n = {};
 
   # Grant promtail access to Docker socket for container log collection
   users.users.promtail.extraGroups = [ "docker" ];
@@ -157,24 +149,9 @@
   age.secrets.restic-password.file = ../../secrets/restic-password.age;
   
   # Configure n8n secrets
-  age.secrets.n8n-encryption-key = {
-    file = ../../secrets/n8n-encryption-key.age;
-    mode = "0400";
-    owner = "n8n";
-    group = "n8n";
-  };
-  age.secrets.n8n-db-password = {
-    file = ../../secrets/n8n-db-password.age;
-    mode = "0400";
-    owner = "n8n";
-    group = "n8n";
-  };
-  age.secrets.n8n-basic-auth-password = {
-    file = ../../secrets/n8n-basic-auth-password.age;
-    mode = "0400";
-    owner = "n8n";
-    group = "n8n";
-  };
+  age.secrets.n8n-encryption-key.file = ../../secrets/n8n-encryption-key.age;
+  age.secrets.n8n-db-password.file = ../../secrets/n8n-db-password.age;
+  age.secrets.n8n-basic-auth-password.file = ../../secrets/n8n-basic-auth-password.age;
 
   # Configure restic backup service
   services.restic-backup = {
@@ -305,43 +282,6 @@
     enable = true;
     openFirewall = false; # We use nginx proxy
     webhookUrl = "https://n8n.workwithnextdesk.com";
-    
-    # Configure settings to generate proper schema for _FILE variables
-    settings = {
-      # Database configuration - these keys need to exist for _FILE to work
-      database = {
-        type = "postgresdb";
-        postgresdb = {
-          host = "localhost";
-          port = 5432;
-          database = "n8n";
-          user = "postgres";
-          password = ""; # Will be overridden by _FILE
-        };
-      };
-      
-      # Basic authentication - these keys need to exist for _FILE to work
-      credentials = {
-        overwrite = {
-          data = "{}";
-        };
-      };
-      
-      # Network configuration
-      host = "0.0.0.0";
-      port = 5678;
-      
-      # Other settings
-      diagnostics = {
-        enabled = false;
-      };
-      versionNotifications = {
-        enabled = false;
-      };
-      generic = {
-        timezone = "UTC";
-      };
-    };
   };
 
   # Ensure n8n database exists
@@ -367,7 +307,7 @@
     '';
   };
 
-  # Configure n8n service with static user and database dependency
+  # Configure n8n service with database dependency
   systemd.services.n8n = {
     after = [ "n8n-db-init.service" ];
     requires = [ "n8n-db-init.service" ];
@@ -378,12 +318,10 @@
       DB_POSTGRESDB_PORT = "5432";
       DB_POSTGRESDB_DATABASE = "n8n";
       DB_POSTGRESDB_USER = "postgres";
-      DB_POSTGRESDB_PASSWORD_FILE = config.age.secrets.n8n-db-password.path;
       
       # Basic authentication
       N8N_BASIC_AUTH_ACTIVE = "true";
       N8N_BASIC_AUTH_USER = "admin";
-      N8N_BASIC_AUTH_PASSWORD_FILE = config.age.secrets.n8n-basic-auth-password.path;
       
       # Network configuration
       N8N_HOST = "0.0.0.0";
@@ -394,10 +332,19 @@
       N8N_VERSION_NOTIFICATIONS_ENABLED = "false";
       GENERIC_TIMEZONE = "UTC";
     };
+    preStart = ''
+      # Read secrets from credentials directory and write to environment file
+      echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
+      echo "N8N_BASIC_AUTH_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-basic-auth-password)" >> /tmp/n8n-env
+    '';
     serviceConfig = {
-      User = "n8n";
-      Group = "n8n";
-      DynamicUser = lib.mkForce false;
+      # Load credentials from secret files
+      LoadCredential = [
+        "n8n-db-password:${config.age.secrets.n8n-db-password.path}"
+        "n8n-basic-auth-password:${config.age.secrets.n8n-basic-auth-password.path}"
+      ];
+      # Use the environment file created by preStart
+      EnvironmentFile = "/tmp/n8n-env";
     };
   };
 
