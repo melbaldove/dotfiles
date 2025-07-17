@@ -90,13 +90,17 @@
             proxy_set_header X-Forwarded-Host $host;
             proxy_buffering off;
             
-            # Forward all headers including Authorization
+            # Forward all headers including Authorization and cookies
             proxy_pass_request_headers on;
             proxy_set_header Authorization $http_authorization;
+            proxy_set_header Cookie $http_cookie;
             
             # WebSocket support for n8n
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions;
+            proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key;
+            proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version;
             
             # Increase timeouts for long-running workflows
             proxy_connect_timeout 60s;
