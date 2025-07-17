@@ -14,12 +14,6 @@
     # Configure access logs to also go to systemd journal
     commonHttpConfig = ''
       access_log syslog:server=unix:/dev/log,tag=nginx_access combined;
-      
-      # WebSocket connection upgrade mapping
-      map $http_upgrade $connection_upgrade {
-        default upgrade;
-        "" close;
-      }
     '';
 
     virtualHosts = {
