@@ -125,6 +125,10 @@
   # Create backup directories with proper ownership
   systemd.tmpfiles.rules = [
     "d /var/lib/restic-backups/newton-restic 0755 root root -"
+    "d /var/lib/n8n 0755 n8n n8n -"
+    "d /var/lib/n8n/pulse 0755 n8n n8n -"
+    "L+ /var/lib/n8n/pulse/scripts - - - - ${inputs.pulse}/scripts"
+    "L+ /var/lib/n8n/pulse/package.json - - - - ${inputs.pulse}/package.json"
   ];
 
 
@@ -335,14 +339,6 @@
     preStart = ''
       # Read secrets from credentials directory and write to environment file
       echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
-      
-      # Create pulse directory and symlink scripts
-      mkdir -p /var/lib/n8n/pulse
-      rm -f /var/lib/n8n/pulse/scripts /var/lib/n8n/pulse/package.json
-      ln -sf ${inputs.pulse}/scripts /var/lib/n8n/pulse/scripts
-      ln -sf ${inputs.pulse}/package.json /var/lib/n8n/pulse/package.json
-      chown -R n8n:n8n /var/lib/n8n/pulse
-      chmod 755 /var/lib/n8n/pulse
     '';
     serviceConfig = {
       # Load credentials from secret files
