@@ -14,6 +14,12 @@
     # Configure access logs to also go to systemd journal
     commonHttpConfig = ''
       access_log syslog:server=unix:/dev/log,tag=nginx_access combined;
+      
+      # WebSocket connection upgrade mapping
+      map $http_upgrade $connection_upgrade {
+        default upgrade;
+        "" close;
+      }
     '';
 
     virtualHosts = {
@@ -84,9 +90,13 @@
             proxy_set_header X-Forwarded-Host $host;
             proxy_buffering off;
             
+            # Forward all headers including Authorization
+            proxy_pass_request_headers on;
+            proxy_set_header Authorization $http_authorization;
+            
             # WebSocket support for n8n
             proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
+            proxy_set_header Connection $connection_upgrade;
             
             # Increase timeouts for long-running workflows
             proxy_connect_timeout 60s;
