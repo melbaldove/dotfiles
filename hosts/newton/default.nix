@@ -351,7 +351,7 @@
       ${pkgs.bun}/bin/bun install
       
       # Install Chrome for puppeteer
-      ${pkgs.bun}/bin/bun x puppeteer browsers install chrome
+      ${pkgs.bun}/bin/bunx puppeteer browsers install chrome
       cd ..
       
       # Run database migrations for pulse database
