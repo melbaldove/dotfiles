@@ -271,7 +271,8 @@ with lib;
       description = "Register Twenty CRM background jobs";
       after = [ "twenty.service" ];
       wants = [ "twenty.service" ];
-      wantedBy = [ "multi-user.target" ];
+      # Temporarily disabled due to hanging issues
+      # wantedBy = [ "multi-user.target" ];
       
       serviceConfig = {
         Type = "oneshot";
