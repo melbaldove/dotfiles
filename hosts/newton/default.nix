@@ -347,6 +347,11 @@
       rm -rf pulse
       ln -sf ${inputs.pulse} pulse
       
+      # Install pulse dependencies
+      cd pulse
+      ${pkgs.bun}/bin/bun install
+      cd ..
+      
       # Run database migrations for pulse database
       export PGPASSWORD="$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)"
       
