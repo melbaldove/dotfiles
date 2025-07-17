@@ -350,6 +350,7 @@
       EnvironmentFile = "/tmp/n8n-env";
       WorkingDirectory = "/var/lib/private/n8n";
     };
+    path = with pkgs; [ bun ];
   };
 
   home-manager = {
