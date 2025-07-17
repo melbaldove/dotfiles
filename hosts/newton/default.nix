@@ -319,9 +319,8 @@
       DB_POSTGRESDB_DATABASE = "n8n";
       DB_POSTGRESDB_USER = "postgres";
       
-      # Basic authentication
-      N8N_BASIC_AUTH_ACTIVE = "true";
-      N8N_BASIC_AUTH_USER = "admin";
+      # Basic authentication disabled - using nginx auth instead
+      N8N_BASIC_AUTH_ACTIVE = "false";
       
       # Network configuration
       N8N_HOST = "0.0.0.0";
@@ -335,13 +334,11 @@
     preStart = ''
       # Read secrets from credentials directory and write to environment file
       echo "DB_POSTGRESDB_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-db-password)" > /tmp/n8n-env
-      echo "N8N_BASIC_AUTH_PASSWORD=$(cat $CREDENTIALS_DIRECTORY/n8n-basic-auth-password)" >> /tmp/n8n-env
     '';
     serviceConfig = {
       # Load credentials from secret files
       LoadCredential = [
         "n8n-db-password:${config.age.secrets.n8n-db-password.path}"
-        "n8n-basic-auth-password:${config.age.secrets.n8n-basic-auth-password.path}"
       ];
       # Use the environment file created by preStart
       EnvironmentFile = "/tmp/n8n-env";
