@@ -334,9 +334,8 @@
       GENERIC_TIMEZONE = "Etc/UTC";
       TZ = "Etc/UTC";
       
-      # Puppeteer configuration
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true";
-      PUPPETEER_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+      # Puppeteer configuration - let puppeteer manage its own Chrome
+      PUPPETEER_CACHE_DIR = "/var/lib/private/n8n/.cache/puppeteer";
       
     };
     preStart = ''
@@ -351,6 +350,9 @@
       # Install pulse dependencies
       cd pulse
       ${pkgs.bun}/bin/bun install
+      
+      # Install Chrome for puppeteer
+      ${pkgs.bun}/bin/bun x puppeteer browsers install chrome
       cd ..
       
       # Run database migrations for pulse database
