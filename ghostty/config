@@ -2,8 +2,8 @@
 # Configure option key to act as meta key
 macos-option-as-alt = true
 
-# Set nushell as default shell  
-command = /etc/profiles/per-user/melbournebaldove/bin/bash -c "exec /etc/profiles/per-user/melbournebaldove/bin/nu"
+# Theme
+theme = iTerm2 Solarized Light
 
 # Disable confirmation on exit
 confirm-close-surface = false
