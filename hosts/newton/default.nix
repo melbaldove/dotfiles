@@ -56,6 +56,24 @@
   # Allow VPN traffic to monitoring ports
   networking.firewall.interfaces.wg0.allowedTCPPorts = [ 9100 9200 9080 ];
 
+  # SECURITY: Block Redis and PostgreSQL ports from external access
+  # These should only be accessible from Docker network
+  networking.firewall.extraCommands = ''
+    # Drop all incoming connections to Redis port except from Docker network
+    iptables -I INPUT -p tcp --dport 6379 ! -s 172.16.0.0/12 -j DROP
+    iptables -I INPUT -p tcp --dport 5432 ! -s 172.16.0.0/12 -j DROP
+    
+    # Log attempts to connect to Redis from external IPs
+    iptables -I INPUT -p tcp --dport 6379 ! -s 172.16.0.0/12 -j LOG --log-prefix "BLOCKED-REDIS: " --log-level 4
+  '';
+  
+  networking.firewall.extraStopCommands = ''
+    # Remove our custom rules when firewall stops
+    iptables -D INPUT -p tcp --dport 6379 ! -s 172.16.0.0/12 -j LOG --log-prefix "BLOCKED-REDIS: " --log-level 4 || true
+    iptables -D INPUT -p tcp --dport 6379 ! -s 172.16.0.0/12 -j DROP || true
+    iptables -D INPUT -p tcp --dport 5432 ! -s 172.16.0.0/12 -j DROP || true
+  '';
+
   # Override Promtail client to use Shannon's startup network IP
   services.promtail.configuration.clients = lib.mkForce [
     {
