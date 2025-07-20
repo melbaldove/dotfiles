@@ -384,11 +384,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1753015401,
-        "narHash": "sha256-eSiT07IQcPN0lLqj76Z6UYhTI+lQ/VPoz0CT8xte39M=",
+        "lastModified": 1753016043,
+        "narHash": "sha256-Mni50NNaKNxqJicAHs55cpC+QRH3yVcfn8GLSUmKybo=",
         "owner": "next-desk-business-solutions",
         "repo": "outline",
-        "rev": "ab4135b409cdda6330374133f7aec3f78d9d0afd",
+        "rev": "c49998f7edd1614424e72462b551c6f7f6c09cb3",
         "type": "github"
       },
       "original": {
@@ -500,11 +500,11 @@
         "nixpkgs": "nixpkgs_6"
       },
       "locked": {
-        "lastModified": 1753014604,
-        "narHash": "sha256-4zyV7KRLjFquIQRzLizrbjZ+Z7RKnJxHqfuI1xRU/8s=",
+        "lastModified": 1753016024,
+        "narHash": "sha256-96hfnuFujJmdxXbAANtXcw8auljxnHfMAZmpNtChMKE=",
         "owner": "next-desk-business-solutions",
         "repo": "twenty",
-        "rev": "a7d589e2dc11f55eda4877b4c7094496d326af15",
+        "rev": "4da46721d89b3b42479ed4a969046702cf59ee11",
         "type": "github"
       },
       "original": {
