@@ -155,10 +155,7 @@ with lib;
   config = mkIf config.services.twenty-crm.enable {
     # Enable container runtime for Arion
     virtualisation.docker.enable = true;
-    virtualisation.docker.daemon.settings = {
-      # SECURITY: Make Docker respect iptables/firewall rules
-      iptables = true;
-    };
+    virtualisation.docker.extraOptions = "--iptables=false";
     virtualisation.podman.enable = false;
     
     # Configure Arion backend
