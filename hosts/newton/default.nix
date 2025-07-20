@@ -262,7 +262,7 @@
     utilsSecretFile = config.age.secrets.outline-utils-secret.path;
     
     database = {
-      host = "twenty-db-1";
+      host = "localhost";
       port = 5432;
       user = "postgres";
       passwordFile = config.age.secrets.outline-db-password.path;
@@ -270,7 +270,7 @@
     };
     
     redis = {
-      host = "twenty-redis-1";
+      host = "localhost";
       port = 6379;
     };
     
