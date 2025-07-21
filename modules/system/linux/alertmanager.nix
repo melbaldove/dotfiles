@@ -41,6 +41,7 @@
           slack_configs = [
             {
               channel = "#alerts";
+              send_resolved = true;
               title = "{{ .GroupLabels.cluster }} Alert";
               text = ''
                 {{ range .Alerts }}
