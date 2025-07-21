@@ -1,10 +1,18 @@
 { config, pkgs, ... }:
 
 {
+  # Create alertmanager user early in activation
+  users.users.alertmanager = {
+    isSystemUser = true;
+    group = "alertmanager";
+    description = "AlertManager daemon user";
+  };
+  users.groups.alertmanager = {};
+
   age.secrets.alertmanager-slack-webhook = {
     file = ../../../secrets/alertmanager-slack-webhook.age;
-    owner = "prometheus";
-    group = "prometheus";
+    owner = "alertmanager";
+    group = "alertmanager";
   };
 
   services.prometheus.alertmanager = {
