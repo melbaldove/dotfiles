@@ -57,3 +57,7 @@ deploy --dry-activate .#<host>
 2. Add secrets to `secrets/secrets.nix`
 3. Import in host config
 4. Configure firewall rules
+```
+
+## Deployment
+- Whenever a deployment fails, it rollback. Any new configuration will be undoed
