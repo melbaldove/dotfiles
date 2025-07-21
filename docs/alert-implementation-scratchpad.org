@@ -37,3 +37,48 @@
 - Issue: File was created but not committed to git
 - Deploy tool uses git tree, needs files to be tracked
 - Need to commit changes before deploy
+
+** 2025-07-21 Deploy Blocked - Missing Secret File
+- Error: alertmanager-slack-webhook.age does not exist
+- Cannot create agenix secrets without access to turing (key signing machine)
+- Moving on to create alert rules while waiting for secret setup
+- AlertManager config committed and ready, just needs webhook URL
+
+** 2025-07-21 Created Comprehensive Alert Rules
+- Created alert-rules/ directory with organized rule files
+- service-alerts.yml: ServiceDown, ServiceSlowResponse for web endpoints
+- infrastructure-alerts.yml: HostDown, HighCPU/Memory/Disk alerts
+- container-alerts.yml: Container monitoring and resource alerts
+- Added rule files to monitoring.nix ruleFiles configuration
+- Ready to commit and test (pending webhook setup)
+
+** 2025-07-21 Alert Testing Methods
+Several ways to test alerts:
+
+1. **Natural triggers** (wait for real issues):
+   - Stop a service: `sudo systemctl stop ghost-cms`
+   - Fill disk space: `dd if=/dev/zero of=/tmp/bigfile bs=1M count=1000`
+   - CPU stress: `stress --cpu 8 --timeout 600s`
+
+2. **Prometheus query testing**:
+   - Visit http://shannon:9090/alerts to see current alert states
+   - Test expressions in Prometheus query interface
+   - Check if metrics are being collected properly
+
+3. **AlertManager testing**:
+   - Send test alert via amtool: `amtool alert add alertname=TestAlert`
+   - Check AlertManager UI at http://shannon:9093
+   - Verify routing rules and silencing work
+
+4. **Slack delivery testing**:
+   - Once webhook configured, test with simple alert
+   - Verify message formatting and channel delivery
+   - Test alert resolution notifications
+
+Best approach: Start with Prometheus query testing, then trigger simple service down alert
+
+** 2025-07-21 Secret Definition Already Exists
+- The "alertmanager-slack-webhook.age" secret definition is already in secrets.nix
+- Issue was deployment trying to reference non-existent .age file
+- Need to create actual secret file with agenix from turing machine
+- Secret is configured for shannon host access with user + shannon keys

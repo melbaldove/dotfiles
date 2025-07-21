@@ -44,6 +44,9 @@
                   summary: "Restic backup taking too long"
                   description: "Restic backup for {{ $labels.repository }} took {{ $value }}s to complete"
       '')
+      ./alert-rules/service-alerts.yml
+      ./alert-rules/infrastructure-alerts.yml
+      ./alert-rules/container-alerts.yml
     ];
     
     scrapeConfigs = [
