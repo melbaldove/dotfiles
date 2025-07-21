@@ -3,8 +3,8 @@
 {
   age.secrets.alertmanager-slack-webhook = {
     file = ../../../secrets/alertmanager-slack-webhook.age;
-    owner = "alertmanager";
-    group = "alertmanager";
+    owner = "prometheus";
+    group = "prometheus";
   };
 
   services.prometheus.alertmanager = {

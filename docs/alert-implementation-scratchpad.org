@@ -103,3 +103,17 @@ Best approach: Start with Prometheus query testing, then trigger simple service 
 - AlertManager runs as alertmanager user, but secret owned by root
 - Fixed by setting owner/group to alertmanager in agenix config
 - Need to redeploy for permission fix
+
+** 2025-07-21 Permission Fix Deployed
+- Fixed agenix permissions: owner/group set to alertmanager
+- Restarted AlertManager service successfully
+- No more permission errors in logs after restart
+- Alerts are active in AlertManager (HostDown, etc.)
+- Check Slack #alerts channel - notifications should be flowing now
+
+** 2025-07-21 Alert Testing Complete
+- Stopped Ghost CMS on newton - ServiceDown alert fired successfully
+- Started Ghost CMS - alert cleared from Prometheus/AlertManager
+- Issue: No resolved notification sent to Slack
+- Fixed by adding send_resolved = true to Slack config
+- Also removed turing from monitoring targets (only monitoring shannon, einstein, newton now)
