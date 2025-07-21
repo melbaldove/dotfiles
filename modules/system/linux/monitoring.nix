@@ -56,7 +56,6 @@
           targets = [ 
             "127.0.0.1:9100"      # shannon itself
             "10.0.0.2:9100"       # einstein
-            "10.0.0.3:9100"       # turing
           ];
         }];
       }
