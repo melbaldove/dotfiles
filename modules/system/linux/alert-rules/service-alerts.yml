@@ -19,4 +19,4 @@ groups:
           service: "web"
         annotations:
           summary: "Service {{ $labels.instance }} responding slowly"
-          description: "HTTP probe for {{ $labels.instance }} took {{ $value }}s (>5s threshold)"
+          description: 'HTTP probe for {{ $labels.instance }} took {{ printf "%.2f" $value }}s (>5s threshold)'

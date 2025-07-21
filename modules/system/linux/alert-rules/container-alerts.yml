@@ -19,7 +19,7 @@ groups:
           component: "container"
         annotations:
           summary: "High CPU usage in container {{ $labels.name }}"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} is using {{ $value }}% CPU"
+          description: 'Container {{ $labels.name }} on {{ $labels.instance }} is using {{ printf "%.1f" $value }}% CPU'
           
       - alert: ContainerHighMemory
         expr: container_memory_usage_bytes{name!=""} > 1073741824  # 1GB
@@ -29,4 +29,4 @@ groups:
           component: "container"
         annotations:
           summary: "High memory usage in container {{ $labels.name }}"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} is using {{ $value }} bytes of memory (>1GB threshold)"
+          description: "Container {{ $labels.name }} on {{ $labels.instance }} is using {{ $value | humanize1024 }}B of memory (>1GB threshold)"

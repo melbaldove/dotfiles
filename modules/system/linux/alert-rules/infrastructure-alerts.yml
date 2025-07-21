@@ -13,23 +13,33 @@ groups:
           
       - alert: HighCPUUsage
         expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
-        for: 10m
+        for: 3m
         labels:
           severity: warning
           component: "infrastructure"
         annotations:
           summary: "High CPU usage on {{ $labels.instance }}"
-          description: "CPU usage is {{ $value }}% for more than 10 minutes"
+          description: 'CPU usage is {{ printf "%.1f" $value }}% for more than 3 minutes'
           
       - alert: HighMemoryUsage
-        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
-        for: 5m
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 3m
+        labels:
+          severity: warning
+          component: "infrastructure"
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: 'Memory usage is {{ printf "%.1f" $value }}% for more than 3 minutes'
+          
+      - alert: CriticalMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 1m
         labels:
           severity: critical
           component: "infrastructure"
         annotations:
-          summary: "High memory usage on {{ $labels.instance }}"
-          description: "Memory usage is {{ $value }}% for more than 5 minutes"
+          summary: "Critical memory usage on {{ $labels.instance }}"
+          description: 'Memory usage is {{ printf "%.1f" $value }}% for more than 1 minute'
           
       - alert: DiskSpaceCritical
         expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 95
@@ -39,7 +49,7 @@ groups:
           component: "infrastructure"
         annotations:
           summary: "Critical disk space on {{ $labels.instance }}"
-          description: "Disk usage is {{ $value }}% on {{ $labels.mountpoint }}"
+          description: 'Disk usage is {{ printf "%.1f" $value }}% on {{ $labels.mountpoint }}'
           
       - alert: DiskSpaceWarning
         expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 85
@@ -49,4 +59,4 @@ groups:
           component: "infrastructure"
         annotations:
           summary: "High disk space on {{ $labels.instance }}"
-          description: "Disk usage is {{ $value }}% on {{ $labels.mountpoint }}"
+          description: 'Disk usage is {{ printf "%.1f" $value }}% on {{ $labels.mountpoint }}'

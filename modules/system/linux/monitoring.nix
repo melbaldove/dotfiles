@@ -42,7 +42,7 @@
                   severity: warning
                 annotations:
                   summary: "Restic backup taking too long"
-                  description: "Restic backup for {{ $labels.repository }} took {{ $value }}s to complete"
+                  description: "Restic backup for {{ $labels.repository }} took {{ $value | humanizeDuration }}s to complete (>1h threshold)"
       '')
       ./alert-rules/service-alerts.yml
       ./alert-rules/infrastructure-alerts.yml
