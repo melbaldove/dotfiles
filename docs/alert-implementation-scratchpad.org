@@ -82,3 +82,24 @@ Best approach: Start with Prometheus query testing, then trigger simple service 
 - Issue was deployment trying to reference non-existent .age file
 - Need to create actual secret file with agenix from turing machine
 - Secret is configured for shannon host access with user + shannon keys
+
+** 2025-07-21 Deployment Successful - Starting Tests
+- Fixed relative path from ../../ to ../../../ in alertmanager.nix
+- Shannon deployed with AlertManager
+- Beginning alert testing sequence
+
+** 2025-07-21 Alert Testing Results
+- AlertManager service running as "alertmanager.service"
+- Found 9 active alerts in Prometheus
+- Current firing alerts:
+  - HostDown (critical): 10.0.0.3:9100 (turing) unreachable
+  - DiskSpaceWarning: einstein /mnt/media at 89.9% usage
+  - ContainerHighMemory: Multiple containers with high memory
+- Sent test alert via AlertManager v2 API
+- Check Slack #alerts channel for notifications
+
+** 2025-07-21 Permission Issue Found
+- Error: "permission denied" accessing /run/agenix/alertmanager-slack-webhook
+- AlertManager runs as alertmanager user, but secret owned by root
+- Fixed by setting owner/group to alertmanager in agenix config
+- Need to redeploy for permission fix
