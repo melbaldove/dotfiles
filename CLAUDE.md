@@ -44,20 +44,27 @@ deploy --dry-activate .#<host>
 - Grafana: `http://shannon:3000`
 - Prometheus: `http://shannon:9090`
 - Loki: `http://shannon:3100`
+- AlertManager: `http://shannon:9093`
 - Twenty CRM: `https://crm.workwithnextdesk.com`
 - Ghost CMS: `https://cms.workwithnextdesk.com`
 - Outline Wiki: `https://wiki.workwithnextdesk.com`
+- n8n: `https://n8n.workwithnextdesk.com`
 
 ## Network
-- Personal: 10.0.0.0/24 (shannon:1, einstein:2, turing:3)
-- Startup: 10.0.1.0/24 (newton:2)
+- Personal VPN: 10.0.0.0/24 (shannon:1, einstein:2, turing:3, phone:4)
+- Startup VPN: 10.0.1.0/24 (shannon:1, newton:2)
 
 ## Adding Services
 1. Create module in `modules/system/linux/`
 2. Add secrets to `secrets/secrets.nix`
 3. Import in host config
 4. Configure firewall rules
-```
+
+## Monitoring
+- Prometheus scrapes metrics from all hosts via VPN
+- Loki aggregates logs from promtail agents
+- Grafana dashboards available on shannon
+- AlertManager sends notifications to Slack
 
 ## Deployment
 - Whenever a deployment fails, it rollback. Any new configuration will be undoed
