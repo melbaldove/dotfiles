@@ -96,38 +96,13 @@
           targets = [
             "https://crm.workwithnextdesk.com"
             "https://cms.workwithnextdesk.com"
+            "https://wiki.workwithnextdesk.com"
+            "https://n8n.workwithnextdesk.com"
           ];
         }];
         metrics_path = "/probe";
         params = {
           module = [ "http_2xx" ];
-        };
-        relabel_configs = [
-          {
-            source_labels = [ "__address__" ];
-            target_label = "__param_target";
-          }
-          {
-            source_labels = [ "__param_target" ];
-            target_label = "instance";
-          }
-          {
-            target_label = "__address__";
-            replacement = "localhost:9115";
-          }
-        ];
-      }
-      {
-        job_name = "blackbox-ssl";
-        static_configs = [{
-          targets = [
-            "crm.workwithnextdesk.com:443"
-            "cms.workwithnextdesk.com:443"
-          ];
-        }];
-        metrics_path = "/probe";
-        params = {
-          module = [ "tcp_tls" ];
         };
         relabel_configs = [
           {
