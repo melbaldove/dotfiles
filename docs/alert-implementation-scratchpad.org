@@ -1,0 +1,39 @@
+#+TITLE: Alert Implementation Scratchpad
+#+DATE: 2025-07-21
+#+STARTUP: overview
+
+* Implementation Log
+
+** 2025-07-21 Starting Implementation
+- Plan created in docs/alert-implementation-plan.org
+- Current state: Prometheus with 3 backup alerts, no AlertManager
+- Goal: Full alerting with Slack notifications
+- Services to monitor: Twenty CRM, Ghost CMS, Outline Wiki, n8n
+- Hosts: shannon (monitoring), einstein, turing, newton (services)
+
+** Next: Create Slack webhook secret and AlertManager config
+
+** 2025-07-21 Need Slack Webhook URL
+- User has existing Slack app configured
+- Need to get webhook URL from Slack app settings
+- Will add as alertmanager-slack-webhook.age secret for shannon host
+- User will configure webhook later, proceeding with AlertManager setup
+
+** 2025-07-21 Created AlertManager Configuration
+- Created modules/system/linux/alertmanager.nix
+- Configured Slack notifications to #alerts channel
+- Added secret reference for webhook URL
+- Set up alert routing: critical/warning → Slack, others → default
+- Groups alerts by cluster/service/severity to reduce noise
+- Next: Add AlertManager to monitoring.nix and create alert rules
+
+** 2025-07-21 Connected AlertManager to Prometheus
+- Added alertmanager.nix import to monitoring.nix
+- Configured Prometheus to send alerts to localhost:9093
+- Ready to test deploy before adding more alert rules
+
+** 2025-07-21 Deploy Failed - Missing File
+- Error: path alertmanager.nix does not exist
+- Issue: File was created but not committed to git
+- Deploy tool uses git tree, needs files to be tracked
+- Need to commit changes before deploy

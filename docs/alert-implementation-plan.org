@@ -1,0 +1,103 @@
+#+TITLE: Alert Implementation Plan
+#+DATE: 2025-07-21
+#+STARTUP: overview
+
+* Executive Summary
+
+Implementation plan for monitoring alerts using Slack notifications. Currently have Prometheus with basic backup alerts but no AlertManager - alerts are evaluated but never delivered.
+
+** Current State
+- ✅ Prometheus collecting metrics from 4 hosts + services
+- ✅ Grafana dashboards and Loki logs
+- ✅ Basic restic backup alerts (3 rules)
+- ❌ No AlertManager (alerts go nowhere)
+- ❌ No notification channels
+
+** Goal
+Complete alerting system with Slack notifications for all critical infrastructure and services.
+
+* Alert Priorities
+
+** Critical (Immediate Response)
+- Service down (CRM, CMS, Wiki, n8n)
+- Host unreachable
+- Database connectivity failures
+- SSL certificates expiring <7 days
+- Disk space >95%
+- Backup failures
+
+** Warning (1 hour response)
+- High CPU/memory usage
+- SSL certificates expiring <30 days
+- Slow response times
+- Disk space >85%
+
+** Info (24 hour response)
+- Backup duration warnings
+- Capacity planning alerts
+- Maintenance reminders
+
+* Technical Architecture
+
+** Flow
+Prometheus → AlertManager → Slack Channel
+
+** Notification Strategy
+- Single #alerts Slack channel
+- Rich message formatting with service context
+- Thread replies for alert resolution
+- Emoji indicators for severity levels
+
+* Implementation Plan
+
+** Phase 1: AlertManager Setup
+- Add AlertManager service to monitoring.nix
+- Configure Slack webhook integration
+- Set up basic alert routing
+- Test end-to-end delivery
+
+** Phase 2: Critical Alerts
+- HTTP endpoint monitoring (all web services)
+- Host availability (shannon, einstein, turing, newton)
+- Container health monitoring
+- Database connectivity
+
+** Phase 3: Resource Monitoring
+- CPU/memory/disk usage alerts
+- SSL certificate expiration
+- Performance degradation detection
+
+** Phase 4: Optimization
+- Alert grouping to reduce noise
+- Inhibition rules (don't alert on service if host down)
+- Rich Slack message formatting
+- Alert silencing workflows
+
+* File Changes Required
+
+** New Files
+- modules/system/linux/alertmanager.nix
+- modules/system/linux/alert-rules/
+  - critical.yml
+  - warning.yml
+  - info.yml
+- secrets/slack-webhook-url.age
+
+** Modified Files
+- modules/system/linux/monitoring.nix (add AlertManager)
+- hosts/shannon/default.nix (import AlertManager)
+- secrets/secrets.nix (add Slack webhook secret)
+
+* Success Metrics
+
+- Mean Time to Notification: <30 seconds
+- Alert delivery success: >99%
+- False positive rate: <10%
+- Service uptime improvement through faster detection
+
+* Next Steps
+
+1. Create Slack webhook URL
+2. Add AlertManager configuration
+3. Implement critical service alerts first
+4. Test and iterate on alert thresholds

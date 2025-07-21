@@ -3,6 +3,7 @@
 {
   imports = [
     ./loki.nix
+    ./alertmanager.nix
   ];
 
   services.prometheus = {
@@ -118,6 +119,14 @@
             replacement = "localhost:9115";
           }
         ];
+      }
+    ];
+    
+    alertmanagers = [
+      {
+        static_configs = [{
+          targets = [ "localhost:9093" ];
+        }];
       }
     ];
   };

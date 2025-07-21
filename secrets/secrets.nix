@@ -51,4 +51,7 @@ in
   "n8n-encryption-key.age".publicKeys = [ user newton ];
   "n8n-db-password.age".publicKeys = [ user newton ];
   "n8n-basic-auth-password.age".publicKeys = [ user newton ];
+  
+  # AlertManager secrets
+  "alertmanager-slack-webhook.age".publicKeys = [ user shannon ];
 }
