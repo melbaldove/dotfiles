@@ -29,4 +29,4 @@ groups:
           component: "container"
         annotations:
           summary: "High memory usage in container {{ $labels.name }}"
-          description: "Container {{ $labels.name }} on {{ $labels.instance }} is using {{ $value }} bytes of memory ({{ printf \"%.1f\" (div $value 1073741824) }}GB)"
+          description: "Container {{ $labels.name }} on {{ $labels.instance }} is using {{ $value }} bytes of memory (>1GB threshold)"
