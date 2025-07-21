@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 {
-  age.secrets.alertmanager-slack-webhook.file = ../../secrets/alertmanager-slack-webhook.age;
+  age.secrets.alertmanager-slack-webhook.file = ../../../secrets/alertmanager-slack-webhook.age;
 
   services.prometheus.alertmanager = {
     enable = true;
