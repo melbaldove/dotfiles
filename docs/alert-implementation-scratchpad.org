@@ -124,3 +124,12 @@ Best approach: Start with Prometheus query testing, then trigger simple service 
 - Deployed with send_resolved = true for resolution notifications
 - Complete alert lifecycle now working: firing → resolved
 - Monitoring only shannon, einstein, newton (turing removed)
+
+** 2025-07-21 Alert System Complete - Success!
+- Explicitly created alertmanager user early in system activation
+- Fixed permissions: alertmanager user now owns webhook secret file
+- Tested full alert lifecycle:
+  - Ghost stopped → Red Slack notification received ✅
+  - Ghost started → Green resolved notification received ✅
+- AlertManager properly reading webhook secret, no more permission errors
+- Complete end-to-end alerting pipeline operational
