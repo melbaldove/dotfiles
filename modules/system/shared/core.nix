@@ -10,6 +10,7 @@
     coreutils
     findutils
     jq
+    tmux
   ];
 
   nixpkgs.config.allowUnfree = true;
