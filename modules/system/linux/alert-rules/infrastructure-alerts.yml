@@ -12,34 +12,44 @@ groups:
           description: "Host {{ $labels.instance }} has been down for more than 2 minutes"
           
       - alert: HighCPUUsage
-        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
-        for: 3m
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 1m
         labels:
           severity: warning
           component: "infrastructure"
         annotations:
           summary: "High CPU usage on {{ $labels.instance }}"
-          description: 'CPU usage is {{ printf "%.1f" $value }}% for more than 3 minutes'
+          description: 'CPU usage is {{ printf "%.1f" $value }}% for more than 1 minute'
+          
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 30s
+        labels:
+          severity: critical
+          component: "infrastructure"
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.instance }}"
+          description: 'CPU usage is {{ printf "%.1f" $value }}% for more than 30 seconds'
           
       - alert: HighMemoryUsage
-        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
-        for: 3m
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 75
+        for: 1m
         labels:
           severity: warning
           component: "infrastructure"
         annotations:
           summary: "High memory usage on {{ $labels.instance }}"
-          description: 'Memory usage is {{ printf "%.1f" $value }}% for more than 3 minutes'
+          description: 'Memory usage is {{ printf "%.1f" $value }}% for more than 1 minute'
           
       - alert: CriticalMemoryUsage
-        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
-        for: 1m
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 0m
         labels:
           severity: critical
           component: "infrastructure"
         annotations:
           summary: "Critical memory usage on {{ $labels.instance }}"
-          description: 'Memory usage is {{ printf "%.1f" $value }}% for more than 1 minute'
+          description: 'Memory usage is {{ printf "%.1f" $value }}% - immediate alert!'
           
       - alert: DiskSpaceCritical
         expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 95

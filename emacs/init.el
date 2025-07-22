@@ -197,6 +197,11 @@
 
 ;; Development tools
 
+;; Nix support with tree-sitter
+(use-package nix-ts-mode
+  :straight (:host github :repo "nix-community/nix-ts-mode")
+  :mode "\\.nix\\'")
+
 ;; Terminal emulator - using eat
 (use-package eat
   :config
@@ -235,6 +240,55 @@
 (use-package rainbow-delimiters
   :hook 
   (prog-mode . rainbow-delimiters-mode))
+
+;; Built-in tree-sitter configuration (Emacs 29+)
+(use-package treesit
+  :straight nil  ; Built-in package
+  :config
+  ;; Auto-install tree-sitter grammars
+  (setq treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (cmake "https://github.com/uyha/tree-sitter-cmake")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (make "https://github.com/alemuller/tree-sitter-make")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (nix "https://github.com/nix-community/tree-sitter-nix")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (rust "https://github.com/tree-sitter/tree-sitter-rust")
+          (swift "https://github.com/alex-pinkus/tree-sitter-swift")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+  
+  ;; Auto-remap major modes to their tree-sitter equivalents
+  (setq major-mode-remap-alist
+        '((bash-mode . bash-ts-mode)
+          (css-mode . css-ts-mode)
+          (javascript-mode . js-ts-mode)
+          (json-mode . json-ts-mode)
+          (python-mode . python-ts-mode)
+          (rust-mode . rust-ts-mode)
+          (typescript-mode . typescript-ts-mode)))
+  
+  ;; Function to install missing grammars
+  (defun my/install-treesit-grammars ()
+    "Install tree-sitter grammars for configured languages."
+    (interactive)
+    (dolist (lang (mapcar #'car treesit-language-source-alist))
+      (unless (treesit-language-available-p lang)
+        (message "Installing tree-sitter grammar for %s..." lang)
+        (treesit-install-language-grammar lang))))
+  
+  ;; Auto-install grammars on first use
+  (add-hook 'after-init-hook
+            (lambda ()
+              (run-with-idle-timer 2 nil #'my/install-treesit-grammars))))
 
 ;; LSP support
 (use-package lsp-mode
