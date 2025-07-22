@@ -75,9 +75,11 @@
 (setq split-width-threshold 160)
 (global-visual-wrap-prefix-mode)
 
-;; Disable file backups
+;; Disable file backups and auto-save files
 (setq make-backup-files nil)
 (setq auto-save-default nil)
+(setq auto-save-list-file-prefix nil)
+(setq create-lockfiles nil)
 
 ;; Auto-revert buffers when files change on disk
 (global-auto-revert-mode 1)
