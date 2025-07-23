@@ -40,6 +40,9 @@ in
 (pkgs.writeShellScriptBin "opencode" ''
       exec ${pkgs.nodejs}/bin/npx opencode-ai@latest "$@"
     '')
+    (pkgs.writeShellScriptBin "qwen-code" ''
+      exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
+    '')
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     go-ios
