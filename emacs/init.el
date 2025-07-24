@@ -270,6 +270,7 @@
   (setq major-mode-remap-alist
         '((bash-mode . bash-ts-mode)
           (css-mode . css-ts-mode)
+          (gleam-mode . gleam-ts-mode)
           (javascript-mode . js-ts-mode)
           (json-mode . json-ts-mode)
           (python-mode . python-ts-mode)
@@ -318,6 +319,49 @@
   :mode "\\.rs\\'"
   :hook 
   (rust-mode . lsp))
+
+;; Gleam development configuration
+(use-package gleam-mode
+  :straight (:host github :repo "gleam-lang/gleam-mode")
+  :mode "\\.gleam\\'"
+  :hook 
+  (gleam-mode . lsp)
+  :config
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-stdio-connection '("gleam" "lsp"))
+                    :major-modes '(gleam-mode)
+                    :server-id 'gleam-lsp))
+  ;; Install tree-sitter grammar if not available
+  (unless (treesit-language-available-p 'gleam)
+    (gleam-ts-install-grammar)))
+
+;; Define gleam-ts-mode
+(define-derived-mode gleam-ts-mode gleam-mode "Gleam[ts]"
+  "Major mode for editing Gleam with tree-sitter."
+  (when (treesit-ready-p 'gleam)
+    (treesit-parser-create 'gleam)
+    (setq-local treesit-font-lock-settings
+                (treesit-font-lock-rules
+                 :language 'gleam
+                 :feature 'comment
+                 '((comment) @font-lock-comment-face)
+                 :language 'gleam
+                 :feature 'keyword
+                 '(["import" "as" "pub" "opaque" "type" "const" "fn" "let" "assert" "use" "case" "if"] @font-lock-keyword-face)
+                 :language 'gleam
+                 :feature 'string
+                 '((string) @font-lock-string-face)
+                 :language 'gleam
+                 :feature 'type
+                 '((type_identifier) @font-lock-type-face)
+                 :language 'gleam
+                 :feature 'function
+                 '((function_name) @font-lock-function-name-face)))
+    (setq-local treesit-font-lock-feature-list
+                '((comment)
+                  (keyword string)
+                  (type function)))
+    (treesit-major-mode-setup)))
 
 ;; Enable FFAP (Find File At Point)
 (ffap-bindings)

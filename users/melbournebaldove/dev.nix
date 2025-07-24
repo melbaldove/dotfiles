@@ -37,6 +37,7 @@ in
     libtool
     tree
     fzf
+    gleam
 (pkgs.writeShellScriptBin "opencode" ''
       exec ${pkgs.nodejs}/bin/npx opencode-ai@latest "$@"
     '')
