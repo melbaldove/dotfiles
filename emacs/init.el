@@ -260,7 +260,7 @@
           (nix "https://github.com/nix-community/tree-sitter-nix")
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          (swift "https://github.com/alex-pinkus/tree-sitter-swift")
+          (swift "https://github.com/alex-pinkus/tree-sitter-swift" "main" "src")
           (toml "https://github.com/tree-sitter/tree-sitter-toml")
           (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
           (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")

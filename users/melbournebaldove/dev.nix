@@ -69,18 +69,9 @@ in
 
 
   programs = {
-    nushell = {
-      enable = true;
-      configFile.text = builtins.replaceStrings 
-        ["@direnv@"] 
-        ["${pkgs.direnv}/bin/direnv"] 
-        (builtins.readFile "${inputs.self}/nushell/config.nu");
-    };
-
     direnv = {
       enable = true;
       enableBashIntegration = true;
-      enableNushellIntegration = true;
       silent = true;
       nix-direnv.enable = true;
     };
