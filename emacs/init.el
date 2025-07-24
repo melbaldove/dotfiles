@@ -56,9 +56,9 @@
 (setenv "PATH" (concat (expand-file-name "~/.local/bin") ":" (getenv "PATH")))
 
 ;; UI Configuration
-(use-package monotropic-theme
+(use-package solarized-theme
   :config
-  (load-theme 'monotropic t))
+  (load-theme 'solarized-light t))
 
 (set-frame-font "Liga SFMono Nerd Font 14")
 
