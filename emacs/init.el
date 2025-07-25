@@ -260,7 +260,7 @@
           (nix "https://github.com/nix-community/tree-sitter-nix")
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          (swift "https://github.com/alex-pinkus/tree-sitter-swift" "main" "src")
+          (swift "https://github.com/alex-pinkus/tree-sitter-swift")
           (toml "https://github.com/tree-sitter/tree-sitter-toml")
           (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
           (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
@@ -277,14 +277,43 @@
           (rust-mode . rust-ts-mode)
           (typescript-mode . typescript-ts-mode)))
   
+  ;; Custom Swift grammar installation
+  (defun my/install-swift-grammar ()
+    "Install Swift tree-sitter grammar with proper build steps."
+    (interactive)
+    (let* ((workdir (make-temp-file "treesit-swift-" t))
+           (repo-dir (expand-file-name "repo" workdir)))
+      (message "Installing Swift tree-sitter grammar...")
+      ;; Clone the repository
+      (shell-command 
+       (format "git clone --depth=1 https://github.com/alex-pinkus/tree-sitter-swift %s" 
+               repo-dir))
+      ;; Build the grammar
+      (let ((default-directory repo-dir))
+        (message "Installing npm dependencies...")
+        (shell-command "npm install")
+        (message "Generating parser.c...")
+        (shell-command "npm run generate")
+        ;; Now compile and install the grammar
+        (let* ((lib-dir (expand-file-name "tree-sitter" user-emacs-directory))
+               (lib-ext (if (eq system-type 'darwin) "dylib" "so"))
+               (lib-file (expand-file-name (format "libtree-sitter-swift.%s" lib-ext) lib-dir)))
+          (make-directory lib-dir t)
+          (message "Compiling Swift grammar...")
+          (shell-command 
+           (format "gcc -shared -o %s -fPIC -I. src/parser.c src/scanner.c" lib-file))
+          (message "Swift grammar installed successfully!")))))
+  
   ;; Function to install missing grammars
   (defun my/install-treesit-grammars ()
     "Install tree-sitter grammars for configured languages."
     (interactive)
     (dolist (lang (mapcar #'car treesit-language-source-alist))
       (unless (treesit-language-available-p lang)
-        (message "Installing tree-sitter grammar for %s..." lang)
-        (treesit-install-language-grammar lang))))
+        (if (eq lang 'swift)
+            (my/install-swift-grammar)
+          (message "Installing tree-sitter grammar for %s..." lang)
+          (treesit-install-language-grammar lang)))))
   
   ;; Auto-install grammars on first use
   (add-hook 'after-init-hook
