@@ -1,6 +1,6 @@
 
 {
-  inputs, ...
+  inputs, pkgs, ...
 }:
 {
   imports = [
@@ -41,19 +41,10 @@
   # Enable TouchID for sudo
   security.pam.services.sudo_local.touchIdAuth = true;
 
-  # Enable Linux emulation for cross-platform builds
-  nix.settings.extra-platforms = [ "x86_64-linux" "aarch64-linux" ];
-  
-  # Configure remote builders
-  nix.buildMachines = [{
-    hostName = "einstein";
-    system = "x86_64-linux";
-    protocol = "ssh-ng";
-    maxJobs = 4;
-    speedFactor = 2;
-    supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
-    mandatoryFeatures = [ ];
-  }];
-  
-  nix.distributedBuilds = true;
+  # Turing-specific packages
+  environment.systemPackages = with pkgs; [
+    wakeonlan
+  ];
+
+  nix.enable = false;
 }
