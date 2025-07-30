@@ -32,14 +32,32 @@
 
 ;; Configure use-package to use straight.el by default
 (setq straight-use-package-by-default t)
-
-;; Make sure we load our custom org version before anything else
-;; This prevents org version mismatch errors
-(add-to-list 'load-path "~/.config/emacs/elpa/org-mode/lisp/")
-(require 'org)
-
-;; Tell straight.el not to manage org since we're loading it manually
-(straight-register-package 'org)
+(use-package org
+  :defer
+  :straight `(org
+              :fork (:host nil
+                     :repo "https://git.tecosaur.net/tec/org-mode.git"
+                     :branch "dev"
+                     :remote "tecosaur")
+              :files (:defaults "etc")
+              :build t
+              :pre-build
+              (with-temp-file "lisp/org-version.el"
+               (require 'lisp-mnt)
+               (let ((version
+                      (with-temp-buffer
+                        (insert-file-contents "lisp/org.el")
+                        (lm-header "version")))
+                     (git-version
+                      (string-trim
+                       (with-temp-buffer
+                         (call-process "git" nil t nil "rev-parse" "--short" "HEAD")
+                         (buffer-string)))))
+                (insert
+                 (format "(defun org-release () \"The release version of Org.\" %S)\n" version)
+                 (format "(defun org-git-version () \"The truncate git commit hash of Org mode.\" %S)\n" git-version)
+                 "(provide 'org-version)\n")))
+              :pin nil))
 
 ;; Load custom file
 (load custom-file)
@@ -64,6 +82,7 @@
 
 ;; Basic UI settings
 (setq inhibit-splash-screen t)
+(setq initial-scratch-message nil)
 (tool-bar-mode 0)
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
@@ -130,11 +149,7 @@
                          "#+title: %<%A, %d/%m/%Y>")
       :empty-lines 1)))
   :config
-  (org-roam-db-autosync-mode)
-  :hook
-  (after-init . (lambda ()
-                  (org-roam-dailies-goto-today)
-                  (end-of-buffer))))
+  (org-roam-db-autosync-mode))
 
 ;; Completion and editing tools
 (use-package smex
@@ -408,6 +423,16 @@
 (set-register ?c (cons 'file "~/.config/emacs/init.el"))
 (set-register ?n (cons 'file "~/.config/nix/home.nix"))
 (set-register ?i (cons 'file (concat org-directory "/ideas.org")))
+
+;; Open daily journal on startup
+(add-hook 'after-init-hook
+          (lambda ()
+            (run-with-timer 0.1 nil
+                            (lambda ()
+                              (org-roam-dailies-goto-today)
+                              (delete-other-windows)
+                              (end-of-buffer))))
+          t)
 
 ;; Provide the feature
 (provide 'init)

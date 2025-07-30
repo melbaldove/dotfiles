@@ -13,9 +13,9 @@ end):start()
 
 -- Application bindings
 local apps = {
-    s = "Dia",
+    s = "Safari",
     e = "Emacs",
-    t = "Ghostty",
+    t = "kitty",
     x = "Xcode",
     c = "Claude",
     m = "Slack",

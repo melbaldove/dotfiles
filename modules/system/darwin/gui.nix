@@ -2,21 +2,22 @@
 
 { pkgs, inputs, config, ... }:
 let
-  # Fixed-output derivation for DefaultKeyBinding.dict
-  defaultKeyBinding = pkgs.fetchurl {
-    url = "https://raw.githubusercontent.com/fkchang/emacs-keybindings-in-osx/refs/heads/master/DefaultKeybinding.dict";
-    sha256 = "sha256-IHe7nXGeE1/4WzMDSyyrUBqIZSp6qFc6DGvp1hl9sKA=";
+  # Fixed-output derivation for the entire fkchan repository
+  fkchanRepo = pkgs.fetchFromGitHub {
+    owner = "fkchang";
+    repo = "emacs-keybindings-in-osx";
+    rev = "master";
+    sha256 = "1fvd440zp1g2rb41z67v0qh1q4bpi0cg6vsrr69qaxzqlycj4p3m";
   };
 in
 {
   nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
-  # Create DefaultKeyBinding.dict symlink for all users
-  system.activationScripts.userKeyBindings.text = ''
-    echo "Setting up DefaultKeyBinding.dict..."
-    USER_HOME="${config.users.users.${config.system.primaryUser}.home}"
-    mkdir -p "$USER_HOME/Library/KeyBindings"
-    ln -sf ${defaultKeyBinding} "$USER_HOME/Library/KeyBindings/DefaultKeyBinding.dict"
+  # Run the fkchan install script
+  system.activationScripts.extraActivation.text = ''
+    export HOME="/Users/${config.system.primaryUser}"
+    cd ${fkchanRepo}
+    ${pkgs.bash}/bin/bash ./install.sh
   '';
 
   system = {
@@ -34,9 +35,9 @@ in
       };
       dock = {
         persistent-apps = [
-          { app = "/Applications/Dia.app"; }
+          { app = "/Applications/Safari.app"; }
           { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Apps/Emacs.app"; }
-          { app = "/Applications/Ghostty.app"; }
+          { app = "/Applications/Kitty.app"; }
           { app = "/System/Applications/Messages.app"; }
           { app = "/System/Applications/Mail.app"; }
           { app = "/System/Applications/Calendar.app"; }
@@ -55,6 +56,12 @@ in
               "InputSourceKind" = "Keyboard Layout";
               "KeyboardLayout ID" = "-7379";
               "KeyboardLayout Name" = "Colemak DH ANSI";
+            }
+            # Unicode Hex Input - prevents Option key from producing unicode
+            {
+              "InputSourceKind" = "Keyboard Layout";
+              "KeyboardLayout ID" = "252";
+              "KeyboardLayout Name" = "Unicode Hex Input";
             }
           ];
           AppleInputSourceHistory = [
@@ -92,8 +99,8 @@ in
       "colemak-dh"
       "anki"
       "discord"
-      "ghostty"
       "hammerspoon"
+      "kitty"
     ];
   };
 }

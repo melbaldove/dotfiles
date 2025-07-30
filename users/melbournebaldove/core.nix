@@ -17,13 +17,24 @@
   };
 
   programs = {
-    bash = {
+    zsh = {
       enable = true;
-      bashrcExtra = ''
+      autosuggestion.enable = true;
+      enableCompletion = true;
+      syntaxHighlighting.enable = true;
+      history = {
+        size = 10000;
+        save = 10000;
+        share = true;
+        ignoreDups = true;
+        ignoreSpace = true;
+      };
+      initContent = ''
         # Custom prompt showing username and current directory
-        export PS1="\u:\w$ "
+        PROMPT='%n:%~$ '
       '';
     };
+    
     home-manager.enable = true;
 
 

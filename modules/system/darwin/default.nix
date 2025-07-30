@@ -1,6 +1,6 @@
 
 {
-  inputs, ...
+  inputs, pkgs, ...
 }:
 {
   imports = [ 
@@ -22,6 +22,7 @@
   users.users.melbournebaldove = {
     name = "melbournebaldove";
     home = "/Users/melbournebaldove"; # This is the standard macOS home path
+    shell = pkgs.zsh;
   };
 
   # NOTE: These system modifications have been moved to a manual setup script

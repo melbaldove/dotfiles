@@ -16,7 +16,9 @@
     ".hammerspoon/init.lua".source = config.lib.file.mkOutOfStoreSymlink "${self}/hammerspoon/init.lua";
   };
 
+  # Kitty terminal configuration
   xdg.configFile = {
-    "ghostty".source = config.lib.file.mkOutOfStoreSymlink "${self}/ghostty";
+    "kitty".source = config.lib.file.mkOutOfStoreSymlink "${self}/kitty";
   };
+
 }
