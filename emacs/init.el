@@ -119,9 +119,9 @@
 (setq org-directory "~/org")
 (setq org-hide-emphasis-markers t)
 (setq org-agenda-files '("~/org/daily"))
+(setq org-use-sub-superscripts nil)
 
 (add-hook 'org-mode-hook (lambda ()
-                           (org-latex-preview-auto-mode)
                            (face-remap-add-relative 'default :family "Inter Display" :height 140)
                            (set-face-attribute 'org-modern-symbol nil :family "Inter Display")
                            (setq-local line-spacing 0.2)))
@@ -190,6 +190,8 @@
 
 (use-package direnv
   :config
+  (setq direnv-always-show-summary nil)
+  (setq direnv-show-paths-in-summary nil)
   (direnv-mode))
 
 (use-package company
