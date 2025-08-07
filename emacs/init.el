@@ -186,7 +186,9 @@
   :config
   (ido-mode 1)
   (ido-everywhere 1)
-  (ido-ubiquitous-mode 1))
+  (ido-ubiquitous-mode 1)
+  ;; Enable flex matching for fuzzy search
+  (setq ido-enable-flex-matching t))
 
 (use-package direnv
   :config
@@ -377,6 +379,13 @@
      (make-lsp-client :new-connection (lsp-stdio-connection '("gleam" "lsp"))
                       :major-modes '(gleam-ts-mode)
                       :server-id 'gleam-lsp))))
+
+;; Mermaid diagrams support
+(use-package mermaid-mode
+  :mode ("\\.mmd\\'" "\\.mermaid\\'")
+  :config
+  (setq mermaid-mmdc-location "mmdc")
+  (setenv "PUPPETEER_EXECUTABLE_PATH" "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
 
 ;; Enable FFAP (Find File At Point)
 (ffap-bindings)

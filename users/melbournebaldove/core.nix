@@ -14,6 +14,7 @@
   
   home.sessionVariables = {
     EDITOR = "vim";
+    TERM = "xterm-256color";
   };
 
   programs = {

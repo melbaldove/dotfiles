@@ -38,6 +38,7 @@ in
     tree
     fzf
     gleam
+    mermaid-cli
 (pkgs.writeShellScriptBin "opencode" ''
       exec ${pkgs.nodejs}/bin/npx opencode-ai@latest "$@"
     '')
@@ -46,7 +47,7 @@ in
     '')
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
-    go-ios
+    # go-ios removed: has Linux dependencies (iproute2) that prevent it from building on Darwin
   ];
 
   # Development-specific bash aliases and setup

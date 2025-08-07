@@ -46,5 +46,10 @@
     wakeonlan
   ];
 
+  # Environment variables
+  environment.variables = {
+    PUPPETEER_EXECUTABLE_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  };
+
   nix.enable = false;
 }
