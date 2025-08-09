@@ -173,6 +173,9 @@
   :config
   (setq avy-timeout-seconds 0.2))
 
+(use-package imenu-list
+  :bind ("C-c l" . imenu-list-smart-toggle))
+
 (use-package projectile
   :init
   (projectile-mode +1)
