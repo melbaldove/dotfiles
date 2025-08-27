@@ -45,6 +45,9 @@ in
     (pkgs.writeShellScriptBin "qwen-code" ''
       exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
     '')
+    (pkgs.writeShellScriptBin "codex" ''
+      exec ${pkgs.nodejs}/bin/npx @openai/codex@latest "$@"
+    '')
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     # go-ios removed: has Linux dependencies (iproute2) that prevent it from building on Darwin

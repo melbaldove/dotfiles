@@ -9,6 +9,9 @@
 (setq gc-cons-threshold 100000000)
 (add-hook 'after-init-hook (lambda () (setq gc-cons-threshold 800000)))
 
+;; Suppress native compiler warnings
+(setq native-comp-async-report-warnings-errors 'silent)
+
 ;; Core settings
 (setq custom-file "~/.config/emacs/.emacs.custom.el")
 
@@ -32,32 +35,11 @@
 
 ;; Configure use-package to use straight.el by default
 (setq straight-use-package-by-default t)
+
+;; Use built-in org-mode
 (use-package org
-  :defer
-  :straight `(org
-              :fork (:host nil
-                     :repo "https://git.tecosaur.net/tec/org-mode.git"
-                     :branch "dev"
-                     :remote "tecosaur")
-              :files (:defaults "etc")
-              :build t
-              :pre-build
-              (with-temp-file "lisp/org-version.el"
-               (require 'lisp-mnt)
-               (let ((version
-                      (with-temp-buffer
-                        (insert-file-contents "lisp/org.el")
-                        (lm-header "version")))
-                     (git-version
-                      (string-trim
-                       (with-temp-buffer
-                         (call-process "git" nil t nil "rev-parse" "--short" "HEAD")
-                         (buffer-string)))))
-                (insert
-                 (format "(defun org-release () \"The release version of Org.\" %S)\n" version)
-                 (format "(defun org-git-version () \"The truncate git commit hash of Org mode.\" %S)\n" git-version)
-                 "(provide 'org-version)\n")))
-              :pin nil))
+  :straight nil  ; Use built-in version
+  :defer t)
 
 ;; Load custom file
 (load custom-file)
@@ -88,6 +70,10 @@
 (scroll-bar-mode 0)
 (column-number-mode 1)
 (show-paren-mode 1)
+
+;; Enable relative line numbers
+(setq display-line-numbers-type 'relative)
+(global-display-line-numbers-mode 1)
 (global-visual-line-mode)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (setq split-height-threshold 80)
@@ -110,21 +96,41 @@
 (setq recentf-exclude '("/tmp/" "/ssh:")) ; Exclude temporary and remote files
 
 ;; Org-mode Configuration
-(use-package org-modern
-  :after org
-  :config
-  (global-org-modern-mode))
 
 ;; Configure org-mode
 (setq org-directory "~/org")
 (setq org-hide-emphasis-markers t)
 (setq org-agenda-files '("~/org/daily"))
 (setq org-use-sub-superscripts nil)
+(setq org-startup-indented t)  ; Enable org-indent-mode by default
+
+;; Use theme colors for org-mode (inherit from default face)
+(add-hook 'org-mode-hook
+          (lambda ()
+            ;; Make TODO keywords use default text color
+            (setq org-todo-keyword-faces
+                  '(("TODO" . (:inherit default :weight bold))
+                    ("DONE" . (:inherit shadow :weight bold))))
+            ;; Make priorities use default text color  
+            (setq org-priority-faces
+                  '((?A . (:inherit default :weight bold))
+                    (?B . (:inherit default))
+                    (?C . (:inherit shadow))))))
 
 (add-hook 'org-mode-hook (lambda ()
                            (face-remap-add-relative 'default :family "Inter Display" :height 140)
-                           (set-face-attribute 'org-modern-symbol nil :family "Inter Display")
-                           (setq-local line-spacing 0.2)))
+                           (setq-local line-spacing 0.2)
+                           ;; Force all org headings to use default text color
+                           (dolist (face '(org-level-1 org-level-2 org-level-3 org-level-4
+                                          org-level-5 org-level-6 org-level-7 org-level-8))
+                             (set-face-foreground face nil))))
+
+;; Modern indentation for org-mode
+(use-package org-modern-indent
+  :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
+  :config
+  ;; Add late to hook to ensure it runs after org-indent
+  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
 
 ;; Dependencies for org-roam and other packages
 (use-package transient)

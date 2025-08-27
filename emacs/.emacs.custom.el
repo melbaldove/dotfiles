@@ -4,19 +4,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(global-org-modern-mode t)
  '(org-agenda-files nil)
  '(org-indent-indentation-per-level 4)
- '(org-latex-preview-appearance-options
-   '(:foreground auto :background "Transparent" :scale 1.25 :zoom 1.25
-		 :page-width 0.8 :matchers
-		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(org-list-indent-offset 2)
- '(org-modern-hide-stars t)
- '(org-modern-keyword "")
- '(org-modern-list '((43 . "◦") (45 . "•") (42 . "•")))
- '(org-modern-replace-stars "")
- '(org-modern-star 'replace)
  '(org-pretty-entities t)
  '(package-selected-packages nil)
  '(writeroom-fullscreen-effect 'maximized))
@@ -25,7 +15,33 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(org-block ((t (:extend t :foreground "#111111" :family "Liga SFMono Nerd Font"))))
+ '(org-block ((t (:extend t :inherit fixed-pitch))))
  '(org-default ((t (:inherit default :weight regular :family "Inter Display"))))
- '(org-document-title ((t (:foreground "headerTextColor" :weight bold :height 1.3))))
- '(org-drawer ((t (:foreground "#d1d1d1")))))
+ '(org-document-title ((t (:inherit default :weight bold :height 1.3))))
+ '(org-drawer ((t (:inherit shadow))))
+ '(org-link ((t (:inherit link :underline nil))))
+ '(org-level-1 ((t (:inherit default :weight bold :height 1.2))))
+ '(org-level-2 ((t (:inherit default :weight semi-bold :height 1.15))))
+ '(org-level-3 ((t (:inherit default :weight semi-bold :height 1.1))))
+ '(org-level-4 ((t (:inherit default :weight semi-bold :height 1.05))))
+ '(org-level-5 ((t (:inherit default :weight semi-bold))))
+ '(org-level-6 ((t (:inherit default :weight semi-bold))))
+ '(org-level-7 ((t (:inherit default :weight semi-bold))))
+ '(org-level-8 ((t (:inherit default :weight semi-bold))))
+ '(org-todo ((t (:inherit default :weight bold))))
+ '(org-done ((t (:inherit shadow :weight bold))))
+ '(org-headline-done ((t (:inherit shadow))))
+ '(org-checkbox ((t (:inherit default :weight bold))))
+ '(org-list-dt ((t (:inherit default :weight bold))))
+ '(org-tag ((t (:inherit shadow))))
+ '(org-date ((t (:inherit default :underline nil))))
+ '(org-special-keyword ((t (:inherit shadow))))
+ '(org-property-value ((t (:inherit default))))
+ '(outline-1 ((t (:inherit default :weight bold))))
+ '(outline-2 ((t (:inherit default :weight semi-bold))))
+ '(outline-3 ((t (:inherit default :weight semi-bold))))
+ '(outline-4 ((t (:inherit default :weight semi-bold))))
+ '(outline-5 ((t (:inherit default :weight semi-bold))))
+ '(outline-6 ((t (:inherit default :weight semi-bold))))
+ '(outline-7 ((t (:inherit default :weight semi-bold))))
+ '(outline-8 ((t (:inherit default :weight semi-bold)))))

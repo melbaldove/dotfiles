@@ -17,7 +17,7 @@ local apps = {
     e = "Emacs",
     t = "kitty",
     x = "Xcode",
-    c = "Claude",
+    c = "ChatGPT",
     m = "Slack",
     l = "Linear",
 }

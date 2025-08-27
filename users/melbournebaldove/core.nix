@@ -23,6 +23,22 @@
       autosuggestion.enable = true;
       enableCompletion = true;
       syntaxHighlighting.enable = true;
+      oh-my-zsh = {
+        enable = true;
+        theme = "lambda";
+        plugins = [
+          "git"
+          "docker"
+          "kubectl"
+          "terraform"
+          "aws"
+          "npm"
+          "python"
+          "golang"
+          "rust"
+          "direnv"
+        ];
+      };
       history = {
         size = 10000;
         save = 10000;
@@ -30,14 +46,28 @@
         ignoreDups = true;
         ignoreSpace = true;
       };
-      initContent = ''
-        # Custom prompt showing username and current directory
-        PROMPT='%n:%~$ '
-      '';
     };
     
     home-manager.enable = true;
 
+
+    ssh = {
+      enable = true;
+      matchBlocks = {
+        "github.com" = {
+          hostname = "github.com";
+          user = "git";
+          identityFile = "~/.ssh/id_ed25519";
+          identitiesOnly = true;
+        };
+        "github-cmsquared" = {
+          hostname = "github.com";
+          user = "git";
+          identityFile = "~/.ssh/id_ed25519_cmsquared";
+          identitiesOnly = true;
+        };
+      };
+    };
 
     git = {
       enable = true;
@@ -52,6 +82,24 @@
         };
         push = {
           autosetupremote = true;
+        };
+        pull = {
+          rebase = true;
+        };
+        rebase = {
+          autoStash = true;
+        };
+        fetch = {
+          prune = true;
+        };
+        rerere = {
+          enabled = true;
+        };
+        gc = {
+          worktreePrune = true;
+        };
+        branch = {
+          autoSetupRebase = "always";
         };
       };
     };
