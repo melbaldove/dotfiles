@@ -118,7 +118,6 @@
                     (?C . (:inherit shadow))))))
 
 (add-hook 'org-mode-hook (lambda ()
-                           (face-remap-add-relative 'default :family "Inter Display" :height 140)
                            (setq-local line-spacing 0.2)
                            ;; Force all org headings to use default text color
                            (dolist (face '(org-level-1 org-level-2 org-level-3 org-level-4
@@ -304,6 +303,10 @@
           (python-mode . python-ts-mode)
           (rust-mode . rust-ts-mode)
           (typescript-mode . typescript-ts-mode)))
+  
+  ;; Add file associations for TypeScript
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
   
   ;; Custom Swift grammar installation
   (defun my/install-swift-grammar ()
