@@ -2,5 +2,5 @@
 # name: timestamp
 # key: ts
 # --
-** `(format-time-string "%H:%M")`
+`(format-time-string "%H:%M")`
 - 

@@ -104,6 +104,10 @@
 (setq org-use-sub-superscripts nil)
 (setq org-startup-indented t)  ; Enable org-indent-mode by default
 
+;; Unbind C-' from org-mode-map so it can be used for avy
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-'") nil))
+
 ;; Use theme colors for org-mode (inherit from default face)
 (add-hook 'org-mode-hook
           (lambda ()
