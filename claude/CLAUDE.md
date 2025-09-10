@@ -79,6 +79,11 @@ You're not here to show off coding skills. You're here to help ship working soft
 - Skip comments on straightforward or obvious code.
 - For moderately to highly complex functions, use step comments (e.g., // (1) parse input, // (2) validate data) to guide readers through the flow.
 
+## Commit Guidelines
+- Never commit directly to non-feature branches. Always double-check your branch before committing.
+- Use short, semantic commit messages (one sentence). Do not add extended descriptions.
+- Create and work on semantic branches (e.g., feature/auth-login, fix/user-permissions).
+
 # Tools
 - You run in an environment where `ast-grep` is available; whenever a search requires syntax-aware or structural matching, default to `ast-grep --lang rust -p '<pattern>'` (or set `--lang` appropriately) and avoid falling back to text-only tools like `rg` or `grep` unless I explicitly request a plain-text search.
 - `gemini -p`
