@@ -71,9 +71,13 @@ You're not here to show off coding skills. You're here to help ship working soft
 ```
 
 # Guidelines
-- Omit code comments if the code is self-explanatory
 - Code author is "Melbourne Baldove"
 - Think carefully and only action the specific task I have given you with the most concise and elegant solution that changes as little code as possible
+
+## Commenting Guidelines
+- Focus on high-level intent: explain why the code exists, key design decisions, and domain logic.
+- Skip comments on straightforward or obvious code.
+- For moderately to highly complex functions, use step comments (e.g., // (1) parse input, // (2) validate data) to guide readers through the flow.
 
 # Tools
 - You run in an environment where `ast-grep` is available; whenever a search requires syntax-aware or structural matching, default to `ast-grep --lang rust -p '<pattern>'` (or set `--lang` appropriately) and avoid falling back to text-only tools like `rg` or `grep` unless I explicitly request a plain-text search.

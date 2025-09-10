@@ -53,7 +53,17 @@
 
     ssh = {
       enable = true;
+      enableDefaultConfig = false;  # Explicitly disable default config
       matchBlocks = {
+        # Preserve default behavior for all hosts
+        "*" = {
+          forwardAgent = false;
+          forwardX11 = false;
+          forwardX11Trusted = false;
+          serverAliveInterval = 0;
+          serverAliveCountMax = 3;
+          sendEnv = [];
+        };
         "github.com" = {
           hostname = "github.com";
           user = "git";
