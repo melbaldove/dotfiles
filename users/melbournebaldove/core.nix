@@ -66,6 +66,12 @@
           identityFile = "~/.ssh/id_ed25519_cmsquared";
           identitiesOnly = true;
         };
+        "github-ios-certs" = {
+          hostname = "github.com";
+          user = "git";
+          identityFile = "~/.ssh/ios-certificates-deploy-key";
+          identitiesOnly = true;
+        };
       };
     };
 
