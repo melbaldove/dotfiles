@@ -20,6 +20,9 @@ local apps = {
     c = "ChatGPT",
     m = "Slack",
     l = "Linear",
+    f = "Figma",
+    b = "Bruno",
+    g = "Google Chrome",
 }
 
 -- Create hyper key bindings
