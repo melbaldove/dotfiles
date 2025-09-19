@@ -39,12 +39,6 @@ in
     fzf
     gleam
     mermaid-cli
-    stdenv.cc.cc.lib
-    dotnet-sdk_8
-    icu
-    openssl
-    zlib
-    krb5
 (pkgs.writeShellScriptBin "opencode" ''
       exec ${pkgs.nodejs}/bin/npx opencode-ai@latest "$@"
     '')
