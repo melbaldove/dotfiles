@@ -40,7 +40,7 @@ in
     gleam
     mermaid-cli
     stdenv.cc.cc.lib
-    dotnet-sdk_6
+    dotnet-sdk_8
     icu
     openssl
     zlib
