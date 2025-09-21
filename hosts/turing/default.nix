@@ -5,11 +5,11 @@
 {
   imports = [
     inputs.home-manager.darwinModules.home-manager
+    inputs.nix-infra.nixosModules.core
     ../../modules/system/darwin/default.nix
     ../../modules/system/darwin/gui.nix
     ../../modules/system/darwin/agenix.nix
     ../../modules/system/darwin/wireguard-client.nix
-    ../../modules/system/shared/core.nix
   ];
 
   home-manager = {

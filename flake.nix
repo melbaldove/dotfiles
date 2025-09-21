@@ -11,6 +11,8 @@
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
+    
+    nix-infra.url = "github:melbaldove/nix-infra";
 
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
