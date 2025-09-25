@@ -23,6 +23,7 @@ local apps = {
     f = "Figma",
     b = "Bruno",
     g = "Google Chrome",
+    v = "Visual Studio Code",
 }
 
 -- Create hyper key bindings
