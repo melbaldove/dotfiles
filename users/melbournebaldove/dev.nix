@@ -30,6 +30,7 @@ in
     nodejs
     bun
     gemini-cli
+    docker
     nmap
     deploy-rs
     wireguard-tools

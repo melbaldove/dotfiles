@@ -19,5 +19,6 @@
 
 ## Commit Guidelines
 - Never commit directly to non-feature branches. Always double-check your branch before committing.
-- Use short, semantic commit messages (one sentence). Do not add extended descriptions.
+- Never amend commits.
+- Use short, commit messages (one sentence) adhering to the semantic commit conventions. Do not add extended descriptions.
 - Create and work on semantic branches (e.g., feature/auth-login, fix/user-permissions).
