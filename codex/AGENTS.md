@@ -18,7 +18,10 @@
 - When deleting code do not leave "deleted" comments
 
 ## Commit Guidelines
-- Never commit directly to non-feature branches. Always double-check your branch before committing.
 - Never amend commits.
 - Use short, commit messages (one sentence) adhering to the semantic commit conventions. Do not add extended descriptions.
 - Create and work on semantic branches (e.g., feature/auth-login, fix/user-permissions).
+
+## Workflow Guidelines
+- If at anytime you are uncertain about a particular course of action (because multiple approaches seem good), stop and brainstorm with the user, otherwise
+if you are fairly confident at a pragmatic and optimal approach then just execute.
