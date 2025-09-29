@@ -1,27 +1,51 @@
-# When you need to call tools from the shell, use this rubric:
+# Tooling
 
-- Find Files: `fd`
-- Find Text: `rg` (ripgrep)
-- Find Code Structure (TS/TSX): `ast-grep`
-  - Default to TypeScript:
-    - `.ts` → `ast-grep --lang ts -p '<pattern>'`
-    - `.tsx` (React) → `ast-grep --lang tsx -p '<pattern>'`
-  - For other languages, set `--lang` appropriately (e.g., `--lang rust`).
-- Select among matches: pipe to `fzf`
-- JSON: `jq`
-- YAML/XML: `yq`
+- Find files: `fd`
+- Find text: `rg` (ripgrep)
+- Find code structure:
+  - TypeScript `.ts`: `ast-grep --lang ts -p '<pattern>'`
+  - TypeScript React `.tsx`: `ast-grep --lang tsx -p '<pattern>'`
+  - Other languages: pick the appropriate `--lang`
+- Select among matches: pipe results to `fzf`
+- JSON processing: `jq`
+- YAML/XML processing: `yq`
 
-## Commenting Guidelines
-- Focus on high-level intent: explain why the code exists, key design decisions, and domain logic.
-- Skip comments on straightforward or obvious code.
-- For moderately to highly complex functions, use step comments (e.g., // (1) parse input, // (2) validate data) to guide readers through the flow.
-- When deleting code do not leave "deleted" comments
+# Code Style & Comments
 
-## Commit Guidelines
-- Never amend commits.
-- Use short, commit messages (one sentence) adhering to the semantic commit conventions. Do not add extended descriptions.
-- Create and work on semantic branches (e.g., feature/auth-login, fix/user-permissions).
+- Comment on high-level intent—purpose, design rationale, domain logic.
+- Skip comments on straightforward or self-evident code.
+- For complex flows, use step comments (e.g., `// (1) parse input`, `// (2) validate data`).
+- When deleting code, do not leave "deleted" placeholder comments.
 
-## Workflow Guidelines
-- If at anytime you are uncertain about a particular course of action (because multiple approaches seem good), stop and brainstorm with the user, otherwise
-if you are fairly confident at a pragmatic and optimal approach then just execute.
+# Git Workflow
+
+- Never amend existing commits.
+- Use short, semantic commit messages (one sentence).
+- Work on semantic branches (e.g., `feature/auth-login`, `fix/user-permissions`).
+
+# Scope & Clarifications
+
+- Do not expand scope beyond the explicit request; ask before adding safeguards or refactors.
+- If requirements feel underspecified or multiple reasonable approaches exist, ask the user to clarify before proceeding.
+
+# Planning & Validation
+
+- Use the planning tool for multi-step or non-trivial tasks; skip it only for obvious, single-edit changes.
+- Run relevant tests or checks before committing when feasible. If you cannot run them, clearly explain why and note any manual validation performed.
+
+# Repo Hygiene
+
+- Check the working tree before starting changes to avoid overwriting user edits.
+- Surface unexpected modifications immediately instead of continuing blindly.
+
+# Documentation Parity
+
+- When behaviour changes (new endpoints, response tweaks, etc.), update or create the corresponding documentation, examples, or API requests in the same pass.
+
+# Scoped Guides
+
+- Every directory must include a local `AGENTS.md`, even if the workflow is standard. Use it to capture essentials and must-know caveats for that scope.
+- When you enter a subdirectory, read its `AGENTS.md` as an overlay on top of these global rules.
+- Keep local guides concise and date-stamped; cover module purpose, primary commands (build/test/lint), key entry points, common pitfalls, and link to longer-form docs rather than duplicating them.
+- Update the relevant local guide in the same PR whenever workflows change, and include an “Updated YYYY-MM-DD” note so staleness is obvious.
+- Local guidance can refine or tighten global rules but must not contradict them. If you spot a conflict, record it under “Open Questions” and escalate to the user.
