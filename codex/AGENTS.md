@@ -19,7 +19,7 @@
 
 # Git Workflow
 
-- Never amend existing commits.
+- NEVER amend existing commits.
 - Use short, semantic commit messages (one sentence).
 - Work on semantic branches (e.g., `feature/auth-login`, `fix/user-permissions`).
 
