@@ -42,10 +42,15 @@
 
 - When behaviour changes (new endpoints, response tweaks, etc.), update or create the corresponding documentation, examples, or API requests in the same pass.
 
+# Cross-Cutting Topics
+
+- Capture repo-wide knowledge (shared auth, feature flags, deployment, etc.) in `docs/cross-cutting/`. Keep summaries here and link to detailed docs.
+- Reference these cross-cutting notes from local guides when they apply, rather than duplicating content.
+
 # Scoped Guides
 
-- Every directory must include a local `AGENTS.md`, even if the workflow is standard. Use it to capture essentials and must-know caveats for that scope.
-- When you enter a subdirectory, read its `AGENTS.md` as an overlay on top of these global rules.
-- Keep local guides concise and date-stamped; cover module purpose, primary commands (build/test/lint), key entry points, common pitfalls, and link to longer-form docs rather than duplicating them.
-- Update the relevant local guide in the same PR whenever workflows change, and include an “Updated YYYY-MM-DD” note so staleness is obvious.
+- Every directory must include a local `AGENTS.md`, even if the workflow is standard. Treat it as an overlay on top of the global rules.
+- Each local guide should demonstrate a real understanding of that directory. Cover the sections that make sense—module intent, key entry points, commands or scripts, dependencies and integrations, testing approach, pitfalls, links to deeper docs, and for UI areas, user flows and invariants.
+- Keep prose concise but substantive—aim for a one-page onboarding brief, linking out to long-form docs instead of duplicating them.
+- Update the relevant local guide in the same PR whenever workflows change, and include an “Updated YYYY-MM-DD” note so staleness is obvious. Highlight open questions if behaviour is unclear and ask for clarification rather than guessing.
 - Local guidance can refine or tighten global rules but must not contradict them. If you spot a conflict, record it under “Open Questions” and escalate to the user.
