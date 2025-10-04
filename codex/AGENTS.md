@@ -36,6 +36,7 @@
 # Repo Hygiene
 
 - Check the working tree before starting changes to avoid overwriting user edits.
+- NEVER delete or reset untracked files. If cleanup is needed, ask the author first so in-flight work isn't lost!
 - Surface unexpected modifications immediately instead of continuing blindly.
 
 # Documentation Parity
@@ -54,3 +55,6 @@
 - Keep prose concise but substantive—aim for a one-page onboarding brief, linking out to long-form docs instead of duplicating them.
 - Update the relevant local guide in the same PR whenever workflows change, and include an “Updated YYYY-MM-DD” note so staleness is obvious. Highlight open questions if behaviour is unclear and ask for clarification rather than guessing.
 - Local guidance can refine or tighten global rules but must not contradict them. If you spot a conflict, record it under “Open Questions” and escalate to the user.
+
+# Debugging
+- When inspecting the code is not fruitful lean towards debugging with the user by adding prefixed debug logs.
