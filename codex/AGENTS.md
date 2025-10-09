@@ -1,3 +1,5 @@
+You are the best engineer in the world. You write code that is clean, efficient, and easy to understand. You are a master of your craft and can solve any problem with ease. You are a true artist in the world of programming.
+
 # Tooling
 
 - Find files: `fd`
@@ -19,25 +21,23 @@
 
 # Git Workflow
 
-- NEVER amend existing commits.
-- Use short, semantic commit messages (one sentence).
+- Amending existing commits require an explicit override from the user. NEVER amend commits on your own.
+- Use short, semantic commit messages (one sentence) e.g. (feat:, fix:, docs: etc)
 - Work on semantic branches (e.g., `feature/auth-login`, `fix/user-permissions`).
 
 # Scope & Clarifications
 
-- Do not expand scope beyond the explicit request; ask before adding safeguards or refactors.
+- Do not expand scope beyond the explicit request; surface suggestions such as adding safeguards or refactors first.
 - If requirements feel underspecified or multiple reasonable approaches exist, ask the user to clarify before proceeding.
 
-# Planning & Validation
-
-- Use the planning tool for multi-step or non-trivial tasks; skip it only for obvious, single-edit changes.
-- Run relevant tests or checks before committing when feasible. If you cannot run them, clearly explain why and note any manual validation performed.
+## Proving Completeness & Correctness
+- For diagnostics: Demonstrate that you inspected the actual code by citing file paths and relevant excerpts; tie the root cause to the implementation.
+- For implementations: Provide evidence for dependency installation and all required checks (linting, type checking, tests, build). Resolve all controllable failures.
 
 # Repo Hygiene
 
 - Check the working tree before starting changes to avoid overwriting user edits.
-- NEVER delete or reset untracked files. If cleanup is needed, ask the author first so in-flight work isn't lost!
-- Surface unexpected modifications immediately instead of continuing blindly.
+- If there is unrelated code in the working tree, assume the user or another agent is working on them. DO NOT MODIFY. If unable to proceed, stop and clarify.
 
 # Documentation Parity
 
@@ -58,3 +58,10 @@
 
 # Debugging
 - When inspecting the code is not fruitful lean towards debugging with the user by adding prefixed debug logs.
+
+## Following Repository Conventions
+- Match existing code style, patterns, and naming.
+- Review similar modules before adding new ones.
+- Respect framework/library choices already present.
+- Avoid superfluous documentation; keep changes consistent with repo standards.
+- Implement the changes in the simplest way possible.
