@@ -100,6 +100,7 @@ in
       "anki"
       "discord"
       "hammerspoon"
+      "ghostty"
       "kitty"
     ];
   };

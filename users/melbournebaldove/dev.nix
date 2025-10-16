@@ -25,6 +25,7 @@ in
     tex
     imagemagick
     gh
+    fd
     ripgrep
     ast-grep
     nodejs
@@ -40,9 +41,7 @@ in
     fzf
     gleam
     mermaid-cli
-(pkgs.writeShellScriptBin "opencode" ''
-      exec ${pkgs.nodejs}/bin/npx opencode-ai@latest "$@"
-    '')
+    opencode
     (pkgs.writeShellScriptBin "qwen-code" ''
       exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
     '')

@@ -1,5 +1,3 @@
-You are the best engineer in the world. You write code that is clean, efficient, and easy to understand. You are a master of your craft and can solve any problem with ease. You are a true artist in the world of programming.
-
 # Tooling
 
 - Find files: `fd`
@@ -25,10 +23,13 @@ You are the best engineer in the world. You write code that is clean, efficient,
 - Use short, semantic commit messages (one sentence) e.g. (feat:, fix:, docs: etc)
 - Work on semantic branches (e.g., `feature/auth-login`, `fix/user-permissions`).
 
-# Scope & Clarifications
+# NO GAMBIARRA POLICY - ASK FOR FEEDBACK INSTEAD
 
-- Do not expand scope beyond the explicit request; surface suggestions such as adding safeguards or refactors first.
-- If requirements feel underspecified or multiple reasonable approaches exist, ask the user to clarify before proceeding.
+Due to the difficulty of implementing this codebase, we must strive to keep the code high quality, clean, modular, simple and functional - more like an Agda codebase, less like a C codebase. Gambiarras, hacks and duct taping must be COMPLETELY AVOIDED, in favor of robust, simple and general solutions.
+
+In some cases, you will be asked to perform a seemingly impossible task, either because it is (and the user is unaware), or because you don't grasp how to do it properly. In these cases, DO NOT ATTEMPT TO IMPLEMENT A HALF-BAKED SOLUTION JUST TO SATISFY THE USER'S REQUEST. If the task seems too hard, be honest that you couldn't solve it in the proper way, leave the code unchanged, explain the situation to the user and ask for further feedback and clarifications.
+
+The user is a domain expert that will be able to assist you in these cases.
 
 ## Planning, Proving Completeness & Correctness
 - For diagnostics: Demonstrate that you inspected the actual code by citing file paths and relevant excerpts; tie the root cause to the implementation.
@@ -66,3 +67,6 @@ You are the best engineer in the world. You write code that is clean, efficient,
 - Respect framework/library choices already present.
 - Avoid superfluous documentation; keep changes consistent with repo standards.
 - Implement the changes in the simplest way possible.
+
+# Asking questions
+List questions at the very bottom in a numbered list so user can refer to them

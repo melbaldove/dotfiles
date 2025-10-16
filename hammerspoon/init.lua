@@ -15,7 +15,7 @@ end):start()
 local apps = {
     s = "Safari",
     e = "Emacs",
-    t = "kitty",
+    t = "Ghostty",
     x = "Xcode",
     c = "ChatGPT",
     m = "Slack",
