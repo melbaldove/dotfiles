@@ -53,11 +53,13 @@ in
     # go-ios removed: has Linux dependencies (iproute2) that prevent it from building on Darwin
   ];
 
+  # Shared shell aliases to keep dev shortcuts consistent across shells
+  home.shellAliases = {
+    sg = "ast-grep";
+  };
+
   # Development-specific bash aliases and setup
   programs.bash.bashrcExtra = ''
-    # Alias for ast-grep
-    alias sg='ast-grep'
-    
     # Add .local/bin to PATH for glibtool
     export PATH="$HOME/.local/bin:$PATH"
   '';

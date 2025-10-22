@@ -19,6 +19,7 @@
   # Kitty terminal configuration
   xdg.configFile = {
     "kitty".source = config.lib.file.mkOutOfStoreSymlink "${self}/kitty";
+    "ghostty/config".source = config.lib.file.mkOutOfStoreSymlink "${self}/ghostty/config";
   };
 
 }

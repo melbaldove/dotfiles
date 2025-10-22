@@ -2,9 +2,8 @@
 # Configure option key to act as meta key
 macos-option-as-alt = true
 
-# Theme
-theme = iTerm2 Solarized Light
+# Hide the macOS window titlebar for a seamless frame
+macos-titlebar-style = hidden
 
 # Disable confirmation on exit
-confirm-close-surface = false
 keybind = shift+enter=text:\n

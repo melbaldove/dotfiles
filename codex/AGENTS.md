@@ -20,16 +20,10 @@
 # Git Workflow
 
 - Amending existing commits require an explicit override from the user. NEVER amend commits on your own.
+- NEVER run git checkout -- <file_path>
+- NEVER do any workarounds to reset code unless explicitly requested by the user
 - Use short, semantic commit messages (one sentence) e.g. (feat:, fix:, docs: etc)
 - Work on semantic branches (e.g., `feature/auth-login`, `fix/user-permissions`).
-
-# NO GAMBIARRA POLICY - ASK FOR FEEDBACK INSTEAD
-
-Due to the difficulty of implementing this codebase, we must strive to keep the code high quality, clean, modular, simple and functional - more like an Agda codebase, less like a C codebase. Gambiarras, hacks and duct taping must be COMPLETELY AVOIDED, in favor of robust, simple and general solutions.
-
-In some cases, you will be asked to perform a seemingly impossible task, either because it is (and the user is unaware), or because you don't grasp how to do it properly. In these cases, DO NOT ATTEMPT TO IMPLEMENT A HALF-BAKED SOLUTION JUST TO SATISFY THE USER'S REQUEST. If the task seems too hard, be honest that you couldn't solve it in the proper way, leave the code unchanged, explain the situation to the user and ask for further feedback and clarifications.
-
-The user is a domain expert that will be able to assist you in these cases.
 
 ## Planning, Proving Completeness & Correctness
 - For diagnostics: Demonstrate that you inspected the actual code by citing file paths and relevant excerpts; tie the root cause to the implementation.

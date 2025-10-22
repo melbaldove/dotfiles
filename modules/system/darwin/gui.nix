@@ -102,6 +102,7 @@ in
       "hammerspoon"
       "ghostty"
       "kitty"
+      "zed"
     ];
   };
 }

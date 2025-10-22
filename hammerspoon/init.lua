@@ -14,7 +14,7 @@ end):start()
 -- Application bindings
 local apps = {
     s = "Safari",
-    e = "Emacs",
+    e = "Zed",
     t = "Ghostty",
     x = "Xcode",
     c = "ChatGPT",
