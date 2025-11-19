@@ -167,7 +167,7 @@
 
     git = {
       enable = true;
-      extraConfig = {
+      settings = {
         core = {
           editor = "vim";
           excludesfile = "~/.gitignore";

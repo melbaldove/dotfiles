@@ -17,7 +17,7 @@ local apps = {
     e = "Zed",
     t = "Ghostty",
     x = "Xcode",
-    c = "ChatGPT",
+    c = "ChatGPT Atlas",
     m = "Slack",
     l = "Linear",
     f = "Figma",
@@ -26,10 +26,24 @@ local apps = {
     v = "Visual Studio Code",
 }
 
+local function focusExistingOrLaunch(appName)
+    -- Prefer focusing an existing window to avoid Electron apps (e.g., ChatGPT Atlas) spawning duplicates
+    local app = hs.application.get(appName)
+    if app then
+        app:activate(true)
+        local win = app:mainWindow()
+        if win then
+            win:focus()
+            return
+        end
+    end
+    hs.application.launchOrFocus(appName)
+end
+
 -- Create hyper key bindings
 for key, app in pairs(apps) do
     hs.hotkey.bind({"cmd", "ctrl", "alt", "shift"}, key, function()
-        hs.application.launchOrFocus(app)
+        focusExistingOrLaunch(app)
     end)
 end
 

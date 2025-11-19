@@ -33,7 +33,9 @@
   system.stateVersion = 6;
 
   # The platform the configuration will be used on.
-  nixpkgs.hostPlatform = "aarch64-darwin";
+  nixpkgs.hostPlatform = {
+    system = "aarch64-darwin";
+  };
 
   # Set the hostname
   networking.hostName = "turing";
@@ -43,7 +45,6 @@
 
   # Turing-specific packages
   environment.systemPackages = with pkgs; [
-    axe
     wakeonlan
   ];
 

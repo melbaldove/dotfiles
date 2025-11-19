@@ -30,8 +30,7 @@ in
     ast-grep
     nodejs
     bun
-    gemini-cli
-    docker
+      docker
     nmap
     deploy-rs
     wireguard-tools
@@ -44,6 +43,9 @@ in
     opencode
     (pkgs.writeShellScriptBin "qwen-code" ''
       exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
+    '')
+    (pkgs.writeShellScriptBin "gemini" ''
+      exec ${pkgs.nodejs}/bin/npx https://github.com/google-gemini/gemini-cli "$@"
     '')
     (pkgs.writeShellScriptBin "codex" ''
       exec ${pkgs.nodejs}/bin/npx @openai/codex@latest "$@"

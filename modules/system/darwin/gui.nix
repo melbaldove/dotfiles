@@ -83,12 +83,12 @@ in
         };
       };
     };
-    
+
     keyboard = {
       enableKeyMapping = true;
       remapCapsLockToControl = true;
     };
-    
+
   };
 
   homebrew = {

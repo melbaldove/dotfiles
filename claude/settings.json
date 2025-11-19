@@ -1,22 +1,25 @@
 {
-    "includeCoAuthoredBy": false,
-    "permissions": {
-        "allow": [
-            "Bash(ast-grep)",
-            "Bash(rg)",
-            "Bash(find)",
-            "LS",
-            "WebFetch",
-            "WebSearch"
-        ]
-    },
-    "env": {
-        "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
-        "BASH_DEFAULT_TIMEOUT_MS": "300000",
-        "BASH_MAX_TIMEOUT_MS": "600000"
-    },
-    "statusLine": {
-        "type": "command",
-        "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
-    }
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(ast-grep)",
+      "Bash(rg)",
+      "Bash(find)",
+      "LS",
+      "WebFetch",
+      "WebSearch"
+    ]
+  },
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
+    "BASH_DEFAULT_TIMEOUT_MS": "300000",
+    "BASH_MAX_TIMEOUT_MS": "600000",
+    "ANTHROPIC_AUTH_TOKEN": "03515763fa31499e83f2f718ff7162e4.GuqAu28r1MTAIUDd",
+    "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+    "API_TIMEOUT_MS": "3000000"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
+  }
 }

@@ -3,7 +3,7 @@
 macos-option-as-alt = true
 
 # Hide the macOS window titlebar for a seamless frame
-macos-titlebar-style = hidden
+macos-titlebar-style = tabs
 
 # Disable confirmation on exit
 keybind = shift+enter=text:\n
