@@ -1,5 +1,17 @@
 {
-  "contextFileName": "AGENTS.md",
-  "theme": "Ayu",
-  "selectedAuthType": "oauth-personal"
+  "context": {
+    "fileName": "AGENTS.md"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "ui": {
+    "theme": "Ayu"
+  },
+  "general": {
+    "vimMode": true,
+    "previewFeatures": true
+  }
 }

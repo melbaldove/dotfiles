@@ -3,7 +3,7 @@
 }:
 {
   home.packages = with pkgs; [
-    claude-code
+
   ];
 
   # Claude AI assistant configurations
