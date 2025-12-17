@@ -12,6 +12,10 @@
 
   home.shell.enableShellIntegration = true;
   
+  home.sessionPath = [
+    "$HOME/.local/bin"
+  ];
+
   home.sessionVariables = {
     EDITOR = "vim";
     TERM = "xterm-256color";
