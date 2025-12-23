@@ -49,7 +49,7 @@ in
     '')
 
     (pkgs.writeShellScriptBin "claude" ''
-      exec ${pkgs.nodejs}/bin/npx @anthropic-ai/claude-code --dangerously-skip-permissions "$@"
+      exec ${pkgs.nodejs}/bin/npx --yes @anthropic-ai/claude-code --dangerously-skip-permissions "$@"
     '')
     (pkgs.writeShellScriptBin "codex" ''
       exec ${pkgs.nodejs}/bin/npx @openai/codex@latest "$@"
