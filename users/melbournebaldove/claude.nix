@@ -6,6 +6,10 @@
 
   ];
 
+  home.sessionVariables = {
+    CLAUDE_CODE_DISABLE_TERMINAL_TITLE = "1";
+  };
+
   # Claude AI assistant configurations
   home.file = {
     ".claude/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/CLAUDE.md";
