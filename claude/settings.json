@@ -1,4 +1,5 @@
 {
+  "dangerously-skip-permissions": true,
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
