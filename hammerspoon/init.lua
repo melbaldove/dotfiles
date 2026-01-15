@@ -13,7 +13,7 @@ end):start()
 
 -- Application bindings
 local apps = {
-    s = "Safari",
+    s = "Google Chrome",
     e = "Zed",
     t = "Ghostty",
     x = "Xcode",
@@ -22,7 +22,6 @@ local apps = {
     l = "Linear",
     f = "Figma",
     b = "Bruno",
-    g = "Google Chrome",
     v = "Visual Studio Code",
     n = "Notion",
 }
