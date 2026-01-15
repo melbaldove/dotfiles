@@ -13,6 +13,7 @@ end):start()
 
 -- Application bindings
 local apps = {
+    a = "Agentastic.dev",
     s = "Google Chrome",
     e = "Zed",
     t = "Ghostty",
