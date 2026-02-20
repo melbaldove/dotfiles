@@ -19,6 +19,7 @@ in
 {
   imports = [
     ./claude.nix
+    ./openclaw.nix
   ];
 
   home.packages = with pkgs; [
