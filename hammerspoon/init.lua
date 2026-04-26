@@ -13,12 +13,12 @@ end):start()
 
 -- Application bindings
 local apps = {
-    a = "Agentastic.dev",
+    a = "Codex",
     s = "Google Chrome",
     e = "Zed",
     t = "Ghostty",
     x = "Xcode",
-    c = "Claude",
+    c = "ChatGPT",
     m = "Slack",
     l = "Linear",
     f = "Figma",
