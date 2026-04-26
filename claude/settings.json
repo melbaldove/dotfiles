@@ -1,4 +1,9 @@
 {
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
+    "BASH_DEFAULT_TIMEOUT_MS": "300000",
+    "BASH_MAX_TIMEOUT_MS": "600000"
+  },
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
@@ -10,13 +15,27 @@
       "WebSearch"
     ]
   },
-  "env": {
-    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
-    "BASH_DEFAULT_TIMEOUT_MS": "300000",
-    "BASH_MAX_TIMEOUT_MS": "600000"
-  },
   "statusLine": {
     "type": "command",
     "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
-  }
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "ai-ml-engineering-pack@claude-code-plugins-plus": true,
+    "axiom@axiom-marketplace": true,
+    "code-simplifier@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "linear@claude-plugins-official": true,
+    "log-analysis-tool@claude-code-plugins-plus": true,
+    "ralph-loop@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": true,
+    "figma@claude-plugins-official": true
+  },
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "light",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true
 }

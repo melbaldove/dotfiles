@@ -20,7 +20,7 @@
   home.file = {
     ".claude/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/CLAUDE.md";
     ".claude/commands".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/commands";
-    ".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/settings.json";
+    ".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/settings.json";
     ".claude/shared".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/shared";
     ".claude/skills".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/skills";
 
