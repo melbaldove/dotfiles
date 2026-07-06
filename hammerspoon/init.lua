@@ -14,7 +14,7 @@ end):start()
 -- Application bindings
 local apps = {
     a = "Codex",
-    s = "Google Chrome",
+    s = "Safari",
     e = "Zed",
     t = "Ghostty",
     x = "Xcode",

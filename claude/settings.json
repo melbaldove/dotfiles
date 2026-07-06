@@ -15,6 +15,7 @@
       "WebSearch"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "statusLine": {
     "type": "command",
     "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
@@ -31,9 +32,12 @@
     "security-guidance@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
-    "figma@claude-plugins-official": true
+    "figma@claude-plugins-official": true,
+    "slack@claude-plugins-official": true,
+    "atlassian@claude-plugins-official": true
   },
   "effortLevel": "high",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "light",
   "remoteControlAtStartup": true,
