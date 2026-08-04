@@ -13,25 +13,25 @@
       "LS",
       "WebFetch",
       "WebSearch"
-    ]
+    ],
+    "defaultMode": "auto"
   },
-  "model": "claude-fable-5[1m]",
   "statusLine": {
     "type": "command",
     "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
   },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
-    "ai-ml-engineering-pack@claude-code-plugins-plus": true,
+    "ai-ml-engineering-pack@claude-code-plugins-plus": false,
     "axiom@axiom-marketplace": true,
-    "code-simplifier@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "linear@claude-plugins-official": true,
-    "log-analysis-tool@claude-code-plugins-plus": true,
+    "code-simplifier@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": false,
+    "linear@claude-plugins-official": false,
+    "log-analysis-tool@claude-code-plugins-plus": false,
     "ralph-loop@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": false,
     "figma@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
     "atlassian@claude-plugins-official": true
@@ -39,7 +39,8 @@
   "effortLevel": "high",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "light",
+  "theme": "dark",
   "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true
 }
