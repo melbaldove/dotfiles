@@ -78,7 +78,7 @@ It owns:
 
 This layout matches the existing repository purposes and commands. `.dotfiles` already contains the nix-darwin input, the existing Turing Darwin host, shared Darwin modules, Home Manager profiles, and the documented `darwin-rebuild` workflow. Each Darwin host generation can be built, activated, and rolled back from one repository revision.
 
-The Wi-Fi credential is not owned by either Git repository. It is a local operational secret on Eisenhower. It stays in a root-owned file outside the Nix store. This boundary prevents the server-secret inventory in `nix-infra` from becoming an indirect runtime dependency of the Mac.
+The Wi-Fi credential is not owned by either Git repository. macOS owns it in the System Keychain as part of the preferred-network configuration. A user provisions it separately through System Settings or another explicit interactive setup. This boundary prevents the server-secret inventory in `nix-infra` from becoming an indirect runtime dependency of the Mac.
 
 ## Nix-darwin host boundary
 
@@ -218,7 +218,7 @@ launchd restarts the watchdog if its process exits. A process restart causes one
 The watchdog uses these states:
 
 - `interface_missing`: macOS does not report a Wi-Fi hardware port.
-- `credential_unavailable`: the credential file is missing or unsafe.
+- `credential_unavailable`: the exact target is not a usable preferred network or macOS has no usable System Keychain credential for it.
 - `service_disabled`: the Wi-Fi network service is disabled.
 - `radio_disabled`: the Wi-Fi radio is disabled.
 - `access_point_unavailable`: the target SSID cannot be associated.
@@ -240,11 +240,13 @@ The Wi-Fi password must not enter:
 - the unified log;
 - the watchdog status file.
 
-The approved design uses `/var/db/eisenhower/wifi-credential`, a root-owned credential file outside the Nix store. Its owner is `root`, its group is `wheel`, and its file mode is `0400`. Credential provisioning is a separate, manual, approval-gated operation.
+macOS preferred-network configuration and the System Keychain are the only credential boundary. A user provisions `Schrödinger’s WiFi` interactively through System Settings or another explicit interactive setup. The watchdog does not create, read, export, copy, decrypt, rotate, or delete the credential.
 
-The watchdog reads the credential from standard input and passes it to the macOS association command through standard input. It does not place the password in an argument or environment variable.
+Before an association attempt, the watchdog confirms that the exact target exists as a preferred-network identity. It does this without listing or logging other preferred or nearby networks.
 
-If the credential file is absent, empty, not owned by root, or has unsafe permissions, the watchdog does not attempt authentication. It records `credential_unavailable` and continues bounded checks without exposing file contents.
+The watchdog invokes `/usr/sbin/networksetup -setairportnetwork <device> 'Schrödinger’s WiFi'`. The command has no password argument. The watchdog also supplies no password through standard input, an environment variable, or a file path. macOS resolves the saved credential through its native preferred-network and System Keychain behavior.
+
+If the exact target is not preferred, the watchdog records `credential_unavailable`, does not attempt password-based association, and continues bounded checks. If a password-free association attempt fails because macOS cannot use the saved credential, the watchdog records `authentication_failed`. Both states require manual credential provisioning or correction. The watchdog never tries to repair a credential.
 
 ## Observability
 
@@ -267,7 +269,7 @@ Logs and status must not contain:
 - BSSID values;
 - unrelated SSIDs;
 - nearby network lists;
-- credential-file contents.
+- Keychain output or credential metadata other than the exact target identity and a usable-or-unavailable result.
 
 ## Verification
 
@@ -281,7 +283,9 @@ Evaluate the Darwin configuration and confirm:
 - both jobs start during boot;
 - both jobs have the expected restart policy;
 - the target SSID has the exact Unicode value `Schrödinger’s WiFi`;
-- no credential value appears in evaluation output or a store path.
+- no credential file is declared or created;
+- no Keychain secret extraction command exists;
+- the association command has no password argument, password environment variable, or password input path.
 
 Run the flake evaluation and Darwin activation check from `.dotfiles` before a switch. Use the canonical `eisenhower` flake output.
 
@@ -294,6 +298,8 @@ After activation, confirm:
 - launchd reports both jobs as loaded;
 - the Wi-Fi watchdog status is readable by root;
 - recent logs contain no secret or unrelated SSID.
+
+Confirm that the exact target is present in the preferred-network configuration without printing unrelated preferred networks. Then inspect the running association attempt and confirm that its arguments contain only the executable, Wi-Fi device, and exact target SSID. A successful association must occur without a password argument or interactive prompt.
 
 Command-line status tools cannot prove the active SSID on this host because macOS redacts that value. Prove the final network identity through the local System Settings Wi-Fi view or the target access point's client list. Inspect only the connected target. Do not capture or list unrelated networks.
 
@@ -357,23 +363,34 @@ Confirm that:
 
 Restore the access point during the maximum backoff period. Confirm recovery within 300 seconds plus association time.
 
-### Authentication failure and recovery
+### Authentication failure and manual recovery
 
-Run this test under local supervision. Use a temporary root-owned test credential with a known incorrect value. Do not print or store the value in logs.
+Use the watchdog command adapter to return a controlled, sanitized authentication failure. This test does not alter, extract, replace, or delete the live System Keychain credential.
 
 Confirm that:
 
 - the watchdog reports `authentication_failed`;
 - retries follow the bounded backoff;
-- the process list and logs contain no credential;
-- restoring the valid credential and restarting the watchdog causes an immediate attempt;
-- a successful attempt resets the failure count.
+- no credential file is created;
+- the process list and logs contain no password or Keychain output;
+- the watchdog does not invoke a Keychain extraction command;
+- the watchdog requires manual credential provisioning after a real credential failure.
+
+For live recovery proof, first confirm the target is preferred. Then use the credential already provisioned interactively and restart the watchdog for an immediate password-free association attempt. A successful attempt resets the failure count. If the credential is unusable, stop the test and provision it manually through System Settings before retrying.
 
 ### Secret-safety audit
 
-Search the evaluated configuration, generated launchd files, Nix store references, process arguments, unified logs, and status file for the credential value through a non-printing comparison.
+Inspect the evaluated configuration, generated launchd files, Nix store references, process arguments, environment, unified logs, status file, and Eisenhower service-state paths.
 
-The test passes only if no match exists. The audit must not print the searched value.
+The test passes only if:
+
+- no service credential file exists;
+- no configuration or script reads a Keychain secret;
+- no association command includes a password argument;
+- no password environment variable or standard-input path exists;
+- no log or status output contains Keychain output or a credential value.
+
+The audit must not extract or print the System Keychain password.
 
 ## Rollout and rollback
 
@@ -391,7 +408,7 @@ If activation causes a problem:
 2. Stop and unload the new Wi-Fi watchdog.
 3. Restore the Wi-Fi radio and network service.
 4. Keep the existing manual sleep daemons active.
-5. Preserve the credential file for diagnosis. Do not delete it automatically.
+5. Leave the preferred-network and System Keychain configuration unchanged.
 
 Remove the two old sleep daemons only in a later activation after all reboot, sleep, and connection-recovery tests pass.
 
@@ -408,8 +425,10 @@ The design is successfully implemented only when:
 - computer sleep is disabled on battery and AC power;
 - the managed idle-sleep assertion survives process failure and reboot;
 - Eisenhower connects to `Schrödinger’s WiFi` after boot without user login;
-- radio, service, disassociation, access-point, and authentication tests recover as specified;
+- radio, service, disassociation, access-point, and authentication-state tests behave as specified;
 - repeated failures use bounded backoff and never stop permanently;
 - logs and status provide enough evidence to diagnose failures;
-- no password or unrelated SSID enters configuration, process arguments, logs, or status;
+- no service credential file is created;
+- association succeeds through the native preferred-network credential without a password argument;
+- no password or unrelated SSID enters configuration, process arguments, environment, logs, or status;
 - rollback to the previous Darwin generation is verified.
