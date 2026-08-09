@@ -4,7 +4,7 @@
 
 **Goal:** Install a supported multi-user Nix implementation on Eisenhower, transfer the exact approved `.dotfiles` history, create a known nix-darwin baseline generation, and activate commit `5c1557db11e313b7431b3a52bc5644ad3e03eb7b` without losing management access or exposing a credential.
 
-**Architecture:** The signed Determinate macOS package owns Nix, the Nix daemon, the encrypted APFS Nix Store volume, and Nix upgrades. The `.dotfiles` flake owns nix-darwin and the Eisenhower system configuration. This boundary matches `hosts/eisenhower/default.nix`, which sets `nix.enable = false`. A clean Git bundle transfers the approved commit and its history. The first nix-darwin generation uses host-only commit `5e77663ce59cae384da0afd3d3262c4b07c78085`. The second generation uses the complete approved commit. Wired Ethernet and the local physical console protect the cutover from Wi-Fi failure.
+**Architecture:** The signed Determinate macOS package owns Nix, the Nix daemon, the encrypted APFS Nix Store volume, and Nix upgrades. The `.dotfiles` flake owns nix-darwin and the Eisenhower system configuration. This boundary matches `hosts/eisenhower/default.nix`, which sets `nix.enable = false`. A clean Git bundle transfers the approved commit and its history. The first local-console activation uses host-only commit `5e77663ce59cae384da0afd3d3262c4b07c78085`, which has no Eisenhower power module or Wi-Fi watchdog. After the shared shell, Homebrew, Home Manager, and GUI changes pass local verification, a later local-console stage activates the complete approved commit with a timed automatic rollback to the baseline. Physical access is the independent management route.
 
 **Tech Stack:** macOS 26.3.1 on Apple Silicon, FileVault, APFS, Determinate Nix 3.21.9, Nix flakes, nix-darwin, Home Manager, Git bundles, launchd, `pmset`, and `networksetup`.
 
@@ -40,10 +40,10 @@ Read-only checks on 2026-08-10 gave this evidence:
 | Nix | No `nix` command, `/nix`, `/etc/nix/nix.conf`, receipt, daemon, or Nix Store mount exists. |
 | nix-darwin | No `darwin-rebuild`, `/run/current-system`, system profile, generation, or nix-darwin launch daemon exists. |
 | Repository | `/Users/melbournebaldove/.dotfiles` does not exist on Eisenhower. |
-| Management route | Current SSH uses IPv6 link-local addresses on `en0`. The default route and active IPv4 address also use Wi-Fi `en0`. |
-| Wired interfaces | `en4`, `en5`, and `en6` exist, but all are inactive and have no IPv4 address. |
+| Management route | Physical local-console access is the only usable route that is independent of Wi-Fi. Current SSH uses IPv6 link-local addresses on Wi-Fi `en0`. |
+| Optional network fallback | Eisenhower has no usable Ethernet. A compatible USB network adapter or phone tether can be used only as an optional fallback. No gate or rollback depends on one. |
 | Legacy sleep control | `com.local.nosleep` and `com.aura.caffeinate` are loaded. `pmset` reports `sleep 0` for AC and battery. |
-| Wi-Fi contract | The exact target is preferred. `networksetup` reports `-setairportnetwork <device name> <network> [password]`. A password-free live association has not been run because no independent route exists. |
+| Wi-Fi contract | The exact target is preferred. `networksetup` reports `-setairportnetwork <device name> <network> [password]`. A password-free live association has not been run. This plan defers association until the approved local-console watchdog stage. |
 
 The host is reachable now at `eisenhower.local` and `192.168.50.140`. Reachability can change. Refresh it before each execution session.
 
@@ -65,7 +65,7 @@ The host is reachable now at `eisenhower.local` and `192.168.50.140`. Reachabili
 |---|---|---|---|---|---|
 | Signed Determinate macOS package | Stable Apple Silicon support. It uses launchd and handles the encrypted APFS store. The package is notarized and signed by Team ID `X3JQ4VPJZ6`. | It keeps `/nix/receipt.json` and `/nix/nix-installer`. The built-in uninstaller is the first recovery path. | Rerun the signed package. Determinate owns `/etc/nix/nix.conf`. | Pin the versioned package URL. Verify its SHA-256, Apple signature, notarization, and Team ID before install. | Best match. The flake already sets `nix.enable = false`, which Determinate documents as supported. |
 | Lix Installer | nix-darwin explicitly supports and generally recommends Lix because it has an automated uninstaller. It uses a fork of the same receipt-based installer design. | `/nix/lix-installer uninstall` uses the receipt. | `nix upgrade-nix` is supported, but current macOS daemon-restart guidance is less complete. | Pin the installer and Lix version. The normal path is a downloaded shell installer, not a signed macOS package. | Compatible, but it installs Lix instead of the requested Nix implementation and gives less complete macOS package and upgrade evidence. |
-| Upstream Nix multi-user installer | Official upstream Nix. It creates build users, a daemon, an APFS volume, `synthetic.conf`, `fstab`, and a mount daemon. | No automated macOS uninstaller. Removal edits system files and deletes the APFS volume manually. | The official process replaces Nix and restarts the daemon manually. | Version-specific release URLs and hashes are available. | Compatible, but the uninstall and macOS upgrade path is less reliable for this first remote cutover. |
+| Upstream Nix multi-user installer | Official upstream Nix. It creates build users, a daemon, an APFS volume, `synthetic.conf`, `fstab`, and a mount daemon. | No automated macOS uninstaller. Removal edits system files and deletes the APFS volume manually. | The official process replaces Nix and restarts the daemon manually. | Version-specific release URLs and hashes are available. | Compatible, but the uninstall and macOS upgrade path is less reliable for this first local-console cutover. |
 
 ## Recommendation
 
@@ -101,7 +101,8 @@ This choice gives the clearest APFS, daemon, upgrade, and uninstall boundary on 
 
 ### Low-impact writes with no expected service interruption
 
-- Connect and configure wired Ethernet.
+- Prepare the local physical console and a dedicated recovery Terminal.
+- Optionally connect a compatible USB network adapter or phone tether. These are not requirements.
 - Complete a Time Machine backup.
 - Download the approved package to a temporary directory.
 - Transfer the approved Git bundle.
@@ -120,13 +121,14 @@ This choice gives the clearest APFS, daemon, upgrade, and uninstall boundary on 
 No disruptive step can start until all of these conditions are true:
 
 1. A current backup is complete and readable.
-2. The wired SSH route works and a new SSH session can use it.
-3. The user is physically present at Eisenhower with the lid open, AC power connected, an unlocked administrator session, and Terminal ready.
+2. The user is physically present at Eisenhower with the lid open, AC power connected, an unlocked administrator session, and two local Terminal windows ready.
+3. One local Terminal runs an explicit native shell and a temporary `caffeinate` assertion. The second contains the tested recovery commands.
 4. The install and activation window is approved.
 5. The package version, hash, Team ID, and downstream Determinate Nix choice are approved.
 6. The user accepts that the first activation runs the Homebrew, Home Manager, GUI preference, and shell changes already declared in the approved configuration.
+7. The Wi-Fi watchdog remains disabled during the first activation. Its later activation has a separate local-console approval and a timed automatic rollback.
 
-Reboot and Wi-Fi fault tests need a second, explicit outage-window approval.
+Reboot and forced Wi-Fi fault tests need a later explicit outage-window approval. This window is separate from both baseline activation and watchdog activation.
 
 ---
 
@@ -229,26 +231,45 @@ printf 'latest_backup=%s\n' "$latest_backup"
 
 Expected: the backup completes, `Running = 0`, a Time Machine destination is configured, and `latestbackup` returns a current readable absolute path. The current missing destination is a hard blocker. Do not accept only a command exit code because `tmutil latestbackup` returned 0 during review while it printed a mount failure. Open the destination and confirm that Eisenhower's recent user data is present.
 
-- [ ] **Step 2: Establish the independent management route**
+- [ ] **Step 2: Establish the physical console as the independent management route**
 
-Recommended route: connect a trusted USB-C Ethernet adapter or dock to one of `en4`, `en5`, or `en6`. Use a trusted wired network with DHCP. If DHCP is not available, use a direct cable and a dedicated private subnet that does not overlap the Wi-Fi subnet.
+The operator must sit at Eisenhower. Keep the lid open and AC power connected. Log in to the graphical administrator session. Open two Terminal windows. Do not log out or close either window during activation.
 
-```bash
-/usr/sbin/networksetup -listallhardwareports
-/sbin/ifconfig en4
-/usr/sbin/ipconfig getifaddr en4
-```
-
-Select the actual active wired interface. From the operator machine, open two SSH sessions to its wired IPv4 address:
+In the first Terminal, start a native process that keeps the Mac awake:
 
 ```bash
-ssh -o BatchMode=yes -o ConnectTimeout=5 <wired-ip> \
-  'hostname; printf "%s\n" "$SSH_CONNECTION"; route -n get default'
+exec /bin/zsh -f
 ```
 
-Expected: `hostname` is `eisenhower.local`, and the server address in `SSH_CONNECTION` is the wired address. Keep one wired session open through each activation. Open a second new wired session after every activation before closing the first one.
+Then run:
 
-The local physical console is a required fallback. Wi-Fi-only SSH is not an independent route. Screen sharing over the same Wi-Fi is also not independent.
+```bash
+test "$(hostname)" = eisenhower.local
+test "$(stat -f '%Su' /dev/console)" = melbournebaldove
+id -Gn | tr ' ' '\n' | grep -Fqx admin
+sudo -v
+/usr/bin/caffeinate -dims
+```
+
+Leave `caffeinate` running in the foreground. In the second Terminal, start and verify another native shell:
+
+```bash
+exec /bin/zsh -f
+```
+
+Then run:
+
+```bash
+printf 'native_shell=%s console_user=%s\n' \
+  "$SHELL" "$(stat -f '%Su' /dev/console)"
+sudo -v
+sudo -n true
+mkdir -p /var/tmp/eisenhower-cutover
+```
+
+Expected: both native Terminal windows work and `sudo` remains authorized. Keep a printed or operator-machine copy of this plan visible until Task 5 copies it to Eisenhower. Keep System Settings open to the Wi-Fi page. The physical console, not SSH, is the recovery route.
+
+A compatible USB network adapter or phone tether can be prepared as an optional fallback. Do not require it. Do not change the default route, preferred-network list, or Wi-Fi state to prove it before cutover. A phone tether can change networking and needs separate approval before use.
 
 - [ ] **Step 3: Record the approved windows and local operator**
 
@@ -256,9 +277,11 @@ Record these facts in the execution log:
 
 ```text
 backup path and completion time
-wired interface and IPv4 address
 local operator name
-install and activation window start/end
+physical-console verification time
+optional fallback type, if present
+Nix install and baseline-activation window start/end
+watchdog-activation window start/end
 reboot and Wi-Fi outage window start/end, if approved
 ```
 
@@ -363,12 +386,16 @@ shasum -a 256 "$stage/eisenhower-5c1557d.bundle"
 
 Expected: the only advertised deployment head is `eisenhower-approved` at the exact full SHA. Git excludes all uncommitted files.
 
-- [ ] **Step 2: Transfer over the wired route**
+- [ ] **Step 2: Transfer before any watchdog or Wi-Fi change**
 
 ```bash
 scp "$stage/eisenhower-5c1557d.bundle" \
-  melbournebaldove@<wired-ip>:/var/tmp/
+  melbournebaldove@eisenhower.local:/var/tmp/
+scp /Users/melbournebaldove/.dotfiles/docs/superpowers/plans/2026-08-10-eisenhower-nix-darwin-installation-and-activation.md \
+  melbournebaldove@eisenhower.local:/var/tmp/eisenhower-cutover/approved-plan.md
 ```
+
+This transfer can use the current Wi-Fi because no network-changing service is active yet and the operator is already at the physical console. A transfer failure is not a lockout. Retry from the console or use removable storage. A USB network adapter or phone tether is optional and is not part of this gate.
 
 Record the local bundle hash. On Eisenhower, compare it before use:
 
@@ -395,7 +422,7 @@ Expected: a clean detached checkout at the exact approved commit. Do not configu
 
 ### Task 6: Evaluate and build without activation
 
-**Files:** Create one detached baseline worktree under `/var/tmp`. Do not change the repository.
+**Files:** Create one detached baseline worktree under `/var/tmp` and root-owned cutover metadata under `/var/db/eisenhower-cutover`. Do not change the repository.
 
 - [ ] **Step 1: Prove the exact committed configuration**
 
@@ -420,6 +447,10 @@ baseline_parent="$(mktemp -d /var/tmp/eisenhower-host-baseline.XXXXXX)"
 baseline_dir="$baseline_parent/worktree"
 git worktree add --detach "$baseline_dir" \
   5e77663ce59cae384da0afd3d3262c4b07c78085
+sudo /usr/bin/install -d -o root -g wheel -m 0755 \
+  /var/db/eisenhower-cutover
+printf '%s\n' "$baseline_dir" |
+  sudo tee /var/db/eisenhower-cutover/baseline-worktree >/dev/null
 test "$(git -C "$baseline_dir" rev-parse HEAD)" = \
   5e77663ce59cae384da0afd3d3262c4b07c78085
 test -z "$(git -C "$baseline_dir" status --porcelain=v1)"
@@ -445,7 +476,7 @@ grep -Fq '5c1557db11e313b7431b3a52bc5644ad3e03eb7b' \
 nix store diff-closures "$baseline_system" "$full_system"
 ```
 
-Expected: both builds complete. The reviewed local build showed that the complete closure adds the two Eisenhower launch daemon property lists and the packaged Wi-Fi watchdog. Stop if the remote closure difference includes Nix ownership, an SSH server change, a credential, or an unrelated host module.
+Expected: both builds complete. The reviewed local build showed that the complete closure adds the two Eisenhower launch daemon property lists and the packaged Wi-Fi watchdog. Stop if the Eisenhower closure difference includes Nix ownership, an SSH server change, a credential, or an unrelated host module.
 
 ### Task 7: Activation preflight and user-state review
 
@@ -483,6 +514,8 @@ The user must accept this exact scope. If any item is not acceptable, stop. A co
 ```bash
 nix_bin=/nix/var/nix/profiles/default/bin/nix
 nix_darwin_rev=15abb8c98f336cd8bd840d71059adebabe60bf04
+baseline_dir="$(cat /var/db/eisenhower-cutover/baseline-worktree)"
+test -d "$baseline_dir"
 sudo "$nix_bin" run \
   "github:nix-darwin/nix-darwin/${nix_darwin_rev}#darwin-rebuild" -- \
   check --flake "$baseline_dir#eisenhower"
@@ -492,81 +525,145 @@ Expected: `ok`. The pinned `check` runs activation safety checks. It is not a pu
 
 ### Task 8: Create the first nix-darwin generation
 
-**Files:** No repository changes. Activate only the host-only baseline.
+**Files:** No repository changes. Activate only the host-only baseline from the physical console.
 
 - [ ] **Step 1: Reconfirm the hard gates**
 
 ```bash
-test -n "$baseline_system"
+cd /Users/melbournebaldove/.dotfiles
+cutover_dir=/var/db/eisenhower-cutover
+baseline_dir="$(cat "$cutover_dir/baseline-worktree")"
+test -d "$baseline_dir"
+baseline_system="$(nix build \
+  "$baseline_dir#darwinConfigurations.eisenhower.system" \
+  --no-link --print-out-paths)"
+full_system="$(nix build \
+  .#darwinConfigurations.eisenhower.system \
+  --no-link --print-out-paths)"
 test -x "$baseline_system/activate"
-ssh -o BatchMode=yes -o ConnectTimeout=5 <wired-ip> hostname
+test -x "$full_system/activate"
+test ! -e \
+  "$baseline_system/Library/LaunchDaemons/com.eisenhower.wifi-watchdog.plist"
+printf '%s\n' "$baseline_system" |
+  sudo tee "$cutover_dir/baseline-system" >/dev/null
+printf '%s\n' "$full_system" |
+  sudo tee "$cutover_dir/full-system" >/dev/null
 latest_backup="$(tmutil latestbackup 2>&1)"
 case "$latest_backup" in /*) ;; *) exit 1 ;; esac
 test -d "$latest_backup"
+test "$(stat -f '%Su' /dev/console)" = melbournebaldove
+pgrep -x caffeinate >/dev/null
+sudo -v
 ```
 
-Expected: wired SSH and the backup still work. The local operator confirms that the window remains open.
+Expected: the exact baseline and full systems are saved locally. The baseline has no watchdog property list. The backup, console, native `caffeinate` process, and administrator authorization work. The local operator confirms that the baseline-activation window remains open.
 
-- [ ] **Step 2: Activate the baseline**
+- [ ] **Step 2: Activate the baseline from the second local Terminal**
 
 ```bash
+nix_bin=/nix/var/nix/profiles/default/bin/nix
+nix_darwin_rev=15abb8c98f336cd8bd840d71059adebabe60bf04
 sudo "$nix_bin" run \
   "github:nix-darwin/nix-darwin/${nix_darwin_rev}#darwin-rebuild" -- \
   switch --flake "$baseline_dir#eisenhower"
-darwin-rebuild --list-generations
-readlink /nix/var/nix/profiles/system
+/run/current-system/sw/bin/darwin-rebuild --list-generations
+baseline_profile="$(readlink /nix/var/nix/profiles/system)"
+printf '%s\n' "$baseline_profile" |
+  sudo tee "$cutover_dir/baseline-profile" >/dev/null
+grep -Fq '5e77663ce59cae384da0afd3d3262c4b07c78085' \
+  "$baseline_profile/darwin-version.json"
 ```
 
 Expected: one nix-darwin generation exists and its `darwin-version.json` records `5e77663...`. The legacy sleep jobs remain loaded. No Eisenhower Wi-Fi watchdog exists yet.
 
-- [ ] **Step 3: Prove access before continuing**
+- [ ] **Step 3: Verify the shared changes locally before watchdog approval**
 
-Keep the old wired SSH session open. Open a new wired SSH session and a new local Terminal. Verify:
+Keep both original Terminal windows open. Open a third local Terminal and run:
 
 ```bash
-hostname
-id
-command -v nix
-command -v darwin-rebuild
-dscl . -read /Users/melbournebaldove UserShell
+/bin/zsh -f -c 'printf "native zsh: PASS\n"'
+/nix/var/nix/profiles/default/bin/nix --version
+/run/current-system/sw/bin/darwin-rebuild --list-generations
+/usr/bin/dscl . -read /Users/melbournebaldove UserShell
+/opt/homebrew/bin/brew --version
+/opt/homebrew/bin/brew tap | grep -Fqx homebrew/core
+/etc/profiles/per-user/melbournebaldove/bin/home-manager generations
 sudo systemsetup -getremotelogin
 sudo launchctl print system/com.local.nosleep
 sudo launchctl print system/com.aura.caffeinate
+if sudo launchctl print system/com.eisenhower.wifi-watchdog >/dev/null 2>&1; then
+  exit 1
+fi
 ```
 
-Expected: both new sessions work. Stop and restore from the local console if the shell, SSH, Home Manager, Homebrew, or application changes fail.
+In the graphical session, verify the declared Dock, keyboard, trackpad, input-source, and managed-application state. Review any Home Manager `.backup` files before removal. Expected: the native recovery shell, managed shell, Nix, nix-darwin, Homebrew, Home Manager, GUI changes, Remote Login, and legacy sleep jobs work. The watchdog is absent. SSH over the current Wi-Fi can be checked as secondary evidence, but it is not the recovery route.
 
-### Task 9: Activate the complete approved generation
+Stop here if any shared change is wrong. Do not activate `5c1557d`. Use the local rollback and uninstall runbook below.
 
-**Files:** No repository changes. This activation can reassociate Wi-Fi.
+### Task 9: Enable the complete approved generation at the local console
 
-- [ ] **Step 1: Check the exact full commit**
+**Files:** No repository changes. This later stage starts the power module and watchdog. It can reassociate Wi-Fi.
+
+- [ ] **Step 1: Obtain separate watchdog-activation approval and check the exact commit**
 
 ```bash
 cd /Users/melbournebaldove/.dotfiles
 test "$(git rev-parse HEAD)" = 5c1557db11e313b7431b3a52bc5644ad3e03eb7b
 test -z "$(git status --porcelain=v1)"
-sudo darwin-rebuild check --flake .#eisenhower
+test "$(stat -f '%Su' /dev/console)" = melbournebaldove
+pgrep -x caffeinate >/dev/null
+sudo /run/current-system/sw/bin/darwin-rebuild check --flake .#eisenhower
 ```
 
-Expected: `ok`. Stop on any difference from the prior build or any activation check failure.
+Expected: `ok`. The user explicitly approves watchdog activation from the physical console. Reboot, forced disconnect, radio-off, service-off, and access-point outage tests remain unauthorized.
 
-- [ ] **Step 2: Activate from the wired session while the local operator watches**
+- [ ] **Step 2: Activate the complete generation locally**
 
 ```bash
-baseline_profile="$(readlink /nix/var/nix/profiles/system)"
-printf '%s\n' "$baseline_profile"
-sudo darwin-rebuild switch --flake .#eisenhower
-darwin-rebuild --list-generations
+cd /Users/melbournebaldove/.dotfiles
+sudo /run/current-system/sw/bin/darwin-rebuild switch --flake .#eisenhower
+/run/current-system/sw/bin/darwin-rebuild --list-generations
 current_profile="$(readlink /nix/var/nix/profiles/system)"
-test "$current_profile" != "$baseline_profile"
+printf '%s\n' "$current_profile" |
+  sudo tee /var/db/eisenhower-cutover/current-profile >/dev/null
 grep -Fq '5c1557db11e313b7431b3a52bc5644ad3e03eb7b' \
   "$current_profile/darwin-version.json"
 ```
 
-Expected: two generations exist. The current generation records the exact approved commit. Keep the old wired session open until immediate verification completes.
+Expected: two generations exist. The current generation records the exact approved commit. If the switch fails, use the immediate local rollback runbook before continuing.
 
-- [ ] **Step 3: Verify immediate services and credentials boundary**
+- [ ] **Step 3: Immediately arm a timed local rollback to the baseline**
+
+Arm the timer only after `darwin-rebuild switch` exits. This prevents the timer from racing a long Homebrew or Home Manager activation. The rollback waits 15 minutes. It restores the baseline system profile, activates it, enables Wi-Fi, and makes one password-free association request. It contains no credential.
+
+```bash
+cutover_dir=/var/db/eisenhower-cutover
+test -s "$cutover_dir/baseline-system"
+sudo nohup /bin/sh -c '
+  set -eu
+  sleep 900
+  baseline_system="$(cat /var/db/eisenhower-cutover/baseline-system)"
+  case "$baseline_system" in /nix/store/*-darwin-system-*) ;; *) exit 1 ;; esac
+  test -x "$baseline_system/activate"
+  /nix/var/nix/profiles/default/bin/nix-env \
+    -p /nix/var/nix/profiles/system --set "$baseline_system"
+  "$baseline_system/activate"
+  iface="$(/usr/sbin/networksetup -listallhardwareports |
+    /usr/bin/awk '\''/Hardware Port: Wi-Fi/{getline; print $2; exit}'\'')"
+  /usr/sbin/networksetup -setnetworkserviceenabled "Wi-Fi" on
+  /usr/sbin/networksetup -setairportpower "$iface" on
+  /usr/sbin/networksetup -setairportnetwork \
+    "$iface" "Schrödinger’s WiFi"
+' >/var/tmp/eisenhower-watchdog-cutover-failsafe.log 2>&1 &
+failsafe_pid=$!
+printf '%s\n' "$failsafe_pid" |
+  sudo tee "$cutover_dir/watchdog-cutover-failsafe.pid" >/dev/null
+sudo kill -0 "$failsafe_pid"
+```
+
+Expected: the root failsafe process is alive. Keep both local recovery Terminals open.
+
+- [ ] **Step 4: Verify locally before disarming the rollback**
 
 ```bash
 sudo launchctl print system/com.eisenhower.prevent-idle-sleep
@@ -574,25 +671,49 @@ sudo launchctl print system/com.eisenhower.wifi-watchdog
 pmset -g custom
 pmset -g assertions | grep -E 'Prevent(UserIdle)?SystemSleep|com.eisenhower|caffeinate'
 sudo sed -n '1,20p' /var/db/eisenhower/wifi-watchdog.status
+sudo grep -Fqx 'state=healthy' \
+  /var/db/eisenhower/wifi-watchdog.status
 sudo launchctl print system/com.eisenhower.wifi-watchdog |
   grep -E 'program|arguments|environment|state|pid'
 test ! -e /var/db/eisenhower/wifi-credential
+iface="$(/usr/sbin/networksetup -listallhardwareports |
+  awk '/Hardware Port: Wi-Fi/{getline; print $2; exit}')"
+test -n "$(/usr/sbin/ipconfig getifaddr "$iface")"
+gateway="$(route -n get default | awk '/gateway:/{print $2; exit}')"
+ping -c 3 "$gateway"
 ```
 
-Expected: both new jobs are loaded. AC and battery computer sleep are `0`. The managed assertion exists. The watchdog reaches a sanitized state. Its launchd arguments contain only the packaged watchdog program and no credential environment.
+Expected: both new jobs are loaded. AC and battery computer sleep are `0`. The managed assertion exists. The watchdog reaches `healthy`. Its launchd arguments contain only the packaged watchdog program and no credential environment. The Wi-Fi interface has an address and reaches its gateway.
 
-Open a new wired SSH session. If the watchdog is not healthy, keep the wired route and local console active. Do not inspect the Keychain. Provision a missing preferred-network credential only through System Settings.
+Use local System Settings to confirm the exact connected SSID. Do not list nearby networks. SSH can be checked after local proof as secondary evidence.
+
+- [ ] **Step 5: Disarm the timed rollback only after all local checks pass**
+
+```bash
+cutover_dir=/var/db/eisenhower-cutover
+failsafe_pid="$(cat "$cutover_dir/watchdog-cutover-failsafe.pid")"
+sudo kill "$failsafe_pid"
+sleep 2
+if sudo kill -0 "$failsafe_pid" 2>/dev/null; then
+  exit 1
+fi
+printf 'watchdog_cutover_failsafe=DISARMED\n'
+```
+
+Expected: the failsafe is stopped only after local network and service proof. If any check fails, do not disarm it. Let it return to the baseline, or run the immediate local rollback in the rollback runbook. Provision a missing preferred-network credential only through System Settings. Do not inspect the Keychain.
 
 ### Task 10: Prove generation rollback before reboot
 
-**Files:** No repository changes.
+**Files:** No repository changes. Run this proof from the physical console inside the watchdog-activation window.
 
 - [ ] **Step 1: Roll back to the known baseline**
 
 ```bash
-test "$(darwin-rebuild --list-generations | sed '/^[[:space:]]*$/d' |
+test "$(/run/current-system/sw/bin/darwin-rebuild --list-generations |
+  sed '/^[[:space:]]*$/d' |
   wc -l | tr -d ' ')" -ge 2
-sudo darwin-rebuild switch --rollback
+sudo /run/current-system/sw/bin/darwin-rebuild --rollback
+baseline_profile="$(cat /var/db/eisenhower-cutover/baseline-profile)"
 test "$(readlink /nix/var/nix/profiles/system)" = "$baseline_profile"
 if sudo launchctl print system/com.eisenhower.wifi-watchdog >/dev/null 2>&1; then
   exit 1
@@ -607,26 +728,60 @@ Expected: the baseline profile is active, the new watchdog is absent, and both l
 
 ```bash
 cd /Users/melbournebaldove/.dotfiles
-sudo darwin-rebuild switch --flake .#eisenhower
+cutover_dir=/var/db/eisenhower-cutover
+sudo /run/current-system/sw/bin/darwin-rebuild switch --flake .#eisenhower
+current_profile="$(cat "$cutover_dir/current-profile")"
 test "$(readlink /nix/var/nix/profiles/system)" = "$current_profile"
+sudo nohup /bin/sh -c '
+  set -eu
+  sleep 900
+  baseline_system="$(cat /var/db/eisenhower-cutover/baseline-system)"
+  case "$baseline_system" in /nix/store/*-darwin-system-*) ;; *) exit 1 ;; esac
+  test -x "$baseline_system/activate"
+  /nix/var/nix/profiles/default/bin/nix-env \
+    -p /nix/var/nix/profiles/system --set "$baseline_system"
+  "$baseline_system/activate"
+  iface="$(/usr/sbin/networksetup -listallhardwareports |
+    /usr/bin/awk '\''/Hardware Port: Wi-Fi/{getline; print $2; exit}'\'')"
+  /usr/sbin/networksetup -setnetworkserviceenabled "Wi-Fi" on
+  /usr/sbin/networksetup -setairportpower "$iface" on
+  /usr/sbin/networksetup -setairportnetwork \
+    "$iface" "Schrödinger’s WiFi"
+' >/var/tmp/eisenhower-rollback-proof-failsafe.log 2>&1 &
+proof_failsafe_pid=$!
+printf '%s\n' "$proof_failsafe_pid" |
+  sudo tee "$cutover_dir/rollback-proof-failsafe.pid" >/dev/null
 sudo launchctl print system/com.eisenhower.prevent-idle-sleep
 sudo launchctl print system/com.eisenhower.wifi-watchdog
+sudo sed -n '1,20p' /var/db/eisenhower/wifi-watchdog.status
+sudo grep -Fqx 'state=healthy' \
+  /var/db/eisenhower/wifi-watchdog.status
+sudo kill "$(cat "$cutover_dir/rollback-proof-failsafe.pid")"
+sleep 2
+if sudo kill -0 "$proof_failsafe_pid" 2>/dev/null; then
+  exit 1
+fi
 ```
 
-Expected: the approved generation and both services return.
+Expected: the approved generation and both services return, the watchdog is healthy, and the rollback-proof failsafe is disarmed.
 
 ### Task 11: Reboot and no-sleep verification
 
 **Files:** No repository changes. This task needs the reboot and Wi-Fi outage window.
 
-- [ ] **Step 1: Reconfirm local and wired recovery, then reboot**
+- [ ] **Step 1: Reconfirm physical-console recovery, then reboot**
 
 ```bash
-ssh -o BatchMode=yes -o ConnectTimeout=5 <wired-ip> hostname
+test "$(stat -f '%Su' /dev/console)" = melbournebaldove
+test -s /var/db/eisenhower-cutover/baseline-system
+test -s /var/db/eisenhower-cutover/current-profile
+sudo grep -Fqx 'state=healthy' \
+  /var/db/eisenhower/wifi-watchdog.status
+sudo -v
 sudo shutdown -r now
 ```
 
-Expected after boot: the local console returns, wired SSH returns, `/run/current-system` records the approved commit, and both Eisenhower jobs load before user login. Stop if wired access does not return. Use the physical console for recovery.
+Expected after boot: the graphical login and local Terminal return. `/run/current-system` records the approved commit, and both Eisenhower jobs load before user login. Verify locally first. SSH over Wi-Fi is secondary evidence only. Use the physical console and the saved rollback paths if Wi-Fi or SSH does not return.
 
 - [ ] **Step 2: Verify no idle system sleep on AC and battery**
 
@@ -664,7 +819,7 @@ Expected: launchd starts a new process for each job. The sleep assertion and wat
 
 ### Task 12: Verify Wi-Fi reconnect and outage recovery
 
-**Files:** No repository changes. Keep wired SSH and the physical console active.
+**Files:** No repository changes. Keep the physical console active. A network adapter or phone tether is optional and is not required. Do not use a phone tether during target-network recovery proof because it can change the default route and mask a failure.
 
 - [ ] **Step 1: Prove password-free association only inside the outage window**
 
@@ -791,22 +946,100 @@ sudo /nix/nix-installer uninstall
 
 Run this from the local console. Verify the daemon, receipt, Nix Store mount, and `/etc/nix` are absent. Follow the official failed-install recovery guide only for verified remnants.
 
+### Failure during the first baseline activation
+
+There is no earlier nix-darwin generation. Do not use `--rollback`. Keep the original native Terminal open. Restore the native shell first if necessary:
+
+```bash
+sudo /usr/bin/dscl . -create \
+  /Users/melbournebaldove UserShell /bin/zsh
+/bin/zsh -f -c 'printf "native shell recovery: PASS\n"'
+```
+
+Then remove the partial nix-darwin activation while Nix still works:
+
+```bash
+if test -x /run/current-system/sw/bin/darwin-uninstaller; then
+  sudo /run/current-system/sw/bin/darwin-uninstaller
+else
+  sudo /nix/var/nix/profiles/default/bin/nix \
+    --extra-experimental-features 'nix-command flakes' run \
+    'github:nix-darwin/nix-darwin/15abb8c98f336cd8bd840d71059adebabe60bf04#darwin-uninstaller'
+fi
+```
+
+Verify native login, Remote Login, `/etc`, the two legacy sleep jobs, and the user shell. Use the verified backup for Homebrew, GUI-default, or Home Manager state that the uninstaller does not reverse. Leave Determinate Nix installed unless the user explicitly abandons Nix after nix-darwin is fully removed.
+
 ### Failure after baseline or full activation
 
 Do not uninstall Nix first. nix-darwin can leave `/etc`, the user shell, and profiles linked into `/nix`.
 
-1. Use `sudo darwin-rebuild switch --rollback` to return from full to baseline.
-2. If abandoning nix-darwin, run its uninstaller while Nix still works:
+From either original local Terminal, enter a native shell and restore the saved baseline directly:
 
 ```bash
-sudo nix --extra-experimental-features 'nix-command flakes' run \
-  'github:nix-darwin/nix-darwin/15abb8c98f336cd8bd840d71059adebabe60bf04#darwin-uninstaller'
+exec /bin/zsh -f
 ```
 
-3. Verify that `/run/current-system` and the system generation links are gone.
-4. Verify that `melbournebaldove` has a valid native shell. Restore `/bin/zsh` from the local console if required.
-5. Verify Remote Login and native `/etc` files.
-6. If the legacy sleep jobs were retired, restore them before Nix removal:
+Then run:
+
+```bash
+sudo -v
+cutover_dir=/var/db/eisenhower-cutover
+baseline_system="$(cat "$cutover_dir/baseline-system")"
+test -x "$baseline_system/activate"
+sudo /nix/var/nix/profiles/default/bin/nix-env \
+  -p /nix/var/nix/profiles/system --set "$baseline_system"
+sudo "$baseline_system/activate"
+iface="$(/usr/sbin/networksetup -listallhardwareports |
+  awk '/Hardware Port: Wi-Fi/{getline; print $2; exit}')"
+sudo /usr/sbin/networksetup -setnetworkserviceenabled 'Wi-Fi' on
+sudo /usr/sbin/networksetup -setairportpower "$iface" on
+sudo /usr/sbin/networksetup -setairportnetwork \
+  "$iface" 'Schrödinger’s WiFi'
+if sudo launchctl print system/com.eisenhower.wifi-watchdog >/dev/null 2>&1; then
+  exit 1
+fi
+```
+
+Expected: the profile points to the saved baseline, the watchdog is unloaded, and native password-free association is requested. SSH is not needed.
+
+If `/nix` is not mounted, recover it locally before the baseline command:
+
+```bash
+nix_volume="$(diskutil info 'Nix Store' |
+  awk -F: '/Device Identifier/{gsub(/[[:space:]]/, "", $2); print $2; exit}')"
+test -n "$nix_volume"
+sudo diskutil mount "$nix_volume"
+sudo launchctl kickstart -k system/systems.determinate.nix-daemon
+/nix/var/nix/profiles/default/bin/nix store ping
+```
+
+If the managed login shell fails, restore the native shell from an already-open local Terminal:
+
+```bash
+sudo /usr/bin/dscl . -create \
+  /Users/melbournebaldove UserShell /bin/zsh
+/bin/zsh -f -c 'printf "native shell recovery: PASS\n"'
+```
+
+If abandoning nix-darwin, run its installed uninstaller while Nix still works:
+
+```bash
+if test -x /run/current-system/sw/bin/darwin-uninstaller; then
+  sudo /run/current-system/sw/bin/darwin-uninstaller
+else
+  sudo /nix/var/nix/profiles/default/bin/nix \
+    --extra-experimental-features 'nix-command flakes' run \
+    'github:nix-darwin/nix-darwin/15abb8c98f336cd8bd840d71059adebabe60bf04#darwin-uninstaller'
+fi
+```
+
+Then:
+
+1. Verify that `/run/current-system` and the system generation links are gone.
+2. Verify that `melbournebaldove` has `/bin/zsh` as a valid native shell.
+3. Verify Remote Login and native `/etc` files.
+4. If the legacy sleep jobs were retired, restore them before Nix removal:
 
 ```bash
 backup_dir="$(sudo cat /var/db/eisenhower/retired-sleep-jobs-path)"
@@ -819,20 +1052,21 @@ sudo launchctl bootstrap system \
   /Library/LaunchDaemons/com.aura.caffeinate.plist
 ```
 
-7. Verify the two legacy jobs and `pmset` state.
-8. Only then run `sudo /nix/nix-installer uninstall`.
-9. Reboot only after the local console confirms that the native shell and system files work.
+5. Verify the two legacy jobs and `pmset` state.
+6. Only then run `sudo /nix/nix-installer uninstall`.
+7. Reboot only after the local console confirms that the native shell and system files work.
 
 nix-darwin rollback and uninstallation do not automatically reverse all Homebrew cask installs, GUI defaults, or Home Manager backup files. Restore those items from the verified backup or from an approved item-by-item restoration list. Do not use a broad worktree or home-directory reset.
 
 ### Self-lockout response
 
-- Keep the physical console logged in and one old wired SSH session open.
-- Do not close a working session until a new wired session succeeds.
-- If the shell fails, use the local administrator session to restore `/bin/zsh`.
-- If SSH fails, recover locally. Do not change Wi-Fi as the first recovery action.
-- If the full watchdog causes a network problem, roll back to the baseline generation over wired Ethernet.
-- If generation rollback fails, activate the saved baseline system path directly with its `activate` script only from the local console and only after a fresh path check.
+- Keep the graphical session logged in and keep both native Terminal windows open.
+- If SSH or Wi-Fi fails, continue locally. SSH recovery is not a prerequisite.
+- If the managed shell fails, use an original Terminal to run `/bin/zsh -f` and restore `UserShell` with the command above.
+- If the watchdog causes a network problem, use the saved baseline-system path from the physical console.
+- If `/nix` is not mounted, mount the verified Nix Store device and restart the Determinate daemon before rollback.
+- A compatible USB network adapter or phone tether can provide optional download access. Do not depend on it for rollback.
+- If normal local login cannot be recovered, use macOS Recovery and the verified Time Machine backup. This is an emergency path and can require a reboot.
 
 ## Post-cutover ownership and upgrades
 
@@ -847,9 +1081,10 @@ nix-darwin rollback and uninstallation do not automatically reverse all Homebrew
 ### Critical controls
 
 - Eisenhower has no configured Time Machine destination. Nix installation is blocked until a current readable backup exists.
-- Current remote management uses Wi-Fi. Activation is blocked until wired SSH and the physical console are ready.
+- Current remote management uses Wi-Fi, and Eisenhower has no usable Ethernet. Physical local-console access is the independent management route.
 - The first activation is not a small host-only change. It runs shared Homebrew, Home Manager, GUI-default, and shell activation. The user must authorize that scope.
-- The full activation starts a Wi-Fi association watchdog. It needs the independent route and approved window even if no explicit Wi-Fi test follows.
+- The baseline activation contains no Eisenhower watchdog or new power module. It isolates shared shell, Homebrew, Home Manager, and GUI changes from network behavior.
+- The later full activation starts the Wi-Fi association watchdog. It requires a separate local-console approval and an armed timed rollback.
 - Nix removal must occur after nix-darwin removal. Reversing this order can leave native system paths linked into a removed Nix store.
 - The package, Git bundle, and flake inputs are pinned and verified before use.
 - No command reads or passes a Wi-Fi password.
@@ -872,10 +1107,11 @@ Before execution, the user must explicitly provide these decisions:
 
 1. Approve Determinate Nix `v3.21.9` and the pinned signed-package identity above.
 2. Approve a current Time Machine backup as the prerequisite backup. Configure, mount, and complete the destination first.
-3. Approve and arrange wired Ethernet plus physical presence at Eisenhower.
+3. Approve physical local-console access as the primary independent management route. Keep two native Terminal windows open. A USB network adapter or phone tether is optional only.
 4. Approve transfer of the exact commit through a verified Git bundle because the commit is not on GitHub `main`.
 5. Approve the first-activation effects from shared Homebrew, Home Manager, GUI preferences, and the Nix-managed user shell.
-6. Approve the install and first-activation maintenance window.
-7. Separately approve the reboot and Wi-Fi outage window, including impact on other access-point users.
+6. Approve the Nix-install and watchdog-disabled baseline-activation window.
+7. Separately approve the later watchdog-activation window with the 15-minute automatic rollback.
+8. Separately approve the reboot and forced Wi-Fi outage window, including impact on other access-point users.
 
 No Wi-Fi password or Keychain access authorization is required.
