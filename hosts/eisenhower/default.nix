@@ -4,6 +4,7 @@
     inputs.home-manager.darwinModules.home-manager
     ../../modules/system/darwin/default.nix
     ../../modules/system/darwin/gui.nix
+    ./power.nix
   ];
 
   home-manager = {
