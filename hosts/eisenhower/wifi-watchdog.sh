@@ -3,7 +3,6 @@ set -euo pipefail
 
 # shellcheck disable=SC1112 # U+2019 is required by the approved SSID.
 readonly target_ssid='Schrödinger’s WiFi'
-readonly network_service='Wi-Fi'
 readonly healthy_interval=30
 readonly reassert_interval=300
 
@@ -47,6 +46,22 @@ wifi_device() {
     awk '/Hardware Port: Wi-Fi/{getline; print $2; exit}'
 }
 
+wifi_service() {
+  "$networksetup_bin" -listnetworkserviceorder 2>/dev/null |
+    awk -v device="$1" '
+      /^\([[:digit:]]+\) / {
+        service = $0
+        sub(/^\([[:digit:]]+\) /, "", service)
+        sub(/^\*/, "", service)
+        next
+      }
+      index($0, "Device: " device ")") {
+        print service
+        exit
+      }
+    '
+}
+
 target_is_preferred() {
   "$networksetup_bin" -listpreferredwirelessnetworks "$1" 2>/dev/null |
     sed '1d; s/^[[:space:]]*//' |
@@ -79,11 +94,15 @@ record_transition() {
 }
 
 ensure_service_and_radio() {
-  local device="$1"
-  if ! "$networksetup_bin" -getnetworkserviceenabled "$network_service" 2>/dev/null |
+  local device="$1" service
+  service="$(wifi_service "$device")"
+  if [[ -z "$service" ]]; then
+    return 1
+  fi
+  if ! "$networksetup_bin" -getnetworkserviceenabled "$service" 2>/dev/null |
     grep -Fq Enabled; then
     record_transition service_disabled
-    "$networksetup_bin" -setnetworkserviceenabled "$network_service" on \
+    "$networksetup_bin" -setnetworkserviceenabled "$service" on \
       >/dev/null 2>&1 || return 1
   fi
   if ! "$networksetup_bin" -getairportpower "$device" 2>/dev/null |

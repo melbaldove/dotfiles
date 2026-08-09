@@ -21,6 +21,12 @@ case "$1" in
       printf '\tUnrelated Network\n'
     fi
     ;;
+  -listnetworkserviceorder)
+    printf '(1) Unrelated Ethernet\n'
+    printf '(Hardware Port: Ethernet, Device: en9)\n'
+    printf '(2) %s\n' "${FAKE_SERVICE_NAME:-Wi-Fi}"
+    printf '(Hardware Port: Wi-Fi, Device: en7)\n'
+    ;;
   -getnetworkserviceenabled)
     printf '%s\n' "${FAKE_SERVICE_STATE:-Enabled}"
     ;;
@@ -97,6 +103,7 @@ reset_case() {
   : >"$FAKE_SLEEPS"
   rm -f "$FAKE_ASSOC_ARGC" "$FAKE_ASSOC_ARGS" "$EISENHOWER_STATUS_FILE"
   export FAKE_PREFERRED=yes FAKE_SERVICE_STATE=Enabled FAKE_RADIO_STATE=On
+  export FAKE_SERVICE_NAME='Wi-Fi'
   export FAKE_LINK_STATE=active FAKE_ADDRESS_STATE=ready
   export FAKE_ASSOC_RESULT=success
 }
@@ -134,9 +141,10 @@ grep -Fq 'state=authentication_failed' "$FAKE_LOG"
 unset FAKE_SLEEP_LIMIT
 
 reset_case
-export FAKE_SERVICE_STATE=Disabled
+export FAKE_SERVICE_STATE=Disabled FAKE_SERVICE_NAME='Primary Wireless'
 bash "$watchdog" --once
-grep -Fq -- '-setnetworkserviceenabled Wi-Fi on' "$FAKE_CALLS"
+grep -Fq -- '-setnetworkserviceenabled Primary Wireless on' "$FAKE_CALLS"
+if grep -Fq 'Unrelated Ethernet' "$FAKE_LOG"; then exit 1; fi
 
 reset_case
 export FAKE_RADIO_STATE=Off
