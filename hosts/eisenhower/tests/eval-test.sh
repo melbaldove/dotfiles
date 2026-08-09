@@ -21,5 +21,14 @@ power_job="$(nix eval --json .#darwinConfigurations.eisenhower.config.launchd.da
 jq -e '.Label == "com.eisenhower.prevent-idle-sleep"' <<<"$power_job" >/dev/null
 jq -e '.ProgramArguments == ["/usr/bin/caffeinate", "-i"]' <<<"$power_job" >/dev/null
 jq -e '.RunAtLoad == true and .KeepAlive == true' <<<"$power_job" >/dev/null
+wifi_job="$(nix eval --json .#darwinConfigurations.eisenhower.config.launchd.daemons.eisenhower-wifi-watchdog.serviceConfig)"
+jq -e '.Label == "com.eisenhower.wifi-watchdog"' <<<"$wifi_job" >/dev/null
+jq -e '.RunAtLoad == true and .KeepAlive == true and .ThrottleInterval == 30' <<<"$wifi_job" >/dev/null
+jq -e '.ProgramArguments | length == 1' <<<"$wifi_job" >/dev/null
+jq -e '.ProgramArguments[0] | endswith("/bin/eisenhower-wifi-watchdog")' <<<"$wifi_job" >/dev/null
+jq -e '.EnvironmentVariables == null' <<<"$wifi_job" >/dev/null
+if grep -Eqi 'password|find-generic-password' <<<"$wifi_job"; then
+  exit 1
+fi
 
 echo "Darwin host boundary: PASS"
