@@ -2,11 +2,11 @@
 
 Date: 2026-08-09
 
-Status: Approved design pending final written-spec review
+Status: Revised design pending final written-spec review
 
 ## Purpose
 
-This design makes the existing macOS host Eisenhower resilient during normal operation.
+This design makes the existing macOS host Eisenhower a nix-darwin-managed host and makes it resilient during normal operation.
 
 It has two required properties:
 
@@ -37,6 +37,72 @@ Darwin secret management is manual. The Darwin module installs `agenix`, but it 
 
 The repository has existing user changes in `codex/AGENTS.md`, `flake.lock`, and `hosts/turing/default.nix`. Future work must preserve those changes.
 
+## Repository ownership decision
+
+### Considered layout: all Eisenhower configuration in `nix-infra`
+
+In this layout, `nix-infra` owns the Eisenhower host assembly, Darwin system modules, connectivity jobs, and system activation. It consumes `.dotfiles` only for Home Manager user configuration.
+
+This layout gives one infrastructure repository for all machine assemblies and could reuse the established agenix inventory. It does not match the current flake structure. `nix-infra` defines NixOS server configurations, NixOS modules, deploy-rs nodes, and NixOS deployment checks. It has no nix-darwin input, Darwin output, or Darwin deployment path. Its documented deployment command runs deploy-rs from Einstein. Adding Eisenhower would require a second operating-system toolchain and a separate activation path in the server repository.
+
+This layout also increases flake coupling. `nix-infra` already consumes `.dotfiles` for user configuration, while `.dotfiles` currently declares `nix-infra` as an input. Making `nix-infra` the Darwin assembly owner would make the dependency boundary harder to understand and test.
+
+### Considered layout: shared Darwin modules in `.dotfiles`, host assembly in `nix-infra`
+
+In this layout, `.dotfiles` exports reusable Darwin modules and Home Manager profiles. `nix-infra` defines `darwinConfigurations.eisenhower` and imports those modules.
+
+This creates a clear module-versus-host distinction in theory. It does not give the smallest practical boundary for the current repositories. The Darwin defaults, GUI settings, Homebrew integration, host packages, Home Manager assembly, and Darwin activation history already live together in `.dotfiles`. Splitting the assembly would require synchronized changes and revisions across both repositories for one host. Evaluation, activation, and rollback would depend on two repository revisions.
+
+This layout also creates a decision problem for host-specific launchd jobs. Putting them in `.dotfiles` makes `nix-infra` a thin wrapper. Putting them in `nix-infra` splits Darwin system ownership across repositories.
+
+### Selected layout: all Eisenhower nix-darwin configuration in `.dotfiles`
+
+`.dotfiles` is the sole source of truth for Eisenhower.
+
+It owns:
+
+- `darwinConfigurations.eisenhower`;
+- the Eisenhower host assembly;
+- Darwin system and launchd modules;
+- Home Manager user imports;
+- the declared SSID identity;
+- configuration evaluation;
+- local activation;
+- Darwin generation rollback;
+- Eisenhower-specific verification documentation.
+
+`nix-infra` remains unchanged. It continues to own NixOS server configurations, deploy-rs nodes, infrastructure services, and server-side agenix secrets. It can continue to consume published `.dotfiles` user modules for Linux hosts. It does not assemble, activate, or roll back Eisenhower.
+
+This layout matches the existing repository purposes and commands. `.dotfiles` already contains the nix-darwin input, the only Darwin host, all Darwin modules, and the documented `darwin-rebuild` workflow. A Darwin generation can be built, activated, and rolled back from one repository revision.
+
+The Wi-Fi credential is not owned by either Git repository. It is a local operational secret on Eisenhower. It stays in a root-owned file outside the Nix store. This boundary prevents the server-secret inventory in `nix-infra` from becoming an indirect runtime dependency of the Mac.
+
+## Nix-darwin host boundary
+
+The existing `turing` host definition becomes the Eisenhower host definition. Implementation must move the host assembly instead of copying it.
+
+The final assembly has these ownership rules:
+
+- `flake.nix` exposes one canonical Darwin output named `darwinConfigurations.eisenhower`.
+- `hosts/eisenhower/default.nix` is the Eisenhower assembly root.
+- Existing generic Darwin defaults remain under `modules/system/darwin/`.
+- Eisenhower-only sleep and connectivity logic remains under `hosts/eisenhower/` unless a second Darwin host creates a proven reuse need.
+- Existing Home Manager profiles remain under `users/melbournebaldove/` and are imported by the Eisenhower assembly.
+- The obsolete `darwinConfigurations.turing` output and `hosts/turing/` assembly do not remain as a second source of truth.
+
+The implementation must preserve the current uncommitted changes to `hosts/turing/default.nix` when it moves that assembly.
+
+### Activation and rollback commands
+
+All Eisenhower lifecycle commands run from `.dotfiles` on Eisenhower.
+
+- Check: `sudo darwin-rebuild check --flake .#eisenhower`
+- Activate: `sudo darwin-rebuild switch --flake .#eisenhower`
+- List generations: `darwin-rebuild --list-generations`
+- Roll back: `sudo darwin-rebuild switch --rollback`
+
+`nix-infra` deploy-rs commands do not target Eisenhower.
+
 ## Scope
 
 ### In scope
@@ -57,7 +123,7 @@ The repository has existing user changes in `codex/AGENTS.md`, `flake.lock`, and
 - Shutdown caused by battery exhaustion.
 - Internet-service availability after successful Wi-Fi association.
 - Credential creation, rotation, or recovery.
-- Host-definition renaming from `turing` to `eisenhower`.
+- Changes to `nix-infra`.
 - Changes to Aura behavior.
 
 "Normal operation" means that Eisenhower is booted, its lid is open, and its battery is above the forced-shutdown threshold.
@@ -168,7 +234,7 @@ The Wi-Fi password must not enter:
 - the unified log;
 - the watchdog status file.
 
-The approved design uses a root-owned credential file outside the Nix store. Its required file mode is `0400`. Credential provisioning is a separate, manual, approval-gated operation.
+The approved design uses `/var/db/eisenhower/wifi-credential`, a root-owned credential file outside the Nix store. Its owner is `root`, its group is `wheel`, and its file mode is `0400`. Credential provisioning is a separate, manual, approval-gated operation.
 
 The watchdog reads the credential from standard input and passes it to the macOS association command through standard input. It does not place the password in an argument or environment variable.
 
@@ -187,7 +253,7 @@ Each event can contain:
 - result class;
 - last successful association time.
 
-The watchdog also writes an atomic, root-owned status file. The status file contains the current state, failure count, retry delay, and timestamps.
+The watchdog also writes an atomic, root-owned status file at `/var/db/eisenhower/wifi-watchdog.status`. The status file contains the current state, failure count, retry delay, and timestamps.
 
 Logs and status must not contain:
 
@@ -211,7 +277,7 @@ Evaluate the Darwin configuration and confirm:
 - the target SSID has the exact Unicode value `Schrödinger’s WiFi`;
 - no credential value appears in evaluation output or a store path.
 
-Run the flake evaluation and Darwin activation check before a switch. Use the repository's existing `turing` flake output unless a separate host-rename design is approved.
+Run the flake evaluation and Darwin activation check from `.dotfiles` before a switch. Use the canonical `eisenhower` flake output.
 
 ### Service tests
 
@@ -308,7 +374,7 @@ The test passes only if no match exists. The audit must not print the searched v
 Before activation:
 
 1. Record the current Darwin generation.
-2. Build and check the new generation.
+2. Build and check the new `.dotfiles#eisenhower` generation.
 3. Confirm local console or secondary network access.
 4. Keep the existing manual sleep daemons active.
 5. Install an independent Wi-Fi recovery failsafe before disruptive tests.
@@ -323,11 +389,15 @@ If activation causes a problem:
 
 Remove the two old sleep daemons only in a later activation after all reboot, sleep, and connection-recovery tests pass.
 
+Rollback uses the Darwin generation history created by `.dotfiles`. It does not use deploy-rs or a `nix-infra` revision.
+
 ## Acceptance criteria
 
 The design is successfully implemented only when:
 
 - configuration evaluation and Darwin checks pass;
+- `.dotfiles` contains the only Eisenhower host assembly and canonical Darwin output;
+- `nix-infra` remains unchanged and is not required for Eisenhower activation or rollback;
 - computer sleep is disabled on battery and AC power;
 - the managed idle-sleep assertion survives process failure and reboot;
 - Eisenhower connects to `Schrödinger’s WiFi` after boot without user login;
