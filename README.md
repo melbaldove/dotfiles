@@ -11,6 +11,13 @@ This repository uses a modular, flake-based approach to manage configurations fo
 - **Reproducible**: Easily bootstrap a new machine to a known state.
 - **Modular**: Configurations are broken down into reusable components for systems and users.
 
+## Hosts
+
+| Host | Flake output | Role |
+|---|---|---|
+| Turing | `turing` | Personal interactive macOS workstation |
+| Eisenhower | `eisenhower` | Personal macOS host for always-on Aura services |
+
 ## Installation
 
 1.  **Install Nix:**
@@ -36,6 +43,9 @@ cd ~/.dotfiles
 
 # Rebuild the system
 sudo darwin-rebuild switch --flake .#turing
+
+# Rebuild Eisenhower
+sudo darwin-rebuild switch --flake .#eisenhower
 
 # Update dependencies
 nix flake update
