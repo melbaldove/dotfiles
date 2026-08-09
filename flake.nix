@@ -42,5 +42,10 @@
         ./hosts/turing/default.nix
       ];
     };
+
+    darwinConfigurations."eisenhower" = nix-darwin.lib.darwinSystem {
+      specialArgs = { inherit inputs self; };
+      modules = [ ./hosts/eisenhower/default.nix ];
+    };
   };
 }
