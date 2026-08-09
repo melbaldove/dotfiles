@@ -17,11 +17,14 @@ This document defines the design and its verification. It does not authorize imp
 
 ## Source evidence
 
-The `.dotfiles` repository and the live host have different identity names:
+The `.dotfiles` repository currently manages Turing as one machine:
 
 - The flake exposes `darwinConfigurations.turing`.
 - The host module declares `networking.hostName = "turing"`.
-- The live host identifies as `eisenhower.local`.
+
+Eisenhower is a separate machine. The live Eisenhower host identifies as `eisenhower.local`, but `.dotfiles` does not yet contain an Eisenhower host assembly or Darwin output.
+
+The `nix-infra` input is declared in `.dotfiles`. The current Darwin assembly does not use it. Eisenhower does not need that input unless implementation discovers a specific shared dependency.
 
 The evaluated Darwin configuration does not declare a sleep policy. Each `power.sleep.*` value is `null`.
 
@@ -73,24 +76,27 @@ It owns:
 
 `nix-infra` remains unchanged. It continues to own NixOS server configurations, deploy-rs nodes, infrastructure services, and server-side agenix secrets. It can continue to consume published `.dotfiles` user modules for Linux hosts. It does not assemble, activate, or roll back Eisenhower.
 
-This layout matches the existing repository purposes and commands. `.dotfiles` already contains the nix-darwin input, the only Darwin host, all Darwin modules, and the documented `darwin-rebuild` workflow. A Darwin generation can be built, activated, and rolled back from one repository revision.
+This layout matches the existing repository purposes and commands. `.dotfiles` already contains the nix-darwin input, the existing Turing Darwin host, shared Darwin modules, Home Manager profiles, and the documented `darwin-rebuild` workflow. Each Darwin host generation can be built, activated, and rolled back from one repository revision.
 
 The Wi-Fi credential is not owned by either Git repository. It is a local operational secret on Eisenhower. It stays in a root-owned file outside the Nix store. This boundary prevents the server-secret inventory in `nix-infra` from becoming an indirect runtime dependency of the Mac.
 
 ## Nix-darwin host boundary
 
-The existing `turing` host definition becomes the Eisenhower host definition. Implementation must move the host assembly instead of copying it.
+Turing and Eisenhower remain separate host assemblies. Turing is not renamed, moved, or used as an Eisenhower template without module-by-module review.
 
 The final assembly has these ownership rules:
 
-- `flake.nix` exposes one canonical Darwin output named `darwinConfigurations.eisenhower`.
+- `flake.nix` keeps `darwinConfigurations.turing` mapped to `hosts/turing/default.nix`.
+- `flake.nix` adds `darwinConfigurations.eisenhower` mapped to `hosts/eisenhower/default.nix`.
 - `hosts/eisenhower/default.nix` is the Eisenhower assembly root.
-- Existing generic Darwin defaults remain under `modules/system/darwin/`.
-- Eisenhower-only sleep and connectivity logic remains under `hosts/eisenhower/` unless a second Darwin host creates a proven reuse need.
-- Existing Home Manager profiles remain under `users/melbournebaldove/` and are imported by the Eisenhower assembly.
-- The obsolete `darwinConfigurations.turing` output and `hosts/turing/` assembly do not remain as a second source of truth.
+- `hosts/turing/default.nix` remains the Turing assembly root and keeps its current behavior.
+- Eisenhower reuses only modules under `modules/system/darwin/` that evaluation and review prove to be machine-independent.
+- Eisenhower reuses the existing Home Manager profiles under `users/melbournebaldove/` because they describe the same user, subject to host evaluation.
+- Eisenhower-only sleep and connectivity logic remains under `hosts/eisenhower/` unless a second proven reuse case exists.
+- Turing does not import Eisenhower-specific sleep or Wi-Fi recovery logic.
+- Neither host assembly imports the other host assembly.
 
-The implementation must preserve the current uncommitted changes to `hosts/turing/default.nix` when it moves that assembly.
+The implementation must preserve `hosts/turing/default.nix` and its current uncommitted changes unchanged. Adding Eisenhower must not require a Turing rebuild or activation.
 
 ### Activation and rollback commands
 
@@ -396,7 +402,8 @@ Rollback uses the Darwin generation history created by `.dotfiles`. It does not 
 The design is successfully implemented only when:
 
 - configuration evaluation and Darwin checks pass;
-- `.dotfiles` contains the only Eisenhower host assembly and canonical Darwin output;
+- `.dotfiles` contains one Eisenhower host assembly and one canonical Eisenhower Darwin output;
+- `darwinConfigurations.turing` and `hosts/turing/default.nix` remain intact and separate from Eisenhower;
 - `nix-infra` remains unchanged and is not required for Eisenhower activation or rollback;
 - computer sleep is disabled on battery and AC power;
 - the managed idle-sleep assertion survives process failure and reboot;
