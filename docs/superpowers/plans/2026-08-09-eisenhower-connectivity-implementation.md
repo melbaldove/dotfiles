@@ -17,6 +17,7 @@
 - Keep `darwinConfigurations.turing` and `hosts/turing/default.nix` unchanged.
 - Preserve existing changes to `codex/AGENTS.md`, `flake.lock`, and `hosts/turing/default.nix`.
 - Use the exact SSID `Schrödinger’s WiFi`.
+- Require SHA-256 `8e7be252173ea3d0905dda6be969e5cf6f3daf3924759227695d8fbd5d200a3d` for the exact SSID UTF-8 bytes.
 - Never read, extract, store, decrypt, log, or pass the Wi-Fi password.
 - Never call a Keychain secret-reading command.
 - Associate with only `networksetup -setairportnetwork <device> 'Schrödinger’s WiFi'`.
@@ -25,7 +26,7 @@
 
 ## Source baseline and file map
 
-The current working flake exposes only Turing. Live `networksetup` reports `-setairportnetwork <device name> <network> [password]`, and a safe exact-match check confirms the target is preferred. Eisenhower will reuse `modules/system/darwin/default.nix`, `modules/system/darwin/gui.nix`, and the existing `core.nix`, `dev.nix`, `desktop.nix`, and `emacs.nix` Home Manager profiles. It will not import the unrelated agenix or WireGuard modules.
+The current working flake exposes only Turing. A prior live check confirmed that `networksetup` reports `-setairportnetwork <device name> <network> [password]` and that the target is preferred. Eisenhower is currently unreachable at `eisenhower.local`. Treat this as a live execution condition. Recheck reachability and the native command contract before any live step. Static design review and local implementation can continue while the host is unreachable. Eisenhower will reuse `modules/system/darwin/default.nix`, `modules/system/darwin/gui.nix`, and the existing `core.nix`, `dev.nix`, `desktop.nix`, and `emacs.nix` Home Manager profiles. It will not import the unrelated agenix or WireGuard modules.
 
 - Modify `flake.nix`: add the Eisenhower output.
 - Create `hosts/eisenhower/default.nix`: assemble the host and user profiles.
@@ -53,13 +54,17 @@ Expected: the approved spec exists and the three unrelated modified files remain
 - [ ] **Step 2: Record immutable baselines outside the repository**
 
 ```bash
-shasum -a 256 hosts/turing/default.nix > /tmp/eisenhower-turing-default.sha256
+shasum -a 256 codex/AGENTS.md flake.lock hosts/turing/default.nix \
+  > /tmp/eisenhower-protected-files.sha256
+sed -n '/darwinConfigurations\."turing"/,/^    };/p' flake.nix |
+  shasum -a 256 > /tmp/eisenhower-turing-flake-output.sha256
 git status --porcelain=v1 > /tmp/eisenhower-preimplementation-status.txt
 git -C /Users/melbournebaldove/nix-infra rev-parse HEAD > /tmp/eisenhower-nix-infra-head
-git -C /Users/melbournebaldove/nix-infra status --short
+git -C /Users/melbournebaldove/nix-infra status --porcelain=v1 \
+  > /tmp/eisenhower-nix-infra-status.txt
 ```
 
-Expected: one Turing hash, one `nix-infra` revision, and no `nix-infra` status output.
+Expected: three protected-file hashes, one Turing output hash, one `nix-infra` revision, and an empty `nix-infra` status file.
 
 ### Task 2: Add Eisenhower as a separate Darwin assembly
 
@@ -74,7 +79,10 @@ Create `hosts/eisenhower/tests/eval-test.sh`:
 set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$repo_root"
-shasum -a 256 -c "${TURING_BASELINE_FILE:-/tmp/eisenhower-turing-default.sha256}"
+baseline_file="${PROTECTED_BASELINE_FILE:-/tmp/eisenhower-protected-files.sha256}"
+if [[ -f "$baseline_file" ]]; then shasum -a 256 -c "$baseline_file"; fi
+test "$(printf '%s' 'Schrödinger’s WiFi' | shasum -a 256 | awk '{print $1}')" = \
+  8e7be252173ea3d0905dda6be969e5cf6f3daf3924759227695d8fbd5d200a3d
 test "$(nix eval --raw .#darwinConfigurations.turing.config.networking.hostName)" = turing
 test "$(nix eval --raw .#darwinConfigurations.eisenhower.config.networking.hostName)" = eisenhower
 test "$(nix eval --raw .#darwinConfigurations.eisenhower.config.nixpkgs.hostPlatform.system)" = aarch64-darwin
@@ -144,9 +152,10 @@ git add flake.nix hosts/eisenhower/default.nix hosts/eisenhower/tests/eval-test.
 git diff --cached --check
 git diff --cached --name-only
 git commit -m "feat(darwin): add Eisenhower host assembly"
+git rev-parse HEAD > /tmp/eisenhower-host-baseline-commit
 ```
 
-Expected: test `PASS`; Turing and `flake.lock` are not staged.
+Expected: test `PASS`; Turing and `flake.lock` are not staged. The recorded commit contains the host assembly but no Eisenhower power or Wi-Fi controls. It is the known first-generation rollback target.
 
 ### Task 3: Add declarative sleep prevention
 
@@ -254,10 +263,18 @@ SH
 cat >"$fake_bin/sleep" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$1" >>"$FAKE_SLEEPS"
+if [[ -n "${FAKE_SLEEP_LIMIT:-}" ]]; then
+  count="$(wc -l <"$FAKE_SLEEPS" | tr -d ' ')"
+  if (( count >= FAKE_SLEEP_LIMIT )); then exit 99; fi
+fi
 SH
 chmod +x "$fake_bin"/*
 
 watchdog="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/wifi-watchdog.sh"
+expected_ssid_sha256='8e7be252173ea3d0905dda6be969e5cf6f3daf3924759227695d8fbd5d200a3d'
+actual_ssid="$(sed -n "s/^readonly target_ssid='\\(.*\\)'$/\\1/p" "$watchdog")"
+test "$(printf '%s' "$actual_ssid" | shasum -a 256 | awk '{print $1}')" = \
+  "$expected_ssid_sha256"
 export EISENHOWER_NETWORKSETUP="$fake_bin/networksetup"
 export EISENHOWER_IFCONFIG="$fake_bin/ifconfig"
 export EISENHOWER_IPCONFIG="$fake_bin/ipconfig"
@@ -279,7 +296,7 @@ bash "$watchdog" --once
 test "$(cat "$FAKE_ASSOC_ARGC")" = 3
 test "$(sed -n '1p' "$FAKE_ASSOC_ARGS")" = -setairportnetwork
 test "$(sed -n '2p' "$FAKE_ASSOC_ARGS")" = en7
-test "$(sed -n '3p' "$FAKE_ASSOC_ARGS")" = 'Schrödinger’s WiFi'
+test "$(sed -n '3p' "$FAKE_ASSOC_ARGS")" = "$actual_ssid"
 test "$(wc -l <"$FAKE_ASSOC_ARGS" | tr -d ' ')" = 3
 grep -Fq 'state=healthy' "$EISENHOWER_STATUS_FILE"
 
@@ -288,7 +305,7 @@ export FAKE_PREFERRED=no
 if bash "$watchdog" --once; then exit 1; fi
 test ! -e "$FAKE_ASSOC_ARGS"
 grep -Fq 'state=credential_unavailable' "$EISENHOWER_STATUS_FILE"
-! grep -Fq 'Unrelated Network' "$FAKE_LOG"
+if grep -Fq 'Unrelated Network' "$FAKE_LOG"; then exit 1; fi
 
 reset_case
 export FAKE_ASSOC_RESULT=failure
@@ -296,15 +313,31 @@ if bash "$watchdog" --once; then exit 1; fi
 grep -Fq 'state=authentication_failed' "$EISENHOWER_STATUS_FILE"
 
 reset_case
+export FAKE_ASSOC_RESULT=failure FAKE_SLEEP_LIMIT=8
+set +e
+bash "$watchdog"
+watchdog_exit="$?"
+set -e
+test "$watchdog_exit" = 99
+test "$(paste -sd, "$FAKE_SLEEPS")" = '5,10,20,40,60,120,300,300'
+grep -Fq 'state=authentication_failed' "$FAKE_LOG"
+unset FAKE_SLEEP_LIMIT
+
+reset_case
 export FAKE_RADIO_STATE=Off
 bash "$watchdog" --once
 grep -Fq -- '-setairportpower en7 on' "$FAKE_CALLS"
+
+reset_case
+export FAKE_LINK_STATE=inactive
+if bash "$watchdog" --wait-healthy en7; then exit 1; fi
+test "$(paste -sd, "$FAKE_SLEEPS")" = 1
 
 expected=(5 10 20 40 60 120 300 300)
 for index in "${!expected[@]}"; do
   test "$(bash "$watchdog" --print-backoff "$((index + 1))")" = "${expected[$index]}"
 done
-! grep -R -n -E 'find-generic-password|wifi-credential|password=' "$watchdog" "$FAKE_LOG"
+if grep -R -n -E 'find-generic-password|password=' "$watchdog" "$FAKE_LOG"; then exit 1; fi
 echo "Wi-Fi watchdog tests: PASS"
 ```
 
@@ -319,6 +352,7 @@ bash hosts/eisenhower/tests/wifi-watchdog-test.sh
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
+# shellcheck disable=SC1112 # U+2019 is required by the approved SSID.
 readonly target_ssid='Schrödinger’s WiFi'
 readonly network_service='Wi-Fi'
 readonly healthy_interval=30
@@ -355,6 +389,13 @@ target_is_preferred() {
     sed '1d; s/^[[:space:]]*//' | grep -Fqx -- "$target_ssid"
 }
 link_is_active() { "$ifconfig_bin" "$1" 2>/dev/null | grep -Fq 'status: active'; }
+wait_healthy_interval() {
+  local device="$1"
+  for _ in {1..30}; do
+    "$sleep_bin" 1
+    if ! link_is_active "$device"; then return 1; fi
+  done
+}
 has_usable_ipv4() {
   local address; address="$($ipconfig_bin getifaddr "$1" 2>/dev/null || true)"
   [[ -n "$address" && "$address" != 169.254.* ]]
@@ -375,12 +416,12 @@ ensure_service_and_radio() {
   fi
 }
 associate_target() {
-  local device="$1" attempt
+  local device="$1"
   if ! "$networksetup_bin" -setairportnetwork "$device" "$target_ssid" >/dev/null 2>&1; then
     last_state=authentication_failed; return 1
   fi
   last_asserted_at="$(date +%s)"
-  for attempt in {1..15}; do
+  for _ in {1..15}; do
     if link_is_active "$device" && has_usable_ipv4 "$device"; then last_state=healthy; return 0; fi
     "$sleep_bin" 1
   done
@@ -398,6 +439,7 @@ check_once() {
 }
 case "${1:-}" in
   --print-backoff) backoff_for "${2:?failure count required}"; exit 0;;
+  --wait-healthy) wait_healthy_interval "${2:?device required}"; exit $?;;
   --once)
     if check_once; then write_status "$last_state" 0 0; exit 0; fi
     write_status "$last_state" 1 "$(backoff_for 1)"; exit 1;;
@@ -407,7 +449,9 @@ esac
 failures=0
 while true; do
   if check_once; then
-    failures=0; write_status healthy 0 "$healthy_interval"; "$sleep_bin" "$healthy_interval"
+    failures=0
+    write_status healthy 0 "$healthy_interval"
+    if ! wait_healthy_interval "$(wifi_device)"; then continue; fi
   else
     failures=$((failures + 1)); delay="$(backoff_for "$failures")"
     write_status "$last_state" "$failures" "$delay"; "$sleep_bin" "$delay"
@@ -440,7 +484,8 @@ jq -e '.Label == "com.eisenhower.wifi-watchdog"' <<<"$wifi_job" >/dev/null
 jq -e '.RunAtLoad == true and .KeepAlive == true and .ThrottleInterval == 30' <<<"$wifi_job" >/dev/null
 jq -e '.ProgramArguments | length == 1' <<<"$wifi_job" >/dev/null
 jq -e '.ProgramArguments[0] | endswith("/bin/eisenhower-wifi-watchdog")' <<<"$wifi_job" >/dev/null
-! grep -Eqi 'password|find-generic-password|wifi-credential' <<<"$wifi_job"
+jq -e 'has("EnvironmentVariables") | not' <<<"$wifi_job" >/dev/null
+! grep -Eqi 'password|find-generic-password' <<<"$wifi_job"
 ```
 
 Run `bash hosts/eisenhower/tests/eval-test.sh`. Expected: missing-daemon failure.
@@ -492,25 +537,40 @@ Expected: both tests `PASS`.
 - [ ] **Step 1: Prove repository boundaries**
 
 ```bash
-shasum -a 256 -c /tmp/eisenhower-turing-default.sha256
+shasum -a 256 -c /tmp/eisenhower-protected-files.sha256
+sed -n '/darwinConfigurations\."turing"/,/^    };/p' flake.nix |
+  shasum -a 256 -c /tmp/eisenhower-turing-flake-output.sha256
 test "$(git -C /Users/melbournebaldove/nix-infra rev-parse HEAD)" = \
   "$(cat /tmp/eisenhower-nix-infra-head)"
-test -z "$(git -C /Users/melbournebaldove/nix-infra status --short)"
+test "$(git -C /Users/melbournebaldove/nix-infra status --porcelain=v1)" = \
+  "$(cat /tmp/eisenhower-nix-infra-status.txt)"
 ```
 
-Expected: Turing `OK`; `nix-infra` revision and worktree unchanged.
+Expected: all protected files report `OK`; the Turing output and `nix-infra` revision and worktree are unchanged.
 
 - [ ] **Step 2: Prove the credential boundary**
 
 ```bash
 ! rg -n -i \
-  'find-generic-password|dump-keychain|wifi-credential|password[[:space:]]*=|security[[:space:]]+find' \
-  hosts/eisenhower
+  'find-generic-password|dump-keychain|password[[:space:]]*=|security[[:space:]]+find' \
+  hosts/eisenhower/wifi-watchdog.sh hosts/eisenhower/*.nix
 test "$(rg -n -- '-setairportnetwork.*target_ssid' hosts/eisenhower/wifi-watchdog.sh | wc -l | tr -d ' ')" = 1
+actual_ssid="$(sed -n "s/^readonly target_ssid='\\(.*\\)'$/\\1/p" \
+  hosts/eisenhower/wifi-watchdog.sh)"
+test "$(printf '%s' "$actual_ssid" | shasum -a 256 | awk '{print $1}')" = \
+  8e7be252173ea3d0905dda6be969e5cf6f3daf3924759227695d8fbd5d200a3d
 bash hosts/eisenhower/tests/wifi-watchdog-test.sh
+wifi_job="$(nix eval --json \
+  .#darwinConfigurations.eisenhower.config.launchd.daemons.eisenhower-wifi-watchdog.serviceConfig)"
+watchdog_program="$(jq -r '.ProgramArguments[0]' <<<"$wifi_job")"
+watchdog_store="${watchdog_program%/bin/*}"
+nix-store -r "$watchdog_store" >/dev/null
+test -x "$watchdog_program"
+! rg -n -i 'find-generic-password|dump-keychain|password[[:space:]]*=' \
+  "$watchdog_program"
 ```
 
-Expected: no prohibited pattern, one association call, and test `PASS`.
+Expected: no prohibited pattern, one association call, the fixed SSID hash, the packaged Nix store script, and all watchdog tests pass. The launchd job has no credential environment.
 
 - [ ] **Step 3: Evaluate and build without activation**
 
@@ -549,9 +609,14 @@ git commit -m "docs: add Eisenhower activation command"
 
 **Files:** No repository changes; inspect live Eisenhower.
 
-- [ ] **Step 1: Require physical, Ethernet, or another independent route**
+- [ ] **Step 1: Require host reachability and a route independent of Wi-Fi**
 
-Expected: one tested route remains usable when Wi-Fi is off. Stop if Wi-Fi SSH is the only route.
+```bash
+ssh -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1 \
+  eisenhower.local 'hostname'
+```
+
+Expected: the host returns `eisenhower`. The current known condition is name-resolution failure. Stop all live steps while this command fails. After reachability returns, test physical console, Ethernet, or another route that remains usable when Wi-Fi is off. Stop if Wi-Fi SSH is the only route.
 
 - [ ] **Step 2: Verify the preferred identity without printing other networks**
 
@@ -570,24 +635,78 @@ Expected: `preferred target: PASS`; no list output.
 - [ ] **Step 3: Prove association with no password argument**
 
 ```bash
+test "$(/usr/sbin/networksetup -help 2>&1 |
+  grep -F 'Usage: networksetup -setairportnetwork <device name> <network> [password]' |
+  wc -l | tr -d ' ')" = 1
 sudo /usr/sbin/networksetup -setairportnetwork "$iface" 'Schrödinger’s WiFi'
 ```
 
 Expected: exit 0 without a prompt. If it fails, stop and provision the network interactively through System Settings. Never inspect the Keychain.
 
-- [ ] **Step 4: Install an independent timed failsafe before fault tests**
-
-Replace `en0` with the verified device:
+- [ ] **Step 4: Define the timed failsafe for each fault test**
 
 ```bash
-sudo nohup /bin/sh -c \
-  'sleep 180; /usr/sbin/networksetup -setnetworkserviceenabled "Wi-Fi" on; /usr/sbin/networksetup -setairportpower en0 on' \
-  >/var/tmp/eisenhower-wifi-failsafe.log 2>&1 &
+arm_wifi_failsafe() {
+  sudo -v
+  sudo nohup /bin/sh -c '
+    sleep 180
+    /sbin/ifconfig "$1" up
+    /usr/sbin/networksetup -setnetworkserviceenabled "Wi-Fi" on
+    /usr/sbin/networksetup -setairportpower "$1" on
+  ' sh "$iface" >/var/tmp/eisenhower-wifi-failsafe.log 2>&1 &
+}
 ```
 
-Expected: a root process restores service and radio after three minutes.
+Expected: calling `arm_wifi_failsafe` starts a root process that restores the interface, service, and radio after three minutes. Call it immediately before each disruptive local fault. One call does not protect later tests.
 
-### Task 8: Check, build, and activate Eisenhower
+### Task 8: Create a known first Darwin generation
+
+**Files:** No repository changes; activate only the host-only Task 2 commit on Eisenhower.
+
+- [ ] **Step 1: Resolve and inspect the host-only baseline**
+
+```bash
+baseline_commit="$(git log --format=%H --grep='^feat(darwin): add Eisenhower host assembly$' -1)"
+test -n "$baseline_commit"
+test "$(git show -s --format=%s "$baseline_commit")" = \
+  'feat(darwin): add Eisenhower host assembly'
+test -z "$(git ls-tree -r --name-only "$baseline_commit" |
+  grep -E '^hosts/eisenhower/(power\.nix|wifi-watchdog)')"
+baseline_parent="$(mktemp -d /var/tmp/eisenhower-host-baseline.XXXXXX)"
+baseline_dir="$baseline_parent/worktree"
+git worktree add --detach "$baseline_dir" "$baseline_commit"
+printf '%s\n' "$baseline_dir" > /var/tmp/eisenhower-host-baseline-worktree
+```
+
+Expected: the detached worktree contains the Eisenhower host assembly but no new power or Wi-Fi control. Keep this worktree until rollback proof is complete.
+
+- [ ] **Step 2: Check and build the baseline**
+
+```bash
+nix_darwin_rev="$(nix flake metadata --json |
+  jq -r '.locks.nodes[.locks.nodes.root.inputs["nix-darwin"]].locked.rev')"
+nix_bin="$(command -v nix)"
+test -x "$nix_bin"
+darwin_rebuild=("$nix_bin" run "github:nix-darwin/nix-darwin/${nix_darwin_rev}#darwin-rebuild" --)
+sudo "${darwin_rebuild[@]}" check --flake "$baseline_dir#eisenhower"
+sudo "${darwin_rebuild[@]}" build --flake "$baseline_dir#eisenhower"
+```
+
+Expected: both commands exit 0. Stop on unsafe-overwrite or Home Manager collision errors.
+
+- [ ] **Step 3: Activate the known baseline from the independent route**
+
+```bash
+sudo "${darwin_rebuild[@]}" switch --flake "$baseline_dir#eisenhower"
+"${darwin_rebuild[@]}" --list-generations > /var/tmp/eisenhower-generations-baseline.txt
+test -s /var/tmp/eisenhower-generations-baseline.txt
+readlink /nix/var/nix/profiles/system > /var/tmp/eisenhower-baseline-system-path
+test -s /var/tmp/eisenhower-baseline-system-path
+```
+
+Expected: Eisenhower has one known nix-darwin generation and its exact system profile path is recorded. The former sleep jobs remain loaded. Native macOS Wi-Fi behavior remains in use. If `darwin-rebuild` was absent before this step, use the pinned `nix run` command as shown.
+
+### Task 9: Check, build, and activate the complete Eisenhower configuration
 
 **Files:** No new repository changes; activate `.dotfiles#eisenhower` locally.
 
@@ -610,8 +729,16 @@ Expected: both exit 0. Stop on unsafe-overwrite or Home Manager collision errors
 
 - [ ] **Step 3: Activate from the independent route**
 
+First verify that `/var/tmp/eisenhower-generations-baseline.txt` and `/var/tmp/eisenhower-baseline-system-path` are not empty.
+
 ```bash
+test -s /var/tmp/eisenhower-generations-baseline.txt
+test -s /var/tmp/eisenhower-baseline-system-path
 sudo darwin-rebuild switch --flake .#eisenhower
+darwin-rebuild --list-generations > /var/tmp/eisenhower-generations-complete.txt
+test "$(darwin-rebuild --list-generations | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" -ge 2
+test "$(readlink /nix/var/nix/profiles/system)" != \
+  "$(cat /var/tmp/eisenhower-baseline-system-path)"
 ```
 
 Expected: exit 0. Keep both old sleep jobs during this stage.
@@ -626,9 +753,9 @@ pmset -g assertions | grep -E 'Prevent(UserIdle)?SystemSleep|com.eisenhower'
 sudo sed -n '1,20p' /var/db/eisenhower/wifi-watchdog.status
 ```
 
-Expected: both jobs loaded, sleep disabled for AC and battery, assertion active, watchdog `healthy`.
+Expected: both jobs loaded, sleep disabled for AC and battery, assertion active, watchdog `healthy`. Do not rely on an unverified pre-nix-darwin system as a rollback target.
 
-### Task 9: Verify reboot and recovery behavior
+### Task 10: Verify reboot and recovery behavior
 
 **Files:** No repository changes; live verification only.
 
@@ -650,23 +777,39 @@ pmset -g log | tail -100
 
 Expected on each power source: `sleep 0`, managed assertion, no idle system-sleep event during the agreed interval.
 
-- [ ] **Step 3: Verify launchd restarts the watchdog**
+- [ ] **Step 3: Verify launchd restarts both assertion daemons**
 
 ```bash
+sleep_pid="$(sudo launchctl print system/com.eisenhower.prevent-idle-sleep |
+  awk '/pid =/{print $3; exit}')"
+sudo kill "$sleep_pid"
+sleep 15
+sleep_pid_after="$(sudo launchctl print system/com.eisenhower.prevent-idle-sleep |
+  awk '/pid =/{print $3; exit}')"
+test -n "$sleep_pid_after"
+test "$sleep_pid_after" != "$sleep_pid"
+pmset -g assertions | grep -E 'Prevent(UserIdle)?SystemSleep|caffeinate'
+
 pid="$(sudo launchctl print system/com.eisenhower.wifi-watchdog | awk '/pid =/{print $3; exit}')"
 sudo kill "$pid"
 sleep 35
-sudo launchctl print system/com.eisenhower.wifi-watchdog | grep -E 'state = running|pid ='
+pid_after="$(sudo launchctl print system/com.eisenhower.wifi-watchdog |
+  awk '/pid =/{print $3; exit}')"
+test -n "$pid_after"
+test "$pid_after" != "$pid"
+sudo sed -n '1,20p' /var/db/eisenhower/wifi-watchdog.status
 ```
 
-Expected: a new PID and healthy status.
+Expected: each job has a new PID. The power assertion returns. The watchdog completes an immediate check and returns to `healthy`.
 
 - [ ] **Step 4: Verify radio and service recovery with failsafe active**
 
 ```bash
+arm_wifi_failsafe
 sudo /usr/sbin/networksetup -setairportpower "$iface" off
 sleep 40
 /usr/sbin/networksetup -getairportpower "$iface"
+arm_wifi_failsafe
 sudo /usr/sbin/networksetup -setnetworkserviceenabled 'Wi-Fi' off
 sleep 40
 /usr/sbin/networksetup -getnetworkserviceenabled 'Wi-Fi'
@@ -675,7 +818,18 @@ sudo sed -n '1,20p' /var/db/eisenhower/wifi-watchdog.status
 
 Expected: radio `On`, service `Enabled`, watchdog `healthy`.
 
-- [ ] **Step 5: Verify access-point outage and bounded backoff**
+- [ ] **Step 5: Verify forced disassociation**
+
+From the target access point, disconnect only Eisenhower. Do not change or remove the preferred credential. Keep the independent management route active.
+
+```bash
+log stream --style compact \
+  --predicate 'eventMessage CONTAINS "component=wifi-watchdog"'
+```
+
+Expected: an association attempt starts within five seconds. The watchdog returns to `healthy`, and its failure counter resets to zero. Confirm the exact target in local System Settings or in the target access point client view. Do not list other networks.
+
+- [ ] **Step 6: Verify access-point outage and bounded backoff**
 
 Obtain explicit approval for the outage window. Turn off the target access point externally, then observe sanitized events only:
 
@@ -685,24 +839,30 @@ log stream --style compact --predicate 'eventMessage CONTAINS "component=wifi-wa
 
 Expected delays: `5, 10, 20, 40, 60, 120, 300, 300`. Restore the access point. Expected recovery within 300 seconds plus association time.
 
-- [ ] **Step 6: Audit live credential safety**
+- [ ] **Step 7: Audit live credential safety**
 
 ```bash
 ps axww -o pid=,command= | grep -F eisenhower-wifi-watchdog | grep -v grep
-sudo grep -R -n -E 'password|find-generic-password|dump-keychain' \
-  /var/db/eisenhower /var/log/eisenhower-wifi-watchdog* 2>/dev/null || true
-test ! -e /var/db/eisenhower/wifi-credential
+if sudo grep -R -n -E 'password|find-generic-password|dump-keychain' \
+  /var/db/eisenhower \
+  /var/log/eisenhower-wifi-watchdog.log \
+  /var/log/eisenhower-wifi-watchdog.error.log 2>/dev/null; then
+  exit 1
+fi
+unexpected_state_files="$(sudo /bin/ls -1A /var/db/eisenhower |
+  grep -Fvx 'wifi-watchdog.status' || true)"
+test -z "$unexpected_state_files"
 ```
 
-Expected: no password argument, Keychain command, password log, or credential file. Never search for the password value.
+Expected: no password argument, Keychain command, password log, or service credential file. The service-state directory contains only the sanitized watchdog status file. Never search for the password value.
 
-### Task 10: Retire old sleep jobs only after proof
+### Task 11: Retire old sleep jobs only after proof
 
 **Files:** No repository changes; move live unmanaged files to a recoverable location.
 
 - [ ] **Step 1: Require complete evidence**
 
-Required: check/build, reboot, AC and battery observation, launchd restart, radio/service recovery, credential audit, and access-point recovery or an explicitly approved deferral.
+Required: check/build, reboot, AC and battery observation, launchd restart, radio/service recovery, credential audit, and access-point outage and recovery. The user can defer the outage test, but the old sleep jobs then remain in place.
 
 - [ ] **Step 2: Move rather than delete the old jobs**
 
@@ -730,17 +890,26 @@ pmset -g assertions
 
 Expected: new controls remain effective without old jobs.
 
-### Task 11: Exercise rollback and restoration
+### Task 12: Exercise rollback and restoration
 
 **Files:** No repository changes; live generation rollback.
 
 - [ ] **Step 1: Roll back from the independent route**
 
 ```bash
+test "$(darwin-rebuild --list-generations | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" -ge 2
 sudo darwin-rebuild switch --rollback
+test "$(readlink /nix/var/nix/profiles/system)" = \
+  "$(cat /var/tmp/eisenhower-baseline-system-path)"
+sudo /usr/sbin/networksetup -setnetworkserviceenabled 'Wi-Fi' on
+sudo /sbin/ifconfig "$iface" up
+sudo /usr/sbin/networksetup -setairportpower "$iface" on
+if sudo launchctl print system/com.eisenhower.wifi-watchdog >/dev/null 2>&1; then
+  exit 1
+fi
 ```
 
-Expected: prior Darwin generation active.
+Expected: the known host-only Task 2 generation is active, the new watchdog is unloaded, and native radio and service controls are on. Do not use rollback if generation history does not contain both the baseline and complete configurations.
 
 - [ ] **Step 2: Restore old jobs if retired**
 
@@ -764,28 +933,44 @@ sudo darwin-rebuild switch --flake .#eisenhower
 
 Expected: managed jobs return and reach healthy state.
 
+- [ ] **Step 4: Remove the detached baseline worktree after rollback proof**
+
+```bash
+baseline_dir="$(cat /var/tmp/eisenhower-host-baseline-worktree)"
+baseline_parent="$(dirname "$baseline_dir")"
+git worktree remove "$baseline_dir"
+rmdir "$baseline_parent"
+```
+
+Expected: only the temporary detached worktree is removed. No repository file or Darwin generation is removed.
+
 ## Plan self-review
 
 ### Critical gates
 
 - Stop before activation if password-free native association fails. Correction is interactive System Settings provisioning only.
+- Stop all live steps while Eisenhower is unreachable. Host unreachability does not block local evaluation or design validation.
 - Stop reboot and Wi-Fi fault tests unless an independent management route works.
-- Exclude `hosts/turing/default.nix` from every commit and keep its recorded hash valid.
+- Create and verify the host-only first Darwin generation before the complete configuration. Do not assume that a pre-nix-darwin installation can roll back.
+- Exclude all three protected files from every commit. Keep their recorded hashes valid. Keep the Turing flake output hash valid.
 
 ### Important gaps and controls
 
 - `networksetup` has no stable structured reason for all association failures. Use the conservative sanitized `authentication_failed` state; recovery does not depend on finer classification.
 - Command-line status redacts the active SSID. Proof combines exact preferred identity, password-free association success, link/address health, and local System Settings or access-point evidence.
-- Reusing the GUI and Home Manager profiles can change user state. Build/check and local first activation are mandatory. Do not add agenix or WireGuard to Eisenhower.
+- A full healthy-state check runs every 30 seconds. A one-second link-state sentinel starts the next association cycle within five seconds after forced disassociation.
+- Reusing the GUI and Home Manager profiles can change user state. Build/check and local first activation are mandatory. Do not import the Darwin agenix or WireGuard system modules. The shared `dev.nix` profile continues to provide its existing agenix and WireGuard command-line packages, but it declares no Eisenhower credential.
 - The access-point outage affects other people and needs an approved window.
-- Old sleep jobs remain until proof and are moved to a recoverable directory, not deleted.
+- Arm a new timed failsafe immediately before each local Wi-Fi fault. A failsafe from an earlier step can expire.
+- Old sleep jobs remain until all proof, including access-point recovery, passes. They are moved to a recoverable directory, not deleted.
 
 ### Coverage
 
 - Host isolation: Tasks 1, 2, and 6.
-- Sleep prevention: Tasks 3, 8, 9, and 10.
-- Password-free reconnect and backoff: Tasks 4, 5, 7, and 9.
-- Observability and secret safety: Tasks 4, 6, 8, and 9.
-- Reboot, fault recovery, safe cutover, and rollback: Tasks 7 through 11.
+- Sleep prevention: Tasks 3, 9, 10, and 11.
+- Password-free reconnect and backoff: Tasks 4, 5, 7, and 10.
+- Observability and secret safety: Tasks 4, 6, 9, and 10.
+- First-generation safety and rollback: Tasks 8, 9, and 12.
+- Reboot, fault recovery, and safe cutover: Tasks 7 through 11.
 
-No implementation begins until this plan is approved.
+After this review is clean, local implementation starts in a separate SOL-medium turn. Live activation remains subject to Tasks 7 and 8.
