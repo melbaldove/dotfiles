@@ -49,9 +49,9 @@ wifi_device() {
 wifi_service() {
   "$networksetup_bin" -listnetworkserviceorder 2>/dev/null |
     awk -v device="$1" '
-      /^\([[:digit:]]+\) / {
+      /^\(([[:digit:]]+|\*)\) / {
         service = $0
-        sub(/^\([[:digit:]]+\) /, "", service)
+        sub(/^\(([[:digit:]]+|\*)\) /, "", service)
         sub(/^\*/, "", service)
         next
       }
@@ -60,6 +60,11 @@ wifi_service() {
         exit
       }
     '
+}
+
+service_is_enabled() {
+  "$networksetup_bin" -getnetworkserviceenabled "$1" 2>/dev/null |
+    grep -Fqx Enabled
 }
 
 target_is_preferred() {
@@ -94,16 +99,26 @@ record_transition() {
 }
 
 ensure_service_and_radio() {
-  local device="$1" service
+  local device="$1" service service_ready
   service="$(wifi_service "$device")"
   if [[ -z "$service" ]]; then
     return 1
   fi
-  if ! "$networksetup_bin" -getnetworkserviceenabled "$service" 2>/dev/null |
-    grep -Fq Enabled; then
+  if ! service_is_enabled "$service"; then
     record_transition service_disabled
     "$networksetup_bin" -setnetworkserviceenabled "$service" on \
       >/dev/null 2>&1 || return 1
+    service_ready=false
+    for _ in {1..5}; do
+      if service_is_enabled "$service"; then
+        service_ready=true
+        break
+      fi
+      "$sleep_bin" 1
+    done
+    if [[ "$service_ready" != true ]]; then
+      return 1
+    fi
   fi
   if ! "$networksetup_bin" -getairportpower "$device" 2>/dev/null |
     grep -Fq ': On'; then
@@ -113,9 +128,13 @@ ensure_service_and_radio() {
 }
 
 associate_target() {
-  local device="$1"
-  if ! "$networksetup_bin" -setairportnetwork "$device" "$target_ssid" \
-    >/dev/null 2>&1; then
+  local device="$1" output
+  if ! output="$("$networksetup_bin" -setairportnetwork \
+    "$device" "$target_ssid" 2>&1)"; then
+    last_state=authentication_failed
+    return 1
+  fi
+  if grep -Eiq 'failed to join network|(^|[[:space:]])error:' <<<"$output"; then
     last_state=authentication_failed
     return 1
   fi

@@ -24,22 +24,44 @@ case "$1" in
   -listnetworkserviceorder)
     printf '(1) Unrelated Ethernet\n'
     printf '(Hardware Port: Ethernet, Device: en9)\n'
-    printf '(2) %s\n' "${FAKE_SERVICE_NAME:-Wi-Fi}"
+    if [[ "${FAKE_SERVICE_ORDER_DISABLED:-no}" == yes ]]; then
+      printf '(*) %s\n' "${FAKE_SERVICE_NAME:-Wi-Fi}"
+    else
+      printf '(2) %s\n' "${FAKE_SERVICE_NAME:-Wi-Fi}"
+    fi
     printf '(Hardware Port: Wi-Fi, Device: en7)\n'
     ;;
   -getnetworkserviceenabled)
-    printf '%s\n' "${FAKE_SERVICE_STATE:-Enabled}"
+    if [[ -n "${FAKE_SERVICE_STATE_FILE:-}" ]]; then
+      cat "$FAKE_SERVICE_STATE_FILE"
+    else
+      printf '%s\n' "${FAKE_SERVICE_STATE:-Enabled}"
+    fi
     ;;
-  -setnetworkserviceenabled|-setairportpower)
+  -setnetworkserviceenabled)
+    printf '%s\n' "$*" >>"$FAKE_CALLS"
+    if [[ -n "${FAKE_SERVICE_STATE_FILE:-}" ]]; then
+      printf 'Enabled\n' >"$FAKE_SERVICE_STATE_FILE"
+    fi
+    ;;
+  -setairportpower)
     printf '%s\n' "$*" >>"$FAKE_CALLS"
     ;;
   -getairportpower)
     printf 'Wi-Fi Power (%s): %s\n' "$2" "${FAKE_RADIO_STATE:-On}"
     ;;
   -setairportnetwork)
+    printf '%s\n' "$*" >>"$FAKE_CALLS"
     printf '%s\n' "$#" >"$FAKE_ASSOC_ARGC"
     printf '%s\n' "$@" >"$FAKE_ASSOC_ARGS"
-    [[ "${FAKE_ASSOC_RESULT:-success}" == success ]]
+    case "${FAKE_ASSOC_RESULT:-success}" in
+      success) ;;
+      failure) exit 1 ;;
+      success-with-failure-output)
+        printf 'Failed to join network. diagnostic=SECRET_SENTINEL\n' >&2
+        ;;
+      *) exit 64 ;;
+    esac
     ;;
   *)
     exit 64
@@ -103,6 +125,7 @@ reset_case() {
   : >"$FAKE_SLEEPS"
   rm -f "$FAKE_ASSOC_ARGC" "$FAKE_ASSOC_ARGS" "$EISENHOWER_STATUS_FILE"
   export FAKE_PREFERRED=yes FAKE_SERVICE_STATE=Enabled FAKE_RADIO_STATE=On
+  export FAKE_SERVICE_ORDER_DISABLED=no FAKE_SERVICE_STATE_FILE=
   export FAKE_SERVICE_NAME='Wi-Fi'
   export FAKE_LINK_STATE=active FAKE_ADDRESS_STATE=ready
   export FAKE_ASSOC_RESULT=success
@@ -130,6 +153,14 @@ if bash "$watchdog" --once; then exit 1; fi
 grep -Fq 'state=authentication_failed' "$EISENHOWER_STATUS_FILE"
 
 reset_case
+export FAKE_ASSOC_RESULT=success-with-failure-output
+if bash "$watchdog" --once; then exit 1; fi
+grep -Fq 'state=authentication_failed' "$EISENHOWER_STATUS_FILE"
+if grep -R -n -F 'SECRET_SENTINEL' "$EISENHOWER_STATUS_FILE" "$FAKE_LOG"; then
+  exit 1
+fi
+
+reset_case
 export FAKE_ASSOC_RESULT=failure FAKE_SLEEP_LIMIT=8
 set +e
 bash "$watchdog"
@@ -141,10 +172,38 @@ grep -Fq 'state=authentication_failed' "$FAKE_LOG"
 unset FAKE_SLEEP_LIMIT
 
 reset_case
-export FAKE_SERVICE_STATE=Disabled FAKE_SERVICE_NAME='Primary Wireless'
+service_state_file="$test_dir/service-state"
+printf 'Enabled: No\n' >"$service_state_file"
+export FAKE_SERVICE_STATE_FILE="$service_state_file"
+export FAKE_SERVICE_NAME='Primary Wireless'
+export FAKE_SERVICE_ORDER_DISABLED=yes
 bash "$watchdog" --once
 grep -Fq -- '-setnetworkserviceenabled Primary Wireless on' "$FAKE_CALLS"
+grep -Fqx Enabled "$service_state_file"
 if grep -Fq 'Unrelated Ethernet' "$FAKE_LOG"; then exit 1; fi
+
+reset_case
+printf 'Enabled: No\n' >"$service_state_file"
+export FAKE_SERVICE_STATE_FILE="$service_state_file"
+export FAKE_SERVICE_NAME='Primary Wireless'
+export FAKE_SERVICE_ORDER_DISABLED=yes
+bash "$watchdog" &
+watchdog_pid="$!"
+observed_intervals=0
+for _ in {1..200}; do
+  observed_intervals="$(wc -l <"$FAKE_SLEEPS" | tr -d ' ')"
+  if (( observed_intervals >= 31 )); then
+    break
+  fi
+  /bin/sleep 0.01
+done
+kill "$watchdog_pid"
+wait "$watchdog_pid" 2>/dev/null || true
+test "$observed_intervals" -ge 31
+test "$(grep -Fc -- '-setnetworkserviceenabled Primary Wireless on' "$FAKE_CALLS")" = 1
+test "$(grep -Fc -- '-setairportnetwork en7 Schrödinger’s WiFi' "$FAKE_CALLS")" = 1
+grep -Fqx Enabled "$service_state_file"
+unset FAKE_SERVICE_STATE_FILE
 
 reset_case
 export FAKE_RADIO_STATE=Off
