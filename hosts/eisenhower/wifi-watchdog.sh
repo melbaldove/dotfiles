@@ -4,17 +4,25 @@ set -euo pipefail
 # shellcheck disable=SC1112 # U+2019 is required by the approved SSID.
 readonly target_ssid='Schrödinger’s WiFi'
 readonly healthy_interval=30
-readonly reassert_interval=300
+readonly expected_ipv4='192.168.50.140'
+readonly expected_netmask='0xffffff00'
+readonly expected_gateway='192.168.50.1'
+readonly health_dns_name='cache.nixos.org'
+readonly health_https_url='https://cache.nixos.org/nix-cache-info'
+readonly management_port=22
 
 networksetup_bin="${EISENHOWER_NETWORKSETUP:-/usr/sbin/networksetup}"
 ifconfig_bin="${EISENHOWER_IFCONFIG:-/sbin/ifconfig}"
 ipconfig_bin="${EISENHOWER_IPCONFIG:-/usr/sbin/ipconfig}"
+route_bin="${EISENHOWER_ROUTE:-/sbin/route}"
+dscacheutil_bin="${EISENHOWER_DSCACHEUTIL:-/usr/bin/dscacheutil}"
+curl_bin="${EISENHOWER_CURL:-/usr/bin/curl}"
+nc_bin="${EISENHOWER_NC:-/usr/bin/nc}"
 logger_bin="${EISENHOWER_LOGGER:-/usr/bin/logger}"
 sleep_bin="${EISENHOWER_SLEEP:-/bin/sleep}"
 status_file="${EISENHOWER_STATUS_FILE:-/var/db/eisenhower/wifi-watchdog.status}"
 
 last_state=command_failed
-last_asserted_at=0
 
 backoff_for() {
   case "$1" in
@@ -87,10 +95,49 @@ wait_healthy_interval() {
   done
 }
 
-has_usable_ipv4() {
+has_expected_ipv4_and_subnet() {
   local address
   address="$($ipconfig_bin getifaddr "$1" 2>/dev/null || true)"
-  [[ -n "$address" && "$address" != 169.254.* ]]
+  if [[ "$address" != "$expected_ipv4" ]]; then
+    return 1
+  fi
+  "$ifconfig_bin" "$1" 2>/dev/null |
+    awk -v address="$expected_ipv4" -v netmask="$expected_netmask" '
+      $1 == "inet" && $2 == address && $4 == netmask { found = 1 }
+      END { exit !found }
+    '
+}
+
+default_route_matches() {
+  local device="$1" route_output
+  route_output="$($route_bin -n get default 2>/dev/null)" || return 1
+  grep -Eq "^[[:space:]]*gateway:[[:space:]]+$expected_gateway$" \
+    <<<"$route_output" &&
+    grep -Eq "^[[:space:]]*interface:[[:space:]]+$device$" \
+      <<<"$route_output"
+}
+
+dns_works() {
+  "$dscacheutil_bin" -q host -a name "$health_dns_name" 2>/dev/null |
+    grep -Eq '^[[:space:]]*ip_address:'
+}
+
+https_works() {
+  "$curl_bin" -fsS --max-time 10 "$health_https_url" >/dev/null 2>&1
+}
+
+management_is_reachable() {
+  "$nc_bin" -z -w 3 "$expected_ipv4" "$management_port" >/dev/null 2>&1
+}
+
+network_contract_is_healthy() {
+  local device="$1"
+  link_is_active "$device" &&
+    has_expected_ipv4_and_subnet "$device" &&
+    default_route_matches "$device" &&
+    dns_works &&
+    https_works &&
+    management_is_reachable
 }
 
 record_transition() {
@@ -138,9 +185,8 @@ associate_target() {
     last_state=authentication_failed
     return 1
   fi
-  last_asserted_at="$(date +%s)"
   for _ in {1..15}; do
-    if link_is_active "$device" && has_usable_ipv4 "$device"; then
+    if network_contract_is_healthy "$device"; then
       last_state=healthy
       return 0
     fi
@@ -151,7 +197,7 @@ associate_target() {
 }
 
 check_once() {
-  local device now
+  local device
   device="$(wifi_device)"
   if [[ -z "$device" ]]; then
     last_state=interface_missing
@@ -165,9 +211,7 @@ check_once() {
     last_state=command_failed
     return 1
   fi
-  now="$(date +%s)"
-  if link_is_active "$device" && has_usable_ipv4 "$device" &&
-    (( now - last_asserted_at < reassert_interval )); then
+  if network_contract_is_healthy "$device"; then
     last_state=healthy
     return 0
   fi
