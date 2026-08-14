@@ -815,14 +815,23 @@ Expected: the failsafe is alive. It has no SSID or password argument. Do not dis
 
 **Files:** No repository changes. This task changes the active Darwin generation but does not intentionally disconnect Wi-Fi.
 
-- [ ] **Step 1: Run the reviewed activation check locally**
+- [ ] **Step 1: Run the non-activating closure check locally**
 
 ```bash
 cd /Users/melbournebaldove/.dotfiles
-sudo /run/current-system/sw/bin/darwin-rebuild check --flake .#eisenhower
+corrected_system="$(sudo cat \
+  /var/db/eisenhower-cutover/native-first/corrected-system)"
+test -x "$corrected_system/activate"
+test -f \
+  "$corrected_system/Library/LaunchDaemons/com.eisenhower.wifi-watchdog.plist"
+test "$(nix eval --raw \
+  .#darwinConfigurations.eisenhower.config.networking.hostName)" = eisenhower
 ```
 
-Expected: exit `0`. Stop on any unrelated activation effect.
+Expected: each check exits `0` and the active generation does not change.
+Do not use `darwin-rebuild check` as a preflight on this host. Live verification
+on 2026-08-15 showed that this nix-darwin command runs activation actions and
+changes `/run/current-system` even though it does not move the system profile.
 
 - [ ] **Step 2: Activate the exact corrected closure**
 
