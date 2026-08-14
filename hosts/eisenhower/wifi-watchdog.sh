@@ -4,6 +4,8 @@ set -euo pipefail
 # shellcheck disable=SC1112 # U+2019 is required by the approved SSID.
 readonly target_ssid='Schrödinger’s WiFi'
 readonly healthy_interval=30
+readonly native_recovery_window=30
+readonly radio_cycle_off_seconds=2
 readonly expected_ipv4='192.168.50.140'
 readonly expected_netmask='0xffffff00'
 readonly expected_gateway='192.168.50.1'
@@ -23,15 +25,13 @@ sleep_bin="${EISENHOWER_SLEEP:-/bin/sleep}"
 status_file="${EISENHOWER_STATUS_FILE:-/var/db/eisenhower/wifi-watchdog.status}"
 
 last_state=command_failed
+last_trigger=none
+last_component='command'
 
 backoff_for() {
   case "$1" in
-    1) echo 5 ;;
-    2) echo 10 ;;
-    3) echo 20 ;;
-    4) echo 40 ;;
-    5) echo 60 ;;
-    6) echo 120 ;;
+    1) echo 60 ;;
+    2) echo 120 ;;
     *) echo 300 ;;
   esac
 }
@@ -41,12 +41,18 @@ write_status() {
   umask 077
   mkdir -p "$(dirname "$status_file")"
   tmp="${status_file}.$$"
-  printf 'state=%s\nfailures=%s\nnext_retry_seconds=%s\nupdated_at=%s\n' \
-    "$state" "$failures" "$delay" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$tmp"
+  printf 'state=%s\nfailures=%s\nnext_retry_seconds=%s\nrecovery_trigger=%s\nfailed_component=%s\nupdated_at=%s\n' \
+    "$state" "$failures" "$delay" "$last_trigger" "$last_component" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$tmp"
   mv -f "$tmp" "$status_file"
   "$logger_bin" -t com.eisenhower.wifi-watchdog \
-    "component=wifi-watchdog state=$state failures=$failures next_retry_seconds=$delay" \
+    "component=wifi-watchdog state=$state failures=$failures next_retry_seconds=$delay recovery_trigger=$last_trigger failed_component=$last_component" \
     >/dev/null 2>&1 || true
+}
+
+record_transition() {
+  "$logger_bin" -t com.eisenhower.wifi-watchdog \
+    "component=wifi-watchdog transition=$1" >/dev/null 2>&1 || true
 }
 
 wifi_device() {
@@ -81,18 +87,13 @@ target_is_preferred() {
     grep -Fqx -- "$target_ssid"
 }
 
-link_is_active() {
-  "$ifconfig_bin" "$1" 2>/dev/null | grep -Fq 'status: active'
+radio_is_on() {
+  "$networksetup_bin" -getairportpower "$1" 2>/dev/null |
+    grep -Fq ': On'
 }
 
-wait_healthy_interval() {
-  local device="$1"
-  for _ in {1..30}; do
-    "$sleep_bin" 1
-    if ! link_is_active "$device"; then
-      return 1
-    fi
-  done
+link_is_active() {
+  "$ifconfig_bin" "$1" 2>/dev/null | grep -Fq 'status: active'
 }
 
 has_expected_ipv4_and_subnet() {
@@ -130,23 +131,47 @@ management_is_reachable() {
   "$nc_bin" -z -w 3 "$expected_ipv4" "$management_port" >/dev/null 2>&1
 }
 
-network_contract_is_healthy() {
+network_identity_is_healthy() {
   local device="$1"
-  link_is_active "$device" &&
-    has_expected_ipv4_and_subnet "$device" &&
-    default_route_matches "$device" &&
-    dns_works &&
-    https_works &&
-    management_is_reachable
+  if ! link_is_active "$device" || ! has_expected_ipv4_and_subnet "$device"; then
+    last_state=address_failed
+    last_component=address
+    return 1
+  fi
+  if ! default_route_matches "$device"; then
+    last_state=route_failed
+    last_component=route
+    return 1
+  fi
+  if ! management_is_reachable; then
+    last_state=management_failed
+    last_component=management
+    return 1
+  fi
+  return 0
 }
 
-record_transition() {
-  "$logger_bin" -t com.eisenhower.wifi-watchdog \
-    "component=wifi-watchdog transition=$1" >/dev/null 2>&1 || true
+online_services_are_healthy() {
+  if ! dns_works; then
+    last_state=dns_failed
+    last_component=dns
+    return 1
+  fi
+  if ! https_works; then
+    last_state=https_failed
+    last_component=https
+    return 1
+  fi
+  return 0
+}
+
+network_contract_is_healthy() {
+  local device="$1"
+  network_identity_is_healthy "$device" && online_services_are_healthy
 }
 
 ensure_service_and_radio() {
-  local device="$1" service service_ready
+  local device="$1" service service_ready radio_ready
   service="$(wifi_service "$device")"
   if [[ -z "$service" ]]; then
     return 1
@@ -166,56 +191,112 @@ ensure_service_and_radio() {
     if [[ "$service_ready" != true ]]; then
       return 1
     fi
+    last_trigger=service_restored
+    record_transition service_restored
   fi
-  if ! "$networksetup_bin" -getairportpower "$device" 2>/dev/null |
-    grep -Fq ': On'; then
+  if ! radio_is_on "$device"; then
     record_transition radio_disabled
-    "$networksetup_bin" -setairportpower "$device" on >/dev/null 2>&1 || return 1
+    "$networksetup_bin" -setairportpower "$device" on \
+      >/dev/null 2>&1 || return 1
+    radio_ready=false
+    for _ in {1..5}; do
+      if radio_is_on "$device"; then
+        radio_ready=true
+        break
+      fi
+      "$sleep_bin" 1
+    done
+    if [[ "$radio_ready" != true ]]; then
+      return 1
+    fi
+    last_trigger=radio_restored
+    record_transition radio_restored
   fi
 }
 
-associate_target() {
-  local device="$1" output
-  if ! output="$("$networksetup_bin" -setairportnetwork \
-    "$device" "$target_ssid" 2>&1)"; then
-    last_state=authentication_failed
-    return 1
+wait_for_native_recovery() {
+  local device="$1" second
+  if [[ "$last_trigger" == none ]]; then
+    last_trigger=native_autojoin_wait
   fi
-  if grep -Eiq 'failed to join network|(^|[[:space:]])error:' <<<"$output"; then
-    last_state=authentication_failed
-    return 1
-  fi
-  for _ in {1..15}; do
-    if network_contract_is_healthy "$device"; then
-      last_state=healthy
+  record_transition native_autojoin_wait
+  for ((second = 1; second <= native_recovery_window; second++)); do
+    "$sleep_bin" 1
+    if network_identity_is_healthy "$device"; then
       return 0
     fi
-    "$sleep_bin" 1
   done
-  last_state=associated_no_address
   return 1
+}
+
+cycle_radio() {
+  local device="$1"
+  last_trigger=radio_cycle
+  record_transition radio_cycle
+  "$networksetup_bin" -setairportpower "$device" off \
+    >/dev/null 2>&1 || return 1
+  "$sleep_bin" "$radio_cycle_off_seconds"
+  "$networksetup_bin" -setairportpower "$device" on \
+    >/dev/null 2>&1 || return 1
 }
 
 check_once() {
   local device
+  last_trigger=none
+  last_component=none
   device="$(wifi_device)"
   if [[ -z "$device" ]]; then
     last_state=interface_missing
+    last_component=interface
     return 1
   fi
   if ! target_is_preferred "$device"; then
-    last_state=credential_unavailable
+    last_state=preferred_target_unavailable
+    last_component=preferred_target
     return 1
   fi
   if ! ensure_service_and_radio "$device"; then
     last_state=command_failed
+    last_component='command'
     return 1
   fi
-  if network_contract_is_healthy "$device"; then
-    last_state=healthy
-    return 0
+  if network_identity_is_healthy "$device"; then
+    if online_services_are_healthy; then
+      last_state=healthy
+      last_component=none
+      return 0
+    fi
+    return 1
   fi
-  associate_target "$device"
+  if wait_for_native_recovery "$device"; then
+    if online_services_are_healthy; then
+      last_state=healthy
+      last_component=none
+      return 0
+    fi
+    return 1
+  fi
+  if ! cycle_radio "$device"; then
+    last_state=command_failed
+    last_component='command'
+    return 1
+  fi
+  if wait_for_native_recovery "$device"; then
+    if online_services_are_healthy; then
+      last_state=healthy
+      last_component=none
+      return 0
+    fi
+    return 1
+  fi
+  last_state=native_recovery_failed
+  return 1
+}
+
+wait_healthy_interval() {
+  local device="$1"
+  "$sleep_bin" "$healthy_interval"
+  network_contract_is_healthy "$device"
 }
 
 case "${1:-}" in
