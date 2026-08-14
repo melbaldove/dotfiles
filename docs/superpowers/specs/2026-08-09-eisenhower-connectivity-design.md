@@ -2,7 +2,9 @@
 
 Date: 2026-08-09
 
-Status: Revised design pending final written-spec review
+Last revised: 2026-08-15
+
+Status: Native-first recovery correction pending final written-spec review
 
 ## Purpose
 
@@ -17,28 +19,37 @@ This document defines the design and its verification. It does not authorize imp
 
 ## Source evidence
 
-The `.dotfiles` repository currently manages Turing as one machine:
+The `.dotfiles` repository manages Turing and Eisenhower as separate machines:
 
 - The flake exposes `darwinConfigurations.turing`.
-- The host module declares `networking.hostName = "turing"`.
+- The flake exposes `darwinConfigurations.eisenhower`.
+- Each output has its own host assembly under `hosts/`.
 
-Eisenhower is a separate machine. The live Eisenhower host identifies as `eisenhower.local`, but `.dotfiles` does not yet contain an Eisenhower host assembly or Darwin output.
+The live Eisenhower host identifies as `eisenhower`. Its active nix-darwin configuration includes the managed sleep controls and Wi-Fi watchdog. Turing remains a separate host and is not part of the Eisenhower activation path.
 
 The `nix-infra` input is declared in `.dotfiles`. The current Darwin assembly does not use it. Eisenhower does not need that input unless implementation discovers a specific shared dependency.
 
-The evaluated Darwin configuration does not declare a sleep policy. Each `power.sleep.*` value is `null`.
+The managed power policy sets computer sleep to `0` for battery and AC power. The managed `com.eisenhower.prevent-idle-sleep` daemon holds the runtime idle-sleep assertion.
 
-The live host has these unmanaged controls:
+The live Wi-Fi metadata includes the preferred network identity `Schrödinger’s WiFi`. Auto-Join is enabled, and a manual selection connects without a password prompt. The credential is therefore valid, but that fact alone does not prove autonomous recovery.
 
-- `pmset` reports `sleep = 0` for battery and AC power.
-- `com.local.nosleep` applies idle-sleep, display-sleep, and disk-sleep values at load time.
-- `com.aura.caffeinate` runs `caffeinate -s` with `KeepAlive`.
+On 2026-08-14, Eisenhower remained awake but disconnected for approximately 17 hours. The watchdog completed 203 unsuccessful recovery cycles. A manual selection restored the connection immediately.
 
-The live host has no Wi-Fi recovery job. Its Wi-Fi metadata has exactly one user-preferred network identity: `Schrödinger’s WiFi`.
+The macOS unified log gives this failure sequence:
+
+1. At `06:41:52`, the link went down and native Auto-Join started.
+2. At `06:42:04`, the watchdog's `networksetup` request started a competing join.
+3. macOS disabled Auto-Join while that join was active.
+4. The competing join failed with internal result `-3900`, disassociated the interface, and caused macOS to blocklist the known network.
+5. Later watchdog requests did not clear the blocklist. Manual selection recovered the connection.
+
+The saved profile records `wpa3-transition`, while the access points can advertise `wpa2-personal`. That combination is not sufficient to explain the outage because it also appeared during successful recovery.
+
+Two controlled 2026-08-15 tests paused the watchdog, cycled the radio, and observed native Auto-Join. Native recovery restored the approved IP, gateway, DNS, HTTPS, and SSH contract in five seconds both while the screen was unlocked and while it was locked. Lock state is not the failure cause. The important difference is the competing watchdog association request.
 
 Darwin secret management is manual. The Darwin module installs `agenix`, but it does not declare or materialize secrets. The expected repository `secrets/` directory is not present in this checkout.
 
-The repository has existing user changes in `codex/AGENTS.md`, `flake.lock`, and `hosts/turing/default.nix`. Future work must preserve those changes.
+The repository has existing user changes in `claude/settings.json`, `codex/AGENTS.md`, `flake.lock`, and `hosts/turing/default.nix`. Future work must preserve those changes.
 
 ## Repository ownership decision
 
@@ -136,19 +147,27 @@ All Eisenhower lifecycle commands run from `.dotfiles` on Eisenhower.
 
 ## Considered approaches
 
-### Native settings only
+### Native Auto-Join only
 
-This approach uses nix-darwin sleep settings and the native macOS preferred-network behavior.
+This approach uses nix-darwin sleep settings and only the native macOS preferred-network behavior.
 
 It has a small configuration surface. It does not give controlled retry timing, durable failure evidence, or a direct way to test repeated authentication failures.
 
-### Declarative settings plus a launchd watchdog
+### Native-first recovery guardian
 
-This approach uses nix-darwin for the sleep policy and two system launch daemons for live enforcement and Wi-Fi recovery.
+This approach uses nix-darwin for the sleep policy and two system launch daemons for live enforcement and Wi-Fi recovery. Native Auto-Join is the only association owner. The root watchdog restores the Wi-Fi service or radio, gives native Auto-Join time to operate, validates recovery, and uses a bounded radio cycle when recovery stalls.
 
-It gives reproducible configuration, infinite retry, bounded backoff, sanitized evidence, and independent process recovery. It needs a small watchdog and a secure credential boundary.
+It gives reproducible configuration, continuous recovery opportunities, bounded backoff, sanitized evidence, and independent process recovery. It does not compete with macOS association or handle the password.
 
 This is the approved approach.
+
+### Native grace followed by direct association
+
+This approach keeps `/usr/sbin/networksetup -setairportnetwork` after a native Auto-Join grace period. It keeps an explicit target request, but it can reproduce the observed competing-join and blocklist failure. The design rejects this approach.
+
+### User LaunchAgent association
+
+This approach moves the direct association request into the logged-in user session. It adds root-to-user coordination, does not operate before the first login, and has no proven advantage over native Auto-Join. The design rejects this approach.
 
 ### Configuration profile or MDM
 
@@ -191,25 +210,34 @@ A root system launch daemon named `com.eisenhower.wifi-watchdog` runs before use
 
 The watchdog does not hard-code `en0`. It discovers the hardware port named Wi-Fi and uses its current device name.
 
-For each health check, it:
+Native macOS Auto-Join is the only association owner. The watchdog must not invoke `networksetup -setairportnetwork`, call a private Wi-Fi association API, or start a second association while macOS is already recovering.
+
+The watchdog uses two health layers:
+
+- The network-identity layer requires IPv4 `192.168.50.140/24`, gateway `192.168.50.1`, a default route on the Wi-Fi device, and local SSH management reachability.
+- The online-service layer checks DNS and HTTPS separately.
+
+The live host redacts its active SSID from command-line status tools, including privileged status calls. When the complete approved network contract is healthy, the watchdog accepts that operational identity without requiring visible SSID output. It does not accept an arbitrary address, subnet, gateway, or route. When the SSID is observable, it must be the exact UTF-8 value `Schrödinger’s WiFi`.
+
+For each healthy check, the watchdog records the result and waits 30 seconds before the next check. It does not reassert the SSID and does not issue a redundant association request.
+
+For each unhealthy transition, it:
 
 1. Finds the Wi-Fi device and service.
-2. Enables the network service if it is disabled.
-3. Enables the Wi-Fi radio if it is disabled.
-4. Tests link state and IPv4 address state.
-5. Starts an association attempt for the exact SSID `Schrödinger’s WiFi` if the link is not healthy.
-6. Records a successful target association only after the association command succeeds and a usable IPv4 address exists.
-7. Records a sanitized result.
+2. Confirms that the exact target remains a preferred network without printing unrelated preferred networks.
+3. Enables the network service if it is disabled, then gives native Auto-Join 30 seconds to recover.
+4. Enables the Wi-Fi radio if it is disabled, then gives native Auto-Join 30 seconds to recover.
+5. If the service and radio were already enabled, gives the existing native Auto-Join attempt 30 seconds to finish.
+6. If the network-identity layer is still unhealthy, cycles the Wi-Fi radio once and gives native Auto-Join another 30 seconds to recover.
+7. Records the failed contract component and a sanitized retry result.
 
-The watchdog checks a healthy connection every 30 seconds.
+If the network-identity layer is healthy but DNS or HTTPS fails, the watchdog records the online-service failure. It does not cycle the radio because an upstream service failure is not proof of lost Wi-Fi association.
 
-The live host redacts its active SSID from command-line status tools, including privileged status calls. The watchdog does not depend on reading the active SSID. It actively selects the configured target at boot and after each unhealthy link state. It also reasserts the target every five minutes. This corrects a manual or automatic switch to another network without enumerating or logging other SSIDs.
+After an unsuccessful recovery cycle, the watchdog retries after these delays:
 
-After a failed association, it retries after these delays:
+`60, 120, 300` seconds.
 
-`5, 10, 20, 40, 60, 120, 300` seconds.
-
-The delay remains at 300 seconds after later failures. The watchdog never enters a terminal failure state. A successful association resets the failure count and delay.
+The delay remains at 300 seconds after later failures. The watchdog never enters a terminal failure state. A healthy network contract resets the failure count and delay.
 
 launchd restarts the watchdog if its process exits. A process restart causes one immediate health check. launchd throttling prevents a crash loop.
 
@@ -218,16 +246,21 @@ launchd restarts the watchdog if its process exits. A process restart causes one
 The watchdog uses these states:
 
 - `interface_missing`: macOS does not report a Wi-Fi hardware port.
-- `credential_unavailable`: the exact target is not a usable preferred network or macOS has no usable System Keychain credential for it.
+- `preferred_target_unavailable`: the exact target is not present as a preferred network identity.
 - `service_disabled`: the Wi-Fi network service is disabled.
 - `radio_disabled`: the Wi-Fi radio is disabled.
-- `access_point_unavailable`: the target SSID cannot be associated.
-- `authentication_failed`: the association command reports an authentication failure.
-- `associated_no_address`: the target SSID is associated, but it has no usable IPv4 address.
+- `native_autojoin_wait`: the watchdog is allowing native Auto-Join to finish without interference.
+- `radio_cycle`: the watchdog is creating a new native Auto-Join opportunity after the initial grace period.
+- `address_failed`: the expected IPv4 address or subnet is absent.
+- `route_failed`: the expected gateway or default route is absent.
+- `management_failed`: local SSH management reachability failed.
+- `dns_failed`: DNS resolution failed after the network-identity layer passed.
+- `https_failed`: the approved HTTPS check failed after the network-identity layer passed.
+- `native_recovery_failed`: the network-identity layer remains unhealthy after the bounded native recovery sequence.
 - `command_failed`: a required system command fails for another reason.
-- `healthy`: the exact target SSID is associated and has a usable IPv4 address.
+- `healthy`: the complete approved network contract passes.
 
-An upstream Internet outage does not cause authentication retries while the target Wi-Fi association remains healthy. Internet health is a separate property.
+The watchdog does not infer an authentication error from `networksetup` output because it no longer starts an association. Native macOS diagnostics can report authentication, security-suite, blocklist, or access-point failures during incident analysis, but those details are not stable control inputs for the daemon.
 
 ## Credential boundary
 
@@ -242,11 +275,11 @@ The Wi-Fi password must not enter:
 
 macOS preferred-network configuration and the System Keychain are the only credential boundary. A user provisions `Schrödinger’s WiFi` interactively through System Settings or another explicit interactive setup. The watchdog does not create, read, export, copy, decrypt, rotate, or delete the credential.
 
-Before an association attempt, the watchdog confirms that the exact target exists as a preferred-network identity. It does this without listing or logging other preferred or nearby networks.
+Before a recovery action, the watchdog confirms that the exact target exists as a preferred-network identity. It does this without listing or logging other preferred or nearby networks.
 
-The watchdog invokes `/usr/sbin/networksetup -setairportnetwork <device> 'Schrödinger’s WiFi'`. The command has no password argument. The watchdog also supplies no password through standard input, an environment variable, or a file path. macOS resolves the saved credential through its native preferred-network and System Keychain behavior.
+The watchdog does not supply an SSID or password to an association command. It restores supported service and radio state, then lets native Auto-Join use the preferred-network and System Keychain configuration.
 
-If the exact target is not preferred, the watchdog records `credential_unavailable`, does not attempt password-based association, and continues bounded checks. If a password-free association attempt fails because macOS cannot use the saved credential, the watchdog records `authentication_failed`. Both states require manual credential provisioning or correction. The watchdog never tries to repair a credential.
+If the exact target is not preferred, the watchdog records `preferred_target_unavailable`, does not change credentials, and continues bounded checks. Manual System Settings work is required to add, correct, or rotate the credential. The watchdog never tries to repair a credential or clear a macOS network blocklist through private interfaces.
 
 ## Observability
 
@@ -257,9 +290,11 @@ Each event can contain:
 - component name;
 - state;
 - attempt number;
+- recovery trigger;
+- failed contract component;
 - next retry delay;
 - result class;
-- last successful association time.
+- last healthy-contract time.
 
 The watchdog also writes an atomic, root-owned status file at `/var/db/eisenhower/wifi-watchdog.status`. The status file contains the current state, failure count, retry delay, and timestamps.
 
@@ -283,11 +318,34 @@ Evaluate the Darwin configuration and confirm:
 - both jobs start during boot;
 - both jobs have the expected restart policy;
 - the target SSID has the exact Unicode value `Schrödinger’s WiFi`;
+- the UTF-8 target value has SHA-256 `8e7be252173ea3d0905dda6be969e5cf6f3daf3924759227695d8fbd5d200a3d`;
 - no credential file is declared or created;
 - no Keychain secret extraction command exists;
-- the association command has no password argument, password environment variable, or password input path.
+- no command invokes `networksetup -setairportnetwork`;
+- no private Wi-Fi association command or API exists;
+- no password argument, password environment variable, or password input path exists;
+- the native grace period, radio-cycle bound, and retry sequence are exact.
 
 Run the flake evaluation and Darwin activation check from `.dotfiles` before a switch. Use the canonical `eisenhower` flake output.
+
+### Watchdog regression tests
+
+The command adapter can simulate service, radio, address, route, DNS, HTTPS, and management state. It must not make an association command create a healthy address or route. Test code changes network health only through an explicit external fixture transition.
+
+The regression suite must prove:
+
+- a healthy contract causes no recovery action;
+- a healthy contract with redacted SSID output causes no recovery action;
+- a wrong address, subnet, gateway, or route is rejected;
+- a link-down event gets the full native Auto-Join grace period;
+- service restoration occurs before native recovery wait;
+- radio restoration occurs before native recovery wait;
+- a stalled native recovery causes one bounded radio cycle;
+- later failures use `60, 120, 300` second backoff;
+- success resets the failure count and backoff;
+- repeated healthy checks are idempotent;
+- process arguments and logs contain no credential;
+- no test or production path invokes `networksetup -setairportnetwork`.
 
 ### Service tests
 
@@ -299,13 +357,15 @@ After activation, confirm:
 - the Wi-Fi watchdog status is readable by root;
 - recent logs contain no secret or unrelated SSID.
 
-Confirm that the exact target is present in the preferred-network configuration without printing unrelated preferred networks. Then inspect the running association attempt and confirm that its arguments contain only the executable, Wi-Fi device, and exact target SSID. A successful association must occur without a password argument or interactive prompt.
+Confirm that the exact target is present in the preferred-network configuration without printing unrelated preferred networks. Confirm that Auto-Join is enabled for the exact target. Inspect the watchdog process and logs and confirm that it does not start an association command. Native macOS Auto-Join must recover without a password argument or interactive prompt.
 
 Command-line status tools cannot prove the active SSID on this host because macOS redacts that value. Prove the final network identity through the local System Settings Wi-Fi view or the target access point's client list. Inspect only the connected target. Do not capture or list unrelated networks.
 
 Terminate the managed sleep-assertion process. Confirm that launchd starts a replacement and the assertion returns.
 
 Terminate the watchdog process. Confirm that launchd starts a replacement and performs an immediate health check.
+
+The service test passes only when the watchdog log and macOS Wi-Fi log identify the responsible mechanism. Final connectivity without a causal event sequence is not sufficient proof.
 
 ### Idle observation
 
@@ -323,6 +383,7 @@ After reboot, confirm:
 - the sleep assertion job is running;
 - the Wi-Fi watchdog is loaded;
 - a Wi-Fi health check occurred during boot;
+- no direct association command ran;
 - Eisenhower connects to the exact target SSID without interactive input.
 
 ### Forced radio disconnect
@@ -333,22 +394,25 @@ Confirm that the watchdog:
 
 1. records `radio_disabled`;
 2. enables the radio;
-3. attempts association;
-4. reports `healthy` after recovery.
+3. records `native_autojoin_wait`;
+4. does not run `networksetup -setairportnetwork`;
+5. reports `healthy` after native recovery.
 
 Do not run this test through the only Wi-Fi SSH route.
+
+Run the radio test once while the screen is unlocked and once while it is locked. For each run, capture the macOS native Auto-Join start and success events. A password-free manual selection is not an automatic-recovery pass.
 
 ### Network-service interruption
 
 Install the same independent failsafe. Disable the Wi-Fi network service and then restore it.
 
-Confirm that the watchdog identifies the disabled service, enables it, and reconnects without user login.
+Confirm that the watchdog identifies the disabled service, enables it, gives native Auto-Join the full grace period, and reconnects without user login or a direct association command.
 
 ### Forced disassociation
 
 Disconnect Eisenhower from the access point without changing the credential.
 
-Confirm that a new association attempt starts within five seconds and that the failure counter resets after recovery.
+Confirm that native Auto-Join starts without a competing watchdog join. The watchdog must record `native_autojoin_wait`, must not call `networksetup -setairportnetwork`, and must reset the failure counter after the approved network contract recovers.
 
 ### Access-point outage and recovery
 
@@ -357,26 +421,29 @@ Turn off the target access point while the watchdog records events.
 Confirm that:
 
 - the watchdog classifies the failure without logging other network names;
-- retry delays follow `5, 10, 20, 40, 60, 120, 300` seconds;
+- the initial native grace period completes before a radio cycle;
+- each radio cycle creates one native Auto-Join opportunity;
+- retry delays follow `60, 120, 300` seconds;
 - later delays remain at 300 seconds;
 - the watchdog does not stop retrying.
 
-Restore the access point during the maximum backoff period. Confirm recovery within 300 seconds plus association time.
+Restore the access point during the maximum backoff period. Confirm native recovery within 330 seconds: the maximum 300-second retry delay plus the 30-second recovery window. Confirm that no direct association command ran.
 
-### Authentication failure and manual recovery
+### Native failure and manual recovery
 
-Use the watchdog command adapter to return a controlled, sanitized authentication failure. This test does not alter, extract, replace, or delete the live System Keychain credential.
+Use sanitized test fixtures for the observed native failure sequence: competing join, result `-3900`, disassociation, and known-network blocklist. The regression must prove that the corrected watchdog does not issue the competing association request.
 
 Confirm that:
 
-- the watchdog reports `authentication_failed`;
-- retries follow the bounded backoff;
+- the watchdog waits for native Auto-Join;
+- one failed native recovery increments the bounded retry counter;
+- the watchdog uses only service restoration or a bounded radio cycle;
 - no credential file is created;
 - the process list and logs contain no password or Keychain output;
-- the watchdog does not invoke a Keychain extraction command;
-- the watchdog requires manual credential provisioning after a real credential failure.
+- the watchdog does not invoke a Keychain extraction command or private blocklist operation;
+- a real invalid credential still requires manual provisioning through System Settings.
 
-For live recovery proof, first confirm the target is preferred. Then use the credential already provisioned interactively and restart the watchdog for an immediate password-free association attempt. A successful attempt resets the failure count. If the credential is unusable, stop the test and provision it manually through System Settings before retrying.
+Do not create a live invalid credential to test this state. A live test must use the existing preferred credential and must not read, replace, or delete it.
 
 ### Secret-safety audit
 
@@ -386,7 +453,7 @@ The test passes only if:
 
 - no service credential file exists;
 - no configuration or script reads a Keychain secret;
-- no association command includes a password argument;
+- no direct association command exists;
 - no password environment variable or standard-input path exists;
 - no log or status output contains Keychain output or a credential value.
 
@@ -425,10 +492,13 @@ The design is successfully implemented only when:
 - computer sleep is disabled on battery and AC power;
 - the managed idle-sleep assertion survives process failure and reboot;
 - Eisenhower connects to `Schrödinger’s WiFi` after boot without user login;
-- radio, service, disassociation, access-point, and authentication-state tests behave as specified;
+- radio, service, disassociation, access-point, and native-failure tests behave as specified;
 - repeated failures use bounded backoff and never stop permanently;
 - logs and status provide enough evidence to diagnose failures;
 - no service credential file is created;
-- association succeeds through the native preferred-network credential without a password argument;
+- native Auto-Join succeeds through the preferred-network credential without a password argument;
+- the watchdog never issues a competing direct association command;
+- locked-screen and unlocked-screen recovery both pass;
+- verification identifies the responsible recovery mechanism instead of accepting final connectivity alone;
 - no password or unrelated SSID enters configuration, process arguments, environment, logs, or status;
 - rollback to the previous Darwin generation is verified.
