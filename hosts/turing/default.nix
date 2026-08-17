@@ -5,7 +5,6 @@
 {
   imports = [
     inputs.home-manager.darwinModules.home-manager
-    inputs.nix-infra.nixosModules.core
     ../../modules/system/darwin/default.nix
     ../../modules/system/darwin/gui.nix
     ../../modules/system/darwin/agenix.nix
@@ -15,6 +14,7 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    backupFileExtension = "backup";
     extraSpecialArgs = { inherit inputs; self = inputs.self; };
     users.melbournebaldove = {
       imports = [
@@ -43,8 +43,17 @@
   # Enable TouchID for sudo
   security.pam.services.sudo_local.touchIdAuth = true;
 
+  nixpkgs.config.allowUnfree = true;
+
   # Turing-specific packages
   environment.systemPackages = with pkgs; [
+    vim
+    coreutils
+    findutils
+    jq
+    tmux
+    curl
+    wget
     wakeonlan
   ];
 
