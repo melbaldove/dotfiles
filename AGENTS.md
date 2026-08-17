@@ -2,6 +2,10 @@
 
 Personal dotfiles. Nix flake configuration for multi-machine management.
 
+## Git Workflow
+
+Work only on `main`. Do not create or switch to another branch or worktree unless the user explicitly asks.
+
 ## Structure
 ```
 hosts/         # Machine configs (turing, einstein, shannon, newton)
