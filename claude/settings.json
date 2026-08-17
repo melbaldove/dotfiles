@@ -16,6 +16,7 @@
     ],
     "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "statusLine": {
     "type": "command",
     "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
