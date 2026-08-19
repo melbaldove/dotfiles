@@ -230,6 +230,18 @@
           identityFile = "~/.ssh/ios-certificates-deploy-key";
           identitiesOnly = true;
         };
+        "einstein" = {
+          hostname = "einstein.tail141ab8.ts.net";
+          user = "melbournebaldove";
+          identityFile = "~/.ssh/id_ed25519";
+          identitiesOnly = true;
+        };
+        "eisenhower" = {
+          hostname = "eisenhower.tail141ab8.ts.net";
+          user = "melbournebaldove";
+          identityFile = "~/.ssh/id_ed25519";
+          identitiesOnly = true;
+        };
       };
     };
 
