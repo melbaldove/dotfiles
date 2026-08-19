@@ -55,4 +55,14 @@ test "$(nix eval --raw \
   .#darwinConfigurations.turing.config.home-manager.users.melbournebaldove.programs.ssh.matchBlocks.eisenhower.data.hostname)" = \
   eisenhower.tail141ab8.ts.net
 
+if rg -n -i 'wireguard|10\.0\.0\.|10\.0\.1\.|shannon|feynman' \
+  hosts/turing \
+  modules/system/darwin \
+  users/melbournebaldove/dev.nix \
+  scripts \
+  AGENTS.md \
+  CLAUDE.md; then
+  exit 1
+fi
+
 echo "Darwin host boundary: PASS"

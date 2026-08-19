@@ -34,7 +34,6 @@ in
       docker
     nmap
     deploy-rs
-    wireguard-tools
     cmake
     libtool
     tree

@@ -8,7 +8,6 @@
     ../../modules/system/darwin/default.nix
     ../../modules/system/darwin/gui.nix
     ../../modules/system/darwin/agenix.nix
-    ../../modules/system/darwin/wireguard-client.nix
   ];
 
   home-manager = {
