@@ -37,6 +37,7 @@ fi
 
 test "$(nix eval --json .#darwinConfigurations.eisenhower.config.services.tailscale.enable)" = true
 test "$(nix eval --json .#darwinConfigurations.eisenhower.config.services.openssh.enable)" = true
+test "$(nix eval --json .#darwinConfigurations.turing.config.services.openssh.enable)" = true
 
 tailscale_job="$(nix eval --json \
   .#darwinConfigurations.eisenhower.config.launchd.daemons.tailscaled.serviceConfig)"

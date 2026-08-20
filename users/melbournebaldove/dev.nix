@@ -48,9 +48,7 @@ in
       exec ${pkgs.nodejs}/bin/npx https://github.com/google-gemini/gemini-cli "$@"
     '')
 
-    (pkgs.writeShellScriptBin "codex" ''
-      exec ${pkgs.nodejs}/bin/npx @openai/codex@latest "$@"
-    '')
+    codex
     inputs.agenix.packages.${pkgs.system}.default
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     # go-ios removed: has Linux dependencies (iproute2) that prevent it from building on Darwin

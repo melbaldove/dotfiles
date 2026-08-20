@@ -42,6 +42,8 @@
   # Enable TouchID for sudo
   security.pam.services.sudo_local.touchIdAuth = true;
 
+  services.openssh.enable = true;
+
   nixpkgs.config.allowUnfree = true;
 
   # Turing-specific packages

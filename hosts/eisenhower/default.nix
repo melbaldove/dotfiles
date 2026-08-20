@@ -43,6 +43,7 @@
 
   users.users.melbournebaldove.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINvRFinX32oEn1D4pBUmAZdmk+LofsuMG9rpmv87U0at melbournebaldove@Turing.local"
+    "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBI5FrzcejffoNea26t9v1zTcWB9IVjA5kMITP5hGeX2w8nkv/LltnVRM99paCqquwQ51upqwy7cHQed/9D5C7lQ= codex-ios@eisenhower"
   ];
 
   environment.systemPackages = with pkgs; [
