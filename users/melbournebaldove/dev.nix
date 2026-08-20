@@ -40,6 +40,7 @@ in
     fzf
     gleam
     mermaid-cli
+    playwright-test
     opencode
     (pkgs.writeShellScriptBin "qwen-code" ''
       exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
