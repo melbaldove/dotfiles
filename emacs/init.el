@@ -101,6 +101,7 @@
 ;; Configure org-mode
 (setq org-directory "~/org")
 (setq org-hide-emphasis-markers t)
+(setq org-agenda-files '("~/org/daily"))
 (setq org-use-sub-superscripts nil)
 (setq org-startup-indented t)  ; Enable org-indent-mode by default
 
@@ -167,6 +168,12 @@
       :target (file+head "drafts/${slug}.org"
                          "#+title: ${title}\n")
       :unnarrowed t)))
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry
+      "* %(format-time-string \"%H:%M\")\n- %?"
+      :target (file+head "%<%Y-%m-%d>.org"
+                         "#+title: %<%A, %d/%m/%Y>")
+      :empty-lines 1)))
   :config
   (org-roam-db-autosync-mode))
 
@@ -433,9 +440,12 @@
 
 ;; Global keybindings
 (global-set-key (kbd "C-x C-r") 'recentf-open-files)
+(global-set-key "\C-ca" 'org-agenda)
 ;; Claude Code keybindings are now handled by the keymap
 (global-set-key "\C-cf" 'org-roam-node-find)
 (global-set-key "\C-ci" 'org-roam-node-insert)
+(global-set-key "\C-cy" 'org-roam-dailies-goto-yesterday)
+(global-set-key "\C-cj" 'org-roam-dailies-goto-today)
 (global-set-key (kbd "C-c q") #'my/org-roam-capture-question)
 (global-set-key (kbd "C-c n") #'my/org-roam-capture-note)
 (global-set-key (kbd "C-c d") #'my/org-roam-capture-draft)
@@ -444,6 +454,16 @@
 (set-register ?c (cons 'file "~/.config/emacs/init.el"))
 (set-register ?n (cons 'file "~/.config/nix/home.nix"))
 (set-register ?i (cons 'file (concat org-directory "/ideas.org")))
+
+;; Open daily journal on startup
+(add-hook 'after-init-hook
+          (lambda ()
+            (run-with-timer 0.1 nil
+                            (lambda ()
+                              (org-roam-dailies-goto-today)
+                              (delete-other-windows)
+                              (end-of-buffer))))
+          t)
 
 ;; Provide the feature
 (provide 'init)
