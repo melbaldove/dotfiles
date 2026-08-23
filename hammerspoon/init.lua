@@ -15,7 +15,7 @@ end):start()
 local apps = {
     a = "ChatGPT",
     s = "Safari",
-    e = "Zed",
+    e = "Emacs",
     t = "Ghostty",
     x = "Xcode",
     c = "ChatGPT Atlas",
@@ -25,7 +25,6 @@ local apps = {
     b = "Bruno",
     v = "Visual Studio Code",
     n = "Notion",
-    o = "Obsidian",
 }
 
 local function focusExistingOrLaunch(appName)
