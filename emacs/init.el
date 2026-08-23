@@ -153,7 +153,7 @@
   :custom
   (org-roam-directory org-directory)
   (org-roam-capture-templates
-   '(("\r" "Empty" plain "%?"
+   '(("\t" "Empty" plain "%?"
       :target (file+head "${slug}.org"
                          "#+title: ${title}\n")
       :immediate-finish t
