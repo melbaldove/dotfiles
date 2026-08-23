@@ -153,7 +153,11 @@
   :custom
   (org-roam-directory org-directory)
   (org-roam-capture-templates
-   '(("q" "Question" plain
+   '(("e" "Empty" plain "%?"
+      :target (file+head "${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)
+     ("q" "Question" plain
       "* ${title}\n\nWhy am I asking this?\n\n%?\n\nWhat do I currently think?\n\nWhat seems unclear, contradictory, or unresolved?\n\n* Thinking\n"
       :target (file+head "questions/${slug}.org"
                          "#+title: ${title}\n")
@@ -176,21 +180,6 @@
       :empty-lines 1)))
   :config
   (org-roam-db-autosync-mode))
-
-(defun my/org-roam-capture-question ()
-  "Create an Org-roam question note."
-  (interactive)
-  (org-roam-capture nil "q"))
-
-(defun my/org-roam-capture-note ()
-  "Create an Org-roam durable note."
-  (interactive)
-  (org-roam-capture nil "n"))
-
-(defun my/org-roam-capture-draft ()
-  "Create an Org-roam writing draft."
-  (interactive)
-  (org-roam-capture nil "d"))
 
 ;; Completion and editing tools
 (use-package smex
@@ -446,9 +435,6 @@
 (global-set-key "\C-ci" 'org-roam-node-insert)
 (global-set-key "\C-cy" 'org-roam-dailies-goto-yesterday)
 (global-set-key "\C-cj" 'org-roam-dailies-goto-today)
-(global-set-key (kbd "C-c q") #'my/org-roam-capture-question)
-(global-set-key (kbd "C-c n") #'my/org-roam-capture-note)
-(global-set-key (kbd "C-c d") #'my/org-roam-capture-draft)
 
 ;; Registers for quick access to important files
 (set-register ?c (cons 'file "~/.config/emacs/init.el"))
