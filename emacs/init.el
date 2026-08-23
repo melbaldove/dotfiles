@@ -159,7 +159,7 @@
       :immediate-finish t
       :unnarrowed t)
      ("q" "Question" plain
-      "* ${title}\n\nWhy am I asking this?\n\n%?\n\nWhat do I currently think?\n\nWhat seems unclear, contradictory, or unresolved?\n\n* Thinking\n"
+      "* ${title}\n\nWhy am I asking this?\nWhat do I currently think?\nWhat seems unclear, contradictory, or unresolved?\n\n* Thinking\n%?"
       :target (file+head "questions/${slug}.org"
                          "#+title: ${title}\n")
       :immediate-finish t
