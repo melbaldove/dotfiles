@@ -6,6 +6,8 @@ Personal dotfiles. Nix flake configuration for multi-machine management.
 
 Work only on `main`. Do not create or switch to another branch or worktree unless the user explicitly asks.
 
+After each verified requested change, automatically commit and push the relevant files to `origin/main`. Do not include unrelated user changes. Skip the commit or push only when the user explicitly asks.
+
 ## Structure
 ```
 hosts/         # Darwin host configs (turing, eisenhower)
