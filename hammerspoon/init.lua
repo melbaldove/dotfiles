@@ -25,6 +25,7 @@ local apps = {
     b = "Bruno",
     v = "Visual Studio Code",
     n = "Notion",
+    o = "Obsidian",
 }
 
 local function focusExistingOrLaunch(appName)
