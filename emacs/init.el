@@ -156,21 +156,25 @@
    '(("e" "Empty" plain "%?"
       :target (file+head "${slug}.org"
                          "#+title: ${title}\n")
+      :immediate-finish t
       :unnarrowed t)
      ("q" "Question" plain
       "* ${title}\n\nWhy am I asking this?\n\n%?\n\nWhat do I currently think?\n\nWhat seems unclear, contradictory, or unresolved?\n\n* Thinking\n"
       :target (file+head "questions/${slug}.org"
                          "#+title: ${title}\n")
+      :immediate-finish t
       :unnarrowed t)
      ("n" "Note" plain
       "* ${title}\n\n%?\n\n* Why I think this\n\n* Implications\n\n* Origin\n"
       :target (file+head "notes/${slug}.org"
                          "#+title: ${title}\n")
+      :immediate-finish t
       :unnarrowed t)
      ("d" "Draft" plain
       "* ${title}\n\n* What I want to say\n\n%?\n\n* Draft\n"
       :target (file+head "drafts/${slug}.org"
                          "#+title: ${title}\n")
+      :immediate-finish t
       :unnarrowed t)))
   (org-roam-dailies-capture-templates
    '(("d" "default" entry
