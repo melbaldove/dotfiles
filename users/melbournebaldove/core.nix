@@ -1,17 +1,17 @@
-
 {
-  config, pkgs, inputs, ...
+  config,
+  pkgs,
+  inputs,
+  ...
 }:
 {
   home.username = "melbournebaldove";
-  home.homeDirectory = 
-    if pkgs.stdenv.isDarwin 
-    then "/Users/melbournebaldove"
-    else "/home/melbournebaldove";
+  home.homeDirectory =
+    if pkgs.stdenv.isDarwin then "/Users/melbournebaldove" else "/home/melbournebaldove";
   home.stateVersion = "24.11";
 
   home.shell.enableShellIntegration = true;
-  
+
   home.sessionPath = [
     "$HOME/.local/bin"
     "$HOME/.npm-global/bin"
@@ -195,13 +195,12 @@
         alias gwtrm='git worktree remove'
       '';
     };
-    
-    home-manager.enable = true;
 
+    home-manager.enable = true;
 
     ssh = {
       enable = true;
-      enableDefaultConfig = false;  # Explicitly disable default config
+      enableDefaultConfig = false; # Explicitly disable default config
       matchBlocks = {
         # Preserve default behavior for all hosts
         "*" = {
@@ -210,7 +209,7 @@
           forwardX11Trusted = false;
           serverAliveInterval = 0;
           serverAliveCountMax = 3;
-          sendEnv = [];
+          sendEnv = [ ];
         };
         "github.com" = {
           hostname = "github.com";
@@ -248,64 +247,64 @@
     tmux = {
       enable = true;
       terminal = "screen-256color";
-      baseIndex = 1;  # Start windows and panes at 1, not 0
+      baseIndex = 1; # Start windows and panes at 1, not 0
       clock24 = true;
-      keyMode = "emacs";  # Emacs key bindings
-      mouse = true;  # Enable mouse support for scrolling and pane selection
+      keyMode = "emacs"; # Emacs key bindings
+      mouse = true; # Enable mouse support for scrolling and pane selection
       historyLimit = 50000;
-      escapeTime = 0;  # No delay for escape key press
-      
+      escapeTime = 0; # No delay for escape key press
+
       extraConfig = ''
         # Enable mouse scrolling
         set -g mouse on
-        
+
         # Easy pane switching with Alt+Arrow
         bind -n M-Left select-pane -L
         bind -n M-Right select-pane -R
         bind -n M-Up select-pane -U
         bind -n M-Down select-pane -D
-        
+
         # Easy pane splitting
         bind | split-window -h -c "#{pane_current_path}"
         bind - split-window -v -c "#{pane_current_path}"
-        
+
         # Reload config
         bind r source-file ~/.config/tmux/tmux.conf \; display "Config reloaded!"
-        
+
         # Copy mode (Emacs style)
         bind-key -T copy-mode MouseDragEnd1Pane send-keys -X copy-selection-and-cancel
-        
+
         # Status bar styling
         set -g status-style bg=colour235,fg=white
         set -g window-status-current-style bg=colour39,fg=colour235,bold
         set -g status-left '#[fg=colour39]#S '
         set -g status-right '#[fg=colour39]%H:%M %d-%b-%y'
-        
+
         # Pane border styling
         set -g pane-border-style fg=colour235
         set -g pane-active-border-style fg=colour39
-        
+
         # Enable true color support
         set -sa terminal-features ',xterm-256color:RGB'
         set -ga terminal-overrides ',xterm-256color:Tc'
-        
+
         # Activity monitoring
         setw -g monitor-activity on
         set -g visual-activity off
-        
+
         # Renumber windows when one is closed
         set -g renumber-windows on
-        
+
         # Increase pane display time
         set -g display-panes-time 2000
-        
+
         # Focus events (for emacs)
         set -g focus-events on
-        
+
         # Preserve current path when creating new windows
         bind c new-window -c "#{pane_current_path}"
       '';
-      
+
       plugins = with pkgs.tmuxPlugins; [
         sensible
         yank
@@ -335,6 +334,16 @@
         user = {
           name = "Melbourne Baldove";
           email = "melbournebaldove@gmail.com";
+          signingKey = "~/.ssh/id_ed25519.pub";
+        };
+        gpg = {
+          format = "ssh";
+        };
+        commit = {
+          gpgSign = true;
+        };
+        tag = {
+          gpgSign = true;
         };
         push = {
           autosetupremote = true;
