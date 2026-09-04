@@ -57,6 +57,20 @@ let
       runHook postInstall
     '';
   };
+  # Codex releases faster than nixpkgs. Use OpenAI's latest stable release.
+  codexUpdater = pkgs.writeShellApplication {
+    name = "update-codex";
+    runtimeInputs = [ pkgs.curl ];
+    text = ''
+      install_dir="${config.home.homeDirectory}/.local/bin"
+
+      mkdir -p "$install_dir"
+      export PATH="$install_dir:$PATH"
+
+      curl -fsSL https://chatgpt.com/codex/install.sh \
+        | CODEX_INSTALL_DIR="$install_dir" CODEX_NON_INTERACTIVE=1 /bin/sh
+    '';
+  };
 in
 {
   imports = [
@@ -88,6 +102,7 @@ in
       playwright-test
       opencode
       openComputerUse
+      codexUpdater
       (pkgs.writeShellScriptBin "qwen-code" ''
         exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
       '')
@@ -95,7 +110,6 @@ in
         exec ${pkgs.nodejs}/bin/npx https://github.com/google-gemini/gemini-cli "$@"
       '')
 
-      codex
       inputs.agenix.packages.${pkgs.system}.default
     ]
     ++ lib.optionals pkgs.stdenv.isDarwin [
@@ -112,6 +126,23 @@ in
     # Add .local/bin to PATH for glibtool
     export PATH="$HOME/.local/bin:$PATH"
   '';
+
+  launchd.agents.codex-update = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+    enable = true;
+    config = {
+      ProgramArguments = [ "${codexUpdater}/bin/update-codex" ];
+      RunAtLoad = true;
+      StartCalendarInterval = [
+        {
+          Hour = 9;
+          Minute = 0;
+        }
+      ];
+      ProcessType = "Background";
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/codex-update.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/codex-update-error.log";
+    };
+  };
 
   # Create glibtool wrapper for vterm compilation on macOS
   home.file.".local/bin/glibtool" = lib.mkIf pkgs.stdenv.isDarwin {
