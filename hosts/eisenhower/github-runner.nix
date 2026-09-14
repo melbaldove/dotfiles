@@ -59,7 +59,8 @@ in
       KeepAlive = true;
       ThrottleInterval = 30;
       SessionCreate = true;
-      ProcessType = "Background";
+      # Match nix-darwin's runner service; builds need normal CPU and disk access.
+      ProcessType = "Interactive";
       StandardOutPath = "/var/log/github-runners/eisenhower-ios/stdout.log";
       StandardErrorPath = "/var/log/github-runners/eisenhower-ios/stderr.log";
     };
