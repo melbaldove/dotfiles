@@ -6,6 +6,7 @@
     ../../modules/system/darwin/gui.nix
     ./power.nix
     ./wifi-watchdog.nix
+    ./github-runner.nix
   ];
 
   home-manager = {

@@ -18,6 +18,8 @@ This repository uses a modular, flake-based approach to manage configurations fo
 | Turing | `turing` | Personal interactive macOS workstation |
 | Eisenhower | `eisenhower` | Personal macOS host for always-on Aura services |
 
+Eisenhower also hosts the [Hey You iOS runner](docs/eisenhower-ios-runner.md).
+
 ## Installation
 
 1.  **Install Nix:**
