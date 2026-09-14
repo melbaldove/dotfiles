@@ -53,3 +53,7 @@ To stop the runner, boot out its launchd service. To remove it permanently,
 remove the GitHub registration and the host module import, then rebuild.
 Preserve state until removal is verified. FileVault can require a console
 unlock after restart before the host becomes available.
+
+The Nix activation imports the hash-pinned Apple WWDR G3 intermediate into
+the system keychain. The launchd service needs it to validate distribution
+signatures. This imports a public intermediate without a trust override.

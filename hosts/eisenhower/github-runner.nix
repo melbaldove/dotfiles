@@ -2,6 +2,10 @@
 let
   runner = pkgs.github-runner;
   runnerHome = "/var/lib/github-runners/eisenhower-ios";
+  signingIntermediate = pkgs.fetchurl {
+    url = "https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer";
+    hash = "sha256-3PIYeMd/QZjktGFPA9aW2JxmxmAI1CROG5kWGqyRYB8=";
+  };
 in
 {
   # The upstream runner service requires nix.enable. Determinate owns Nix here.
@@ -20,6 +24,11 @@ in
     /usr/bin/install -d -m 0700 -o _github-runner -g _github-runner \
       ${runnerHome} ${runnerHome}/.ssh ${runnerHome}/Library/Keychains \
       ${runnerHome}/work ${runnerHome}/tmp /var/log/github-runners/eisenhower-ios
+    # Service signing resolves intermediates through the system keychain.
+    if ! /usr/bin/security find-certificate -a -Z /Library/Keychains/System.keychain | \
+      /usr/bin/grep -q '06EC06599F4ED0027CC58956B4D3AC1255114F35'; then
+      /usr/bin/security import ${signingIntermediate} -k /Library/Keychains/System.keychain
+    fi
   '';
 
   launchd.daemons.github-runner-eisenhower-ios = {
