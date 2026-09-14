@@ -11,7 +11,7 @@ Check that requirement when updating nix-darwin before replacing this module.
 Nix supplies the runner, Node 24, Ruby 3.3, and command-line tools. Xcode 26.3
 must exist at `/Applications/Xcode.app`. Apple supplies Xcode and its iOS SDK.
 The workflow checks these versions before building. Install the required iOS
-platform component with `xcodebuild -downloadPlatform iOS -architectureVariant arm64`.
+platform component with `xcodebuild -downloadPlatform iOS -buildVersion 26.2 -architectureVariant arm64`.
 Check the app's generic iOS archive destination as the runner account.
 An SDK version check alone does not establish that this destination is available.
 
