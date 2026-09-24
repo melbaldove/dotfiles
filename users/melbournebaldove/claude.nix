@@ -3,9 +3,7 @@
 }:
 {
   home.packages = [
-    (pkgs.writeShellScriptBin "claude-code" ''
-      exec ${pkgs.nodejs}/bin/npx @anthropic-ai/claude-code@latest "$@"
-    '')
+    pkgs.claude-code
   ];
 
   home.sessionVariables = {
@@ -13,7 +11,7 @@
   };
 
   home.shellAliases = {
-    claude = "claude-code --dangerously-skip-permissions";
+    claude = "${pkgs.claude-code}/bin/claude --dangerously-skip-permissions";
   };
 
   # Claude AI assistant configurations
