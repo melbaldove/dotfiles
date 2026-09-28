@@ -494,6 +494,32 @@ Large inline images make Org buffers slow to scroll, so view them apart."
                     t)
     (with-selected-window win (image-transform-fit-both))))
 
+;; One command to check a diagram: render the block at point, then open it.
+;; d2 prints its success message to stderr, which Org shows in an output
+;; window, so render with the window layout saved and judge success by
+;; whether the :file result changed on disk.
+(defun my/org-render-and-view ()
+  "Render the source block at point and open its :file result."
+  (interactive)
+  (let* ((info (org-babel-get-src-block-info))
+         (params (nth 2 info))
+         (file (cdr (assq :file params)))
+         (path (and file (expand-file-name file)))
+         (mtime (lambda () (and path (file-exists-p path)
+                                (file-attribute-modification-time
+                                 (file-attributes path)))))
+         ;; With :cache yes, an unchanged block keeps its result file as is
+         (cached (and (equal (cdr (assq :cache params)) "yes")
+                      path (file-exists-p path)
+                      (equal (org-babel-current-result-hash)
+                             (org-babel-sha1-hash info))))
+         (before (funcall mtime)))
+    (unless cached
+      (save-window-excursion (org-babel-execute-src-block)))
+    (if (and path (or cached (not (equal before (funcall mtime)))))
+        (my/show-image-in-frame path)
+      (message "Render failed; see *Org-Babel Error Output*"))))
+
 ;; Quick Look style zoom keys in image buffers (defaults: i +, i -, C-scroll)
 (with-eval-after-load 'image-mode
   (define-key image-mode-map (kbd "+") #'image-increase-size)
