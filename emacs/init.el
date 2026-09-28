@@ -93,7 +93,15 @@
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (setq split-height-threshold 80)
 (setq split-width-threshold 160)
-(global-visual-wrap-prefix-mode)
+;; visual-wrap-prefix-mode everywhere except Org. In Org, org-indent already
+;; indents wrapped lines, and visual-wrap's `min-width' display properties make
+;; phscroll count table cells as zero width, so rows overflow and wrap.
+(define-globalized-minor-mode my/global-visual-wrap-prefix-mode
+  visual-wrap-prefix-mode
+  (lambda ()
+    (unless (derived-mode-p 'org-mode)
+      (visual-wrap-prefix-mode 1))))
+(my/global-visual-wrap-prefix-mode 1)
 
 ;; Disable file backups and auto-save files
 (setq make-backup-files nil)
@@ -157,9 +165,6 @@
   :straight (phscroll :type git :host github :repo "misohena/phscroll")
   :after org
   :config
-  ;; Measured: without one extra column, phscroll sizes each row one column
-  ;; too wide for this setup, and word wrap still splits it into two lines
-  (setq phscroll-margin-right-additional 1)
   (require 'org-phscroll))
 
 ;; Dependencies for org-roam and other packages
