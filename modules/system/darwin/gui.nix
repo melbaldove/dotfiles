@@ -11,8 +11,15 @@ let
   };
 in
 {
-  imports = [ inputs.mac-app-util.darwinModules.default ];
-  home-manager.sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
+  # Copy real app bundles to a fixed path on each switch. A copy keeps one
+  # stable path for Launch Services and, unlike a launcher app, still receives
+  # the files that Finder's "Open With" sends.
+  home-manager.sharedModules = [
+    {
+      targets.darwin.copyApps.enable = true;
+      targets.darwin.linkApps.enable = false;
+    }
+  ];
 
   nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
@@ -39,7 +46,7 @@ in
       dock = {
         persistent-apps = [
           { app = "/Applications/Safari.app"; }
-          { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Trampolines/Emacs.app"; }
+          { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Apps/Emacs.app"; }
           { app = "/Applications/Kitty.app"; }
           { app = "/System/Applications/Messages.app"; }
           { app = "/System/Applications/Mail.app"; }
