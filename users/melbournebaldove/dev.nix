@@ -98,7 +98,7 @@ in
       tree
       fzf
       gleam
-      mermaid-cli
+      d2
       playwright-test
       opencode
       openComputerUse

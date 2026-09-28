@@ -458,22 +458,16 @@
                       :major-modes '(gleam-ts-mode)
                       :server-id 'gleam-lsp))))
 
-;; Mermaid diagrams support
-(use-package mermaid-mode
-  :mode ("\\.mmd\\'" "\\.mermaid\\'")
-  :config
-  (setq mermaid-mmdc-location "mmdc")
-  (setenv "PUPPETEER_EXECUTABLE_PATH" "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
+;; D2 diagrams: d2-mode edits .d2 files, and ob-d2 renders d2 blocks in Org
+;; (C-c C-c on a block with a :file header). The d2 binary comes from dev.nix.
+(use-package d2-mode
+  :mode "\\.d2\\'")
 
-;; Render mermaid source blocks in Org: C-c C-c on a block with a :file header
-(use-package ob-mermaid
+(use-package ob-d2
   :after org
   :config
-  (setq ob-mermaid-cli-path "mmdc")
-  ;; mmdc needs this even when mermaid-mode has not loaded yet
-  (setenv "PUPPETEER_EXECUTABLE_PATH" "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
   (org-babel-do-load-languages 'org-babel-load-languages
-                               (append org-babel-load-languages '((mermaid . t)))))
+                               (append org-babel-load-languages '((d2 . t)))))
 
 ;; Enable FFAP (Find File At Point)
 (ffap-bindings)
