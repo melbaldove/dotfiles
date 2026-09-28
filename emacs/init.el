@@ -150,6 +150,15 @@
   ;; Add late to hook to ensure it runs after org-indent
   (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
 
+;; Scroll Org tables horizontally while visual-line-mode wraps the prose, so a
+;; wide table keeps one row per screen line
+(setq org-startup-truncated nil)
+(use-package phscroll
+  :straight (phscroll :type git :host github :repo "misohena/phscroll")
+  :after org
+  :config
+  (require 'org-phscroll))
+
 ;; Dependencies for org-roam and other packages
 (use-package transient)
 (use-package dash)
