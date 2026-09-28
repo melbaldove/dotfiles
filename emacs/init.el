@@ -470,16 +470,43 @@
   ;; Center the diagram in its viewer instead of pinning it to the top left
   (d2-flags '("--center")))
 
-(defun my/view-svg-in-preview (svg)
-  "Open SVG in Preview through a 2x PNG, converting only when SVG changed.
-Preview zooms and scrolls smoothly; Emacs redraws a large SVG on every
-zoom step, and inline images make Org buffers slow to scroll. The
-conversion runs in the background, so Emacs stays responsive."
+(defun my/show-png-in-frame (png)
+  "Show PNG in a frame sized to the image, reusing that frame if it is open.
+A bitmap zooms smoothly in image-mode; a large SVG is redrawn on every
+zoom step, and inline images make Org buffers slow to scroll."
+  (let* ((buf (find-file-noselect png))
+         (win (get-buffer-window buf t)))
+    (with-current-buffer buf
+      ;; Reload only when the PNG changed on disk; decoding it costs ~0.2 s
+      (unless (verify-visited-file-modtime buf)
+        (revert-buffer t t))
+      (unless (derived-mode-p 'image-mode) (image-mode))
+      (display-line-numbers-mode -1))
+    (if win
+        (select-frame-set-input-focus (window-frame win))
+      (let* ((natural (image-size (create-image png) t))
+             ;; Largest scale that keeps the image within 85% of the screen
+             (scale (min 1.0
+                         (/ (* 0.85 (display-pixel-width)) (float (car natural)))
+                         (/ (* 0.85 (display-pixel-height)) (float (cdr natural))))))
+        ;; fullscreen nil: new frames otherwise inherit `default-frame-alist''s
+        ;; maximized setting
+        (setq win (display-buffer buf '(display-buffer-pop-up-frame
+                                        (pop-up-frame-parameters (fullscreen . nil)))))
+        (set-frame-size (window-frame win)
+                        (round (* scale (car natural)))
+                        (+ (round (* scale (cdr natural)))
+                           (window-mode-line-height win))
+                        t)))
+    (with-selected-window win (image-transform-fit-both))))
+
+(defun my/view-svg (svg)
+  "Show SVG through a 2x PNG, converting only when SVG changed.
+The conversion runs in the background, so Emacs stays responsive."
   (let ((png (expand-file-name (concat (file-name-base svg) ".png")
-                               temporary-file-directory))
-        (open-png (lambda (png) (call-process "open" nil 0 nil "-a" "Preview" png))))
+                               temporary-file-directory)))
     (cond
-     ((file-newer-than-file-p png svg) (funcall open-png png))
+     ((file-newer-than-file-p png svg) (my/show-png-in-frame png))
      ((not (executable-find "rsvg-convert"))
       (message "Cannot convert %s: rsvg-convert (librsvg) is not installed" svg))
      (t
@@ -490,7 +517,7 @@ conversion runs in the background, so Emacs stays responsive."
        :sentinel (lambda (proc _event)
                    (when (memq (process-status proc) '(exit signal))
                      (if (zerop (process-exit-status proc))
-                         (funcall open-png png)
+                         (my/show-png-in-frame png)
                        (message "rsvg-convert failed for %s" svg)))))))))
 
 ;; One command to check a diagram: render the block at point, then open it.
@@ -516,7 +543,7 @@ conversion runs in the background, so Emacs stays responsive."
     (unless cached
       (save-window-excursion (org-babel-execute-src-block)))
     (if (and path (or cached (not (equal before (funcall mtime)))))
-        (my/view-svg-in-preview path)
+        (my/view-svg path)
       (message "Render failed; see *Org-Babel Error Output*"))))
 
 ;; Quick Look style zoom keys in image buffers (defaults: i +, i -, C-scroll)
