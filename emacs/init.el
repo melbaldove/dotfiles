@@ -157,6 +157,9 @@
   :straight (phscroll :type git :host github :repo "misohena/phscroll")
   :after org
   :config
+  ;; phscroll sizes rows one column too wide with relative line numbers,
+  ;; so word wrap still split each row; reserve one more column
+  (setq phscroll-margin-right-additional 1)
   (require 'org-phscroll))
 
 ;; Dependencies for org-roam and other packages
