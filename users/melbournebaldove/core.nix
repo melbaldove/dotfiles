@@ -367,6 +367,12 @@
           autoSetupRebase = "always";
         };
       };
+      includes = [
+        {
+          condition = "gitdir:~/sphere-ai-workspace/";
+          path = "~/.config/git/sphere.gitconfig";
+        }
+      ];
     };
   };
 
