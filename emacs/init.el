@@ -458,16 +458,17 @@
                       :major-modes '(gleam-ts-mode)
                       :server-id 'gleam-lsp))))
 
-;; D2 diagrams: d2-mode edits .d2 files, and ob-d2 renders d2 blocks in Org
-;; (C-c C-c on a block with a :file header). The d2 binary comes from dev.nix.
+;; D2 diagrams: d2-mode edits .d2 files and also defines the Org Babel
+;; executor for d2 blocks (C-c C-c on a block with a :file header). It reads
+;; flags from `d2-flags', not from a block's :flags header, so there is no
+;; separate ob-d2 package. The d2 binary comes from dev.nix.
 (use-package d2-mode
-  :mode "\\.d2\\'")
-
-(use-package ob-d2
-  :after org
-  :config
-  (org-babel-do-load-languages 'org-babel-load-languages
-                               (append org-babel-load-languages '((d2 . t)))))
+  :mode "\\.d2\\'"
+  :init
+  (with-eval-after-load 'org (require 'd2-mode))
+  :custom
+  ;; Center the diagram in its viewer instead of pinning it to the top left
+  (d2-flags '("--center")))
 
 ;; Open rendered SVG results (C-c C-v o) in Quick Look instead of inline:
 ;; large inline SVGs make scrolling slow
