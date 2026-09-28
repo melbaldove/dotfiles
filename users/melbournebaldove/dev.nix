@@ -99,6 +99,7 @@ in
       fzf
       gleam
       d2
+      librsvg
       playwright-test
       opencode
       openComputerUse

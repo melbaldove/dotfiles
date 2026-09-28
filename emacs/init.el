@@ -470,29 +470,17 @@
   ;; Center the diagram in its viewer instead of pinning it to the top left
   (d2-flags '("--center")))
 
-(defun my/show-image-in-frame (path)
-  "Show the image at PATH in a popup frame sized to the image; q closes it.
-Large inline images make Org buffers slow to scroll, so view them apart."
-  (let* ((buf (find-file-noselect path))
-         (natural (image-size (create-image path) t))
-         ;; Largest scale that keeps the image within 85% of the screen
-         (scale (min 1.0
-                     (/ (* 0.85 (display-pixel-width)) (float (car natural)))
-                     (/ (* 0.85 (display-pixel-height)) (float (cdr natural)))))
-         (win nil))
-    (with-current-buffer buf
-      (image-mode)
-      (display-line-numbers-mode -1))
-    ;; fullscreen nil: new frames otherwise inherit `default-frame-alist''s
-    ;; maximized setting
-    (setq win (display-buffer buf '(display-buffer-pop-up-frame
-                                    (pop-up-frame-parameters (fullscreen . nil)))))
-    (set-frame-size (window-frame win)
-                    (round (* scale (car natural)))
-                    (+ (round (* scale (cdr natural)))
-                       (window-mode-line-height win))
-                    t)
-    (with-selected-window win (image-transform-fit-both))))
+(defun my/view-svg-in-preview (svg)
+  "Convert SVG to a 2x PNG and open it in Preview.
+Preview zooms and scrolls smoothly; Emacs redraws a large SVG on every
+zoom step, and inline images make Org buffers slow to scroll."
+  (let ((png (expand-file-name (concat (file-name-base svg) ".png")
+                               temporary-file-directory)))
+    (if (and (executable-find "rsvg-convert")
+             (zerop (call-process "rsvg-convert" nil nil nil
+                                  "-z" "2" "-o" png svg)))
+        (call-process "open" nil 0 nil "-a" "Preview" png)
+      (message "Could not convert %s; is rsvg-convert (librsvg) installed?" svg))))
 
 ;; One command to check a diagram: render the block at point, then open it.
 ;; d2 prints its success message to stderr, which Org shows in an output
@@ -517,7 +505,7 @@ Large inline images make Org buffers slow to scroll, so view them apart."
     (unless cached
       (save-window-excursion (org-babel-execute-src-block)))
     (if (and path (or cached (not (equal before (funcall mtime)))))
-        (my/show-image-in-frame path)
+        (my/view-svg-in-preview path)
       (message "Render failed; see *Org-Babel Error Output*"))))
 
 ;; Quick Look style zoom keys in image buffers (defaults: i +, i -, C-scroll)
