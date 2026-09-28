@@ -473,6 +473,19 @@
 ;; large inline SVGs make scrolling slow
 (with-eval-after-load 'org
   (add-to-list 'org-file-apps '("\\.svg\\'" . "qlmanage -p %s >/dev/null 2>&1")))
+;; One command to check a diagram: render the block at point, then open it
+(defun my/org-render-and-view ()
+  "Render the source block at point and open its :file result."
+  (interactive)
+  (org-babel-execute-src-block)
+  (org-babel-open-src-block-result))
+
+;; d2 blocks only draw a diagram, so render them without the confirmation prompt
+(setq org-confirm-babel-evaluate
+      (lambda (lang _body) (not (string= lang "d2"))))
+
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-c r") #'my/org-render-and-view))
 
 ;; Enable FFAP (Find File At Point)
 (ffap-bindings)
