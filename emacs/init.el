@@ -470,10 +470,13 @@
   ;; Center the diagram in its viewer instead of pinning it to the top left
   (d2-flags '("--center")))
 
-;; Open rendered SVG results (C-c C-v o) in Quick Look instead of inline:
-;; large inline SVGs make scrolling slow
-(with-eval-after-load 'org
-  (add-to-list 'org-file-apps '("\\.svg\\'" . "qlmanage -p %s >/dev/null 2>&1")))
+(defun my/show-image-in-frame (path)
+  "Show the image at PATH in a small popup frame; q closes the frame.
+Large inline images make Org buffers slow to scroll, so view them apart."
+  (let ((buf (find-file-noselect path)))
+    (with-current-buffer buf (image-mode))
+    (display-buffer buf '(display-buffer-pop-up-frame
+                          (pop-up-frame-parameters (width . 110) (height . 55))))))
 ;; One command to check a diagram: render the block at point, then open it.
 ;; d2 prints its success message to stderr, which Org shows in an output
 ;; window, so render with the window layout saved and judge success by
@@ -497,7 +500,7 @@
     (unless cached
       (save-window-excursion (org-babel-execute-src-block)))
     (if (and path (or cached (not (equal before (funcall mtime)))))
-        (org-babel-open-src-block-result)
+        (my/show-image-in-frame path)
       (message "Render failed; see *Org-Babel Error Output*"))))
 
 ;; d2 blocks only draw a diagram, so render them without the confirmation prompt
