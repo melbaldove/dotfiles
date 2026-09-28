@@ -471,16 +471,27 @@
   (d2-flags '("--center")))
 
 (defun my/view-svg-in-preview (svg)
-  "Convert SVG to a 2x PNG and open it in Preview.
+  "Open SVG in Preview through a 2x PNG, converting only when SVG changed.
 Preview zooms and scrolls smoothly; Emacs redraws a large SVG on every
-zoom step, and inline images make Org buffers slow to scroll."
+zoom step, and inline images make Org buffers slow to scroll. The
+conversion runs in the background, so Emacs stays responsive."
   (let ((png (expand-file-name (concat (file-name-base svg) ".png")
-                               temporary-file-directory)))
-    (if (and (executable-find "rsvg-convert")
-             (zerop (call-process "rsvg-convert" nil nil nil
-                                  "-z" "2" "-o" png svg)))
-        (call-process "open" nil 0 nil "-a" "Preview" png)
-      (message "Could not convert %s; is rsvg-convert (librsvg) installed?" svg))))
+                               temporary-file-directory))
+        (open-png (lambda (png) (call-process "open" nil 0 nil "-a" "Preview" png))))
+    (cond
+     ((file-newer-than-file-p png svg) (funcall open-png png))
+     ((not (executable-find "rsvg-convert"))
+      (message "Cannot convert %s: rsvg-convert (librsvg) is not installed" svg))
+     (t
+      (message "Converting %s..." (file-name-nondirectory svg))
+      (make-process
+       :name "rsvg-convert"
+       :command (list "rsvg-convert" "-z" "2" "-o" png svg)
+       :sentinel (lambda (proc _event)
+                   (when (memq (process-status proc) '(exit signal))
+                     (if (zerop (process-exit-status proc))
+                         (funcall open-png png)
+                       (message "rsvg-convert failed for %s" svg)))))))))
 
 ;; One command to check a diagram: render the block at point, then open it.
 ;; d2 prints its success message to stderr, which Org shows in an output
