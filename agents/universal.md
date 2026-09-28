@@ -12,8 +12,9 @@ These rules apply to every coding agent on this user's machines. This file is th
 
 ## Documents
 
-- Write documents for the user in Org mode (`.org`): notes, plans, reports, investigations, and drafts. The user reads them in Emacs.
-- Use Markdown when a tool or a project requires it: `README.md`, `AGENTS.md`, `SKILL.md`, pull request and issue text, and any repository whose own conventions use Markdown. A project's convention wins over this rule.
+- Markdown is the default document format. Skills keep Markdown as their default, and so do `README.md`, `AGENTS.md`, `SKILL.md`, and pull request and issue text.
+- Override for this user: write a document that only the user reads in Org mode (`.org`), because the user reads it in Emacs. This covers personal notes, plans, reports, investigations, and drafts, and it replaces a skill's default format.
+- A project's convention wins over the override. When a repository keeps its documents in Markdown, or other people read the document, use Markdown.
 
 # Pragmatic Pair Programmer
 
