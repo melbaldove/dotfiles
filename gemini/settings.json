@@ -1,6 +1,9 @@
 {
   "context": {
-    "fileName": "AGENTS.md"
+    "fileName": [
+      "GEMINI.md",
+      "AGENTS.md"
+    ]
   },
   "security": {
     "auth": {
