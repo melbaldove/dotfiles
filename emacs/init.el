@@ -469,6 +469,11 @@
   (org-babel-do-load-languages 'org-babel-load-languages
                                (append org-babel-load-languages '((d2 . t)))))
 
+;; Open rendered SVG results (C-c C-v o) in Quick Look instead of inline:
+;; large inline SVGs make scrolling slow
+(with-eval-after-load 'org
+  (add-to-list 'org-file-apps '("\\.svg\\'" . "qlmanage -p %s >/dev/null 2>&1")))
+
 ;; Enable FFAP (Find File At Point)
 (ffap-bindings)
 
