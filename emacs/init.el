@@ -463,6 +463,16 @@
   (setq mermaid-mmdc-location "mmdc")
   (setenv "PUPPETEER_EXECUTABLE_PATH" "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
 
+;; Render mermaid source blocks in Org: C-c C-c on a block with a :file header
+(use-package ob-mermaid
+  :after org
+  :config
+  (setq ob-mermaid-cli-path "mmdc")
+  ;; mmdc needs this even when mermaid-mode has not loaded yet
+  (setenv "PUPPETEER_EXECUTABLE_PATH" "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               (append org-babel-load-languages '((mermaid . t)))))
+
 ;; Enable FFAP (Find File At Point)
 (ffap-bindings)
 
