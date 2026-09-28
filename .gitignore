@@ -18,3 +18,9 @@ docs/wireguard-manual-setup.md
 
 .opencode
 
+
+# Nix build output (darwin-rebuild build)
+/result
+
+# Skills the Claude app syncs per account
+/agents/skills/synced/
