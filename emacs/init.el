@@ -494,6 +494,13 @@ Large inline images make Org buffers slow to scroll, so view them apart."
                     t)
     (with-selected-window win (image-transform-fit-both))))
 
+;; Quick Look style zoom keys in image buffers (defaults: i +, i -, C-scroll)
+(with-eval-after-load 'image-mode
+  (define-key image-mode-map (kbd "+") #'image-increase-size)
+  (define-key image-mode-map (kbd "=") #'image-increase-size)
+  (define-key image-mode-map (kbd "-") #'image-decrease-size)
+  (define-key image-mode-map (kbd "0") #'image-transform-fit-both))
+
 ;; d2 blocks only draw a diagram, so render them without the confirmation prompt
 (setq org-confirm-babel-evaluate
       (lambda (lang _body) (not (string= lang "d2"))))
