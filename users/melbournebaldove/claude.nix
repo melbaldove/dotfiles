@@ -23,7 +23,13 @@
     ".claude/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.agents/skills";
     ".agents/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/skills";
 
-    # Codex agents configuration
-    ".codex/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/codex/AGENTS.md";
+    # Global rules for every agent; CLAUDE.md imports this file
+    ".agents/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/agents/AGENTS.md";
+
+    # Codex has no import syntax, so its file is the global rules plus the Codex-only rules
+    ".codex/AGENTS.md".source = pkgs.concatText "AGENTS.md" [
+      "${inputs.self}/agents/AGENTS.md"
+      "${inputs.self}/codex/AGENTS.md"
+    ];
   };
 }
