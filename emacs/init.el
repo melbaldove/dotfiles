@@ -480,14 +480,22 @@
 (defun my/org-render-and-view ()
   "Render the source block at point and open its :file result."
   (interactive)
-  (let* ((file (cdr (assq :file (nth 2 (org-babel-get-src-block-info t)))))
+  (let* ((info (org-babel-get-src-block-info))
+         (params (nth 2 info))
+         (file (cdr (assq :file params)))
          (path (and file (expand-file-name file)))
          (mtime (lambda () (and path (file-exists-p path)
                                 (file-attribute-modification-time
                                  (file-attributes path)))))
+         ;; With :cache yes, an unchanged block keeps its result file as is
+         (cached (and (equal (cdr (assq :cache params)) "yes")
+                      path (file-exists-p path)
+                      (equal (org-babel-current-result-hash)
+                             (org-babel-sha1-hash info))))
          (before (funcall mtime)))
-    (save-window-excursion (org-babel-execute-src-block))
-    (if (and path (not (equal before (funcall mtime))))
+    (unless cached
+      (save-window-excursion (org-babel-execute-src-block)))
+    (if (and path (or cached (not (equal before (funcall mtime)))))
         (org-babel-open-src-block-result)
       (message "Render failed; see *Org-Babel Error Output*"))))
 
