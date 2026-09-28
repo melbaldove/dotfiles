@@ -46,11 +46,16 @@
 (load custom-file)
 ;; System integration
 (use-package exec-path-from-shell
-  :if (memq window-system '(mac ns x)) ; Only run on GUI Emacs
+  ;; The launchd daemon starts without a window system, so check for it too;
+  ;; otherwise it keeps launchd's minimal PATH and cannot find direnv.
+  :if (or (daemonp) (memq window-system '(mac ns x)))
   :custom
   (exec-path-from-shell-variables '("PATH" "MANPATH" "LANG")) ; Customize variables to copy if needed
   :config
   (exec-path-from-shell-initialize))
+
+;; Open files from Finder and `open -a Emacs` in the current frame, not a new one
+(setq ns-pop-up-frames nil)
 
 ;; Ensure .local/bin is in exec-path for glibtool
 (add-to-list 'exec-path (expand-file-name "~/.local/bin"))
