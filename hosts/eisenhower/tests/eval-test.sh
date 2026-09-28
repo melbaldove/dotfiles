@@ -62,7 +62,7 @@ if rg -n -i 'wireguard|10\.0\.0\.|10\.0\.1\.|shannon|feynman' \
   users/melbournebaldove/dev.nix \
   scripts \
   AGENTS.md \
-  CLAUDE.md; then
+  agents/universal.md; then
   exit 1
 fi
 

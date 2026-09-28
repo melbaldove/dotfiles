@@ -171,7 +171,8 @@ in
     ".codex/skills/open-computer-use".source = "${openComputerUseSource}/skills/open-computer-use";
     ".gemini/settings.json".source =
       config.lib.file.mkOutOfStoreSymlink "${inputs.self}/gemini/settings.json";
-    ".gemini/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/CLAUDE.md";
+    # gemini/settings.json sets context.fileName to AGENTS.md
+    ".gemini/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/universal.md";
     ".gemini/commands".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/commands";
     ".gemini/shared".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/shared";
   };
