@@ -123,6 +123,8 @@
 ;; Configure org-mode
 (setq org-directory "~/org")
 (setq org-hide-emphasis-markers t)
+;; Honor #+ATTR_ORG: :width on inline images; otherwise show the real size
+(setq org-image-actual-width nil)
 (setq org-agenda-files '("~/org/daily"))
 (setq org-use-sub-superscripts nil)
 (setq org-startup-indented t)  ; Enable org-indent-mode by default
