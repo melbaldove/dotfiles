@@ -11,6 +11,9 @@ let
   };
 in
 {
+  imports = [ inputs.mac-app-util.darwinModules.default ];
+  home-manager.sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
+
   nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
   # Run the fkchan install script
@@ -36,7 +39,7 @@ in
       dock = {
         persistent-apps = [
           { app = "/Applications/Safari.app"; }
-          { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Apps/Emacs.app"; }
+          { app = "${config.users.users.${config.system.primaryUser}.home}/Applications/Home Manager Trampolines/Emacs.app"; }
           { app = "/Applications/Kitty.app"; }
           { app = "/System/Applications/Messages.app"; }
           { app = "/System/Applications/Mail.app"; }

@@ -57,6 +57,15 @@
 ;; Open files from Finder and `open -a Emacs` in the current frame, not a new one
 (setq ns-pop-up-frames nil)
 
+;; The GUI Emacs owns the server, so emacsclient opens files in the visible frame
+(require 'server)
+(unless (or (daemonp) (server-running-p))
+  (server-start))
+
+;; Smooth, pixel-based scrolling on the trackpad
+(when (fboundp 'pixel-scroll-precision-mode)
+  (pixel-scroll-precision-mode 1))
+
 ;; Ensure .local/bin is in exec-path for glibtool
 (add-to-list 'exec-path (expand-file-name "~/.local/bin"))
 (setenv "PATH" (concat (expand-file-name "~/.local/bin") ":" (getenv "PATH")))

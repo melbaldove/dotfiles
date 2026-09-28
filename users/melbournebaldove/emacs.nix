@@ -11,14 +11,9 @@
       ];
     };
   };
-  
-  services = {
-    emacs = {
-      enable = true;
-      package = pkgs.emacs-unstable;
-      defaultEditor = false;
-    };
-  };
+
+  # No launchd daemon: the GUI Emacs runs the server (see init.el), so one
+  # Emacs owns both the visible frames and emacsclient.
 
   # Emacs configuration
   xdg.configFile = {

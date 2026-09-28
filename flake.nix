@@ -17,6 +17,10 @@
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Stable launcher apps, so Launch Services sees one app per program across rebuilds
+    mac-app-util.url = "github:hraban/mac-app-util";
+    mac-app-util.inputs.nixpkgs.follows = "nixpkgs";
+
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
       flake = false;
