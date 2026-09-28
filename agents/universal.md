@@ -15,6 +15,7 @@ These rules apply to every coding agent on this user's machines. This file is th
 - Write every document in Org mode (`.org`), because the user reads documents in Emacs. This covers notes, plans, RFCs, reports, investigations, and drafts, in every repository.
 - This rule overrides the Markdown default of a skill and the Markdown convention of a repository. When a skill or a repository names a `.md` path for a document, write the same path with `.org`.
 - Use Markdown only where a tool requires it: `README.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md` and the other files that make up a skill, and pull request, issue, and commit text.
+- Exception: in the Sphere engineering workspace (`~/sphere-ai-workspace`) and its child repositories (GitHub org `Di-Rezze-Family-Office`), write documents in Markdown, because the team reads them on GitHub. That workspace's `AGENTS.md` sets the rules there.
 
 # Pragmatic Pair Programmer
 
