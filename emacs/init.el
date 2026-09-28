@@ -468,7 +468,21 @@
   (with-eval-after-load 'org (require 'd2-mode))
   :custom
   ;; Center the diagram in its viewer instead of pinning it to the top left
-  (d2-flags '("--center")))
+  (d2-flags '("--center"))
+  :config
+  ;; Personal style for every diagram (Solarized, sketch, ELK), kept here in
+  ;; the config layer so documents hold only structure. It goes first, so a
+  ;; block's own vars (e.g. a white Confluence export) still override it.
+  (defvar my/d2-style-file (expand-file-name "d2/style.d2" "~/.dotfiles"))
+  (defun my/d2-style ()
+    "Return the contents of `my/d2-style-file'."
+    (with-temp-buffer (insert-file-contents my/d2-style-file) (buffer-string)))
+  (advice-add 'org-babel-execute:d2 :filter-args
+              (lambda (args) (cons (concat (my/d2-style) "\n" (car args)) (cdr args))))
+  ;; Header args count toward :cache hashes, so a style change re-renders
+  ;; cached blocks (after the config reloads)
+  (setq org-babel-default-header-args:d2
+        `((:d2-style . ,(secure-hash 'sha1 (my/d2-style))))))
 
 (defun my/view-svg (svg)
   "Open SVG in Preview through a 1x PNG, converting only when SVG changed.

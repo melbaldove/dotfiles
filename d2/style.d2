@@ -1,0 +1,31 @@
+# Personal D2 style, applied to every d2 block rendered from Org.
+# ~/.dotfiles/emacs/init.el prepends this file (see my/d2-style-file), so
+# diagrams hold only structure; a diagram's own vars still override it.
+vars: {
+  d2-config: {
+    # Solarized Light on top of Neutral Default
+    theme-id: 0
+    sketch: true
+    layout-engine: elk
+    theme-overrides: {
+      N1: "#586e75"
+      N2: "#657b83"
+      N3: "#839496"
+      N4: "#93a1a1"
+      N5: "#d9d2bf"
+      N6: "#eee8d5"
+      N7: "#fdf6e3"
+      B1: "#268bd2"
+      B2: "#268bd2"
+      B3: "#6c71c4"
+      B4: "#eee8d5"
+      B5: "#f3e0b0"
+      B6: "#f3e0b0"
+      AA2: "#2aa198"
+      AA4: "#d2e4ef"
+      AA5: "#e4eef3"
+      AB4: "#d2e4ef"
+      AB5: "#e4eef3"
+    }
+  }
+}
