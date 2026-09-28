@@ -473,12 +473,23 @@
 ;; large inline SVGs make scrolling slow
 (with-eval-after-load 'org
   (add-to-list 'org-file-apps '("\\.svg\\'" . "qlmanage -p %s >/dev/null 2>&1")))
-;; One command to check a diagram: render the block at point, then open it
+;; One command to check a diagram: render the block at point, then open it.
+;; d2 prints its success message to stderr, which Org shows in an output
+;; window, so render with the window layout saved and judge success by
+;; whether the :file result changed on disk.
 (defun my/org-render-and-view ()
   "Render the source block at point and open its :file result."
   (interactive)
-  (org-babel-execute-src-block)
-  (org-babel-open-src-block-result))
+  (let* ((file (cdr (assq :file (nth 2 (org-babel-get-src-block-info t)))))
+         (path (and file (expand-file-name file)))
+         (mtime (lambda () (and path (file-exists-p path)
+                                (file-attribute-modification-time
+                                 (file-attributes path)))))
+         (before (funcall mtime)))
+    (save-window-excursion (org-babel-execute-src-block))
+    (if (and path (not (equal before (funcall mtime))))
+        (org-babel-open-src-block-result)
+      (message "Render failed; see *Org-Babel Error Output*"))))
 
 ;; d2 blocks only draw a diagram, so render them without the confirmation prompt
 (setq org-confirm-babel-evaluate
