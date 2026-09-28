@@ -474,9 +474,14 @@
   "Show the image at PATH in a small popup frame; q closes the frame.
 Large inline images make Org buffers slow to scroll, so view them apart."
   (let ((buf (find-file-noselect path)))
-    (with-current-buffer buf (image-mode))
+    (with-current-buffer buf
+      (image-mode)
+      (display-line-numbers-mode -1))
+    ;; fullscreen nil: new frames otherwise inherit `default-frame-alist''s
+    ;; maximized setting
     (display-buffer buf '(display-buffer-pop-up-frame
-                          (pop-up-frame-parameters (width . 110) (height . 55))))))
+                          (pop-up-frame-parameters (width . 110) (height . 55)
+                                                   (fullscreen . nil))))))
 ;; One command to check a diagram: render the block at point, then open it.
 ;; d2 prints its success message to stderr, which Org shows in an output
 ;; window, so render with the window layout saved and judge success by
