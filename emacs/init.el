@@ -471,42 +471,28 @@
   (d2-flags '("--center")))
 
 (defun my/show-image-in-frame (path)
-  "Show the image at PATH in a small popup frame; q closes the frame.
+  "Show the image at PATH in a popup frame sized to the image; q closes it.
 Large inline images make Org buffers slow to scroll, so view them apart."
-  (let ((buf (find-file-noselect path)))
+  (let* ((buf (find-file-noselect path))
+         (natural (image-size (create-image path) t))
+         ;; Largest scale that keeps the image within 85% of the screen
+         (scale (min 1.0
+                     (/ (* 0.85 (display-pixel-width)) (float (car natural)))
+                     (/ (* 0.85 (display-pixel-height)) (float (cdr natural)))))
+         (win nil))
     (with-current-buffer buf
       (image-mode)
       (display-line-numbers-mode -1))
     ;; fullscreen nil: new frames otherwise inherit `default-frame-alist''s
     ;; maximized setting
-    (display-buffer buf '(display-buffer-pop-up-frame
-                          (pop-up-frame-parameters (width . 110) (height . 55)
-                                                   (fullscreen . nil))))))
-;; One command to check a diagram: render the block at point, then open it.
-;; d2 prints its success message to stderr, which Org shows in an output
-;; window, so render with the window layout saved and judge success by
-;; whether the :file result changed on disk.
-(defun my/org-render-and-view ()
-  "Render the source block at point and open its :file result."
-  (interactive)
-  (let* ((info (org-babel-get-src-block-info))
-         (params (nth 2 info))
-         (file (cdr (assq :file params)))
-         (path (and file (expand-file-name file)))
-         (mtime (lambda () (and path (file-exists-p path)
-                                (file-attribute-modification-time
-                                 (file-attributes path)))))
-         ;; With :cache yes, an unchanged block keeps its result file as is
-         (cached (and (equal (cdr (assq :cache params)) "yes")
-                      path (file-exists-p path)
-                      (equal (org-babel-current-result-hash)
-                             (org-babel-sha1-hash info))))
-         (before (funcall mtime)))
-    (unless cached
-      (save-window-excursion (org-babel-execute-src-block)))
-    (if (and path (or cached (not (equal before (funcall mtime)))))
-        (my/show-image-in-frame path)
-      (message "Render failed; see *Org-Babel Error Output*"))))
+    (setq win (display-buffer buf '(display-buffer-pop-up-frame
+                                    (pop-up-frame-parameters (fullscreen . nil)))))
+    (set-frame-size (window-frame win)
+                    (round (* scale (car natural)))
+                    (+ (round (* scale (cdr natural)))
+                       (window-mode-line-height win))
+                    t)
+    (with-selected-window win (image-transform-fit-both))))
 
 ;; d2 blocks only draw a diagram, so render them without the confirmation prompt
 (setq org-confirm-babel-evaluate
