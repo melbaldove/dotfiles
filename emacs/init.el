@@ -162,7 +162,11 @@
 ;; wide table keeps one row per screen line
 (setq org-startup-truncated nil)
 (use-package phscroll
-  :straight (phscroll :type git :host github :repo "misohena/phscroll")
+  ;; Load from source: its phscroll-define-minor-mode-command macro copies the
+  ;; target's interactive form at expansion time, so a compiled build defines
+  ;; the starred scroll commands (C-x <, C-x >) without `interactive'.
+  :straight (phscroll :type git :host github :repo "misohena/phscroll"
+                      :build (:not compile native-compile))
   :after org
   :config
   (require 'org-phscroll))
