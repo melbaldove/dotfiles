@@ -482,7 +482,8 @@
   ;; Header args count toward :cache hashes, so a style change re-renders
   ;; cached blocks (after the config reloads)
   (setq org-babel-default-header-args:d2
-        `((:d2-style . ,(secure-hash 'sha1 (my/d2-style))))))
+        (cons `(:d2-style . ,(secure-hash 'sha1 (my/d2-style)))
+              (assq-delete-all :d2-style org-babel-default-header-args:d2))))
 
 (defun my/view-svg (svg)
   "Open SVG in Preview through a 1x PNG, converting only when SVG changed.
