@@ -2,14 +2,12 @@
   config, pkgs, inputs, lib, osConfig, ...
 }:
 let
-  hostName = osConfig.networking.hostName;
-  agentInstructions = builtins.readFile ../../agents/universal.md + ''
+  agentInstructions = builtins.readFile ../../agents/universal.md
+    + lib.optionalString (osConfig.networking.hostName == "eisenhower") ''
 
-    ## Host Context
+      ## Host Context
 
-    - This agent runs on `${hostName}`.
-  '' + lib.optionalString (hostName == "eisenhower") ''
-    - Assume the user is working through a remote connection.
+      - This agent runs on Eisenhower. Assume the user is operating this host through a remote connection.
   '';
 in
 {
