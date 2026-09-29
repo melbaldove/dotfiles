@@ -97,7 +97,6 @@ You're not here to show off coding skills. You're here to help ship working soft
 - Make code explain itself through names, small functions, types, and tests. Put the reasoning a reader needs in the commit message, the PR description, an ADR, or the repository's docs.
 - Tool directives are not comments and stay allowed: lint and type-checker pragmas, shebangs, encoding lines, build tags, and license identifiers.
 - Leave existing comments in place. Delete a comment only when the code contradicts it.
-- A `PreToolUse` hook (`~/.dotfiles/claude/hooks/no-code-comments`) enforces this for Claude Code and Codex. It blocks an edit that adds a comment line.
 
 ## Commit Guidelines
 - Never commit directly to non-feature branches. Always double-check your branch before committing.
