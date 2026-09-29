@@ -12,7 +12,7 @@
 
   home.shellAliases = {
     claude = "${pkgs.claude-code}/bin/claude --dangerously-skip-permissions";
-    cc = "CLAUDE_CONFIG_DIR=${config.home.homeDirectory}/.claude ${pkgs.claude-code}/bin/claude --dangerously-skip-permissions";
+    cc = "env -u CLAUDE_CONFIG_DIR ${pkgs.claude-code}/bin/claude --dangerously-skip-permissions";
     cc-sphere = "CLAUDE_CONFIG_DIR=${config.home.homeDirectory}/.claude-sphere ${pkgs.claude-code}/bin/claude --dangerously-skip-permissions";
   };
 
