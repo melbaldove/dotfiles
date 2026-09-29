@@ -20,4 +20,6 @@ These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md
 ## Computer Use
 
 - Complete routine, reversible UI steps for an authorized task, including authentication and ordinary consent screens.
+- When a CLI login uses OAuth, run the CLI login command, complete the browser sign-in and callback with Computer Use, verify that the CLI is authenticated, and continue the task. Do not stop at the browser handoff or ask the user to complete routine OAuth steps that Computer Use can perform.
+- If a login flow fails, diagnose it and try available supported routes before asking the user for input.
 - Get user confirmation before a payment, financial trade, material legal agreement, destructive deletion, irreversible security or account-recovery change, new access grant, or unrequested external publication or message.
