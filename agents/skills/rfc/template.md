@@ -30,10 +30,15 @@
 
 <Start with the decision and a component diagram. Then add one subsection per component, each with the six contract fields. Put the key flows after the components.>
 
-```mermaid
-flowchart LR
-  A[Source] --> B[Component] --> C[Consumer]
+```d2
+direction: down
+source: Source
+component: Component
+consumer: Consumer
+source -> component -> consumer
 ```
+
+![<Caption>](NNN-slug-components.svg)
 
 *<Caption: what the reader should see in this diagram.>*
 

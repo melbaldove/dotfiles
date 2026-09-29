@@ -130,7 +130,7 @@ Make a decision where you can, and add a `VERIFY` marker if it rests on an unche
 ## Diagrams
 
 - Start the Proposal with the decision, then a component diagram. Draw every other diagram that you mention; a description of a diagram is not a diagram.
-- Use Mermaid, which GitHub renders: `flowchart` for components and data flow, `sequenceDiagram` for request paths, and `stateDiagram-v2` for lifecycles.
+- Draw in D2, as the universal Diagrams rule describes: a structure-only D2 block and its committed SVG. Use D2 shapes for components and data flow, `shape: sequence_diagram` for request paths, and states with labelled edges for lifecycles.
 - Give each diagram a one-line caption that states what the reader should see in it.
 
 ## Credits

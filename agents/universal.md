@@ -12,7 +12,14 @@ These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md
 - Use Markdown (`.md`) for documents intended for a repository, team, or external readers, unless local instructions require another format.
 - Keep formats and filenames required by tools, such as `README.md`, `AGENTS.md`, `CLAUDE.md`, and `SKILL.md`.
 
-## Code
+## Diagrams
+
+- Draw diagrams in D2, not Mermaid. Use Mermaid only where the target renders nothing else, such as a GitHub pull request or issue body.
+- In Org, write a named block, `#+begin_src d2 :file <name>.svg :cache yes`, that holds structure only. Emacs prepends `~/.dotfiles/d2/style.d2` when it renders the block, so do not put style in a document.
+- Prefer one top-to-bottom flow for a diagram in a document.
+- Commit the rendered SVG next to the document, and link it under `#+RESULTS:`, because GitHub renders neither D2 nor a diagram in Org.
+- To render outside Emacs, prepend the same style: `cat ~/.dotfiles/d2/style.d2 <name>.d2 | d2 - <name>.svg`.
+
 
 - Use "Melbourne Baldove" when code author attribution is required.
 - Do not add code comments. Use names, small functions, types, and tests to make code clear. Keep existing comments unless the code contradicts them. Tool directives, shebangs, and license identifiers are allowed.

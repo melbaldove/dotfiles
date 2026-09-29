@@ -46,7 +46,7 @@ The reader of the RFC is fluent in English. Judge the draft by cognitive load: w
 - For "known before new", report only the places where the reader must reread to find the link to the previous sentence. Do not report a sentence only because it is short.
 
 **Diagrams**
-- The Proposal starts with the decision, then a component diagram. Every diagram that the text mentions is drawn in Mermaid and has a caption.
+- The Proposal starts with the decision, then a component diagram. Every diagram that the text mentions is drawn in D2, has its rendered SVG committed next to the RFC, and has a caption.
 - Every component in a diagram is defined in the text.
 
 ## Self-Challenge
