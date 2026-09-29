@@ -1,6 +1,6 @@
 # Universal Agent Rules
 
-These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.gemini/AGENTS.md` link to this file. Repository rules belong in that repository's `AGENTS.md` and take precedence.
+These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.gemini/AGENTS.md` use them. Repository rules belong in that repository's `AGENTS.md` and take precedence.
 
 ## Agent Configuration
 

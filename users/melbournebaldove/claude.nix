@@ -1,6 +1,17 @@
 {
-  config, pkgs, inputs, ...
+  config, pkgs, inputs, lib, osConfig, ...
 }:
+let
+  hostName = osConfig.networking.hostName;
+  agentInstructions = builtins.readFile ../../agents/universal.md + ''
+
+    ## Host Context
+
+    - This agent runs on `${hostName}`.
+  '' + lib.optionalString (hostName == "eisenhower") ''
+    - Assume the user is working through a remote connection.
+  '';
+in
 {
   home.packages = [
     pkgs.claude-code
@@ -18,19 +29,19 @@
 
   # Claude AI assistant configurations
   home.file = {
-    # One universal rules file for every agent; each link gives it the name its tool reads
-    ".claude/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/universal.md";
+    ".claude/CLAUDE.md".text = agentInstructions;
     ".claude/commands".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/commands";
     ".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/settings.json";
     ".claude/shared".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/shared";
     ".claude/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.agents/skills";
-    ".claude-sphere/CLAUDE.md".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/universal.md";
+    ".claude-sphere/CLAUDE.md".text = agentInstructions;
     ".claude-sphere/commands".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/commands";
     ".claude-sphere/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/claude/settings.json";
     ".claude-sphere/shared".source = config.lib.file.mkOutOfStoreSymlink "${inputs.self}/claude/shared";
     ".claude-sphere/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.agents/skills";
     ".agents/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/skills";
 
-    ".codex/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/universal.md";
+    ".codex/AGENTS.md".text = agentInstructions;
+    ".gemini/AGENTS.md".text = agentInstructions;
   };
 }
