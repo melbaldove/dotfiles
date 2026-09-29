@@ -35,7 +35,17 @@
     "plugin-dev@claude-plugins-official": false,
     "figma@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
-    "atlassian@claude-plugins-official": true
+    "atlassian@claude-plugins-official": true,
+    "aws-core@claude-plugins-official": true,
+    "data@knowledge-work-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "knowledge-work-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/knowledge-work-plugins"
+      }
+    }
   },
   "effortLevel": "high",
   "modelSettings": {
