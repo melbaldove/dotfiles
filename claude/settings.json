@@ -36,13 +36,20 @@
     "slack@claude-plugins-official": true,
     "atlassian@claude-plugins-official": true,
     "aws-core@claude-plugins-official": true,
-    "data@knowledge-work-plugins": true
+    "data@knowledge-work-plugins": true,
+    "pstack@pstack-claude": true
   },
   "extraKnownMarketplaces": {
     "knowledge-work-plugins": {
       "source": {
         "source": "github",
         "repo": "anthropics/knowledge-work-plugins"
+      }
+    },
+    "pstack-claude": {
+      "source": {
+        "source": "github",
+        "repo": "michael-denyer/pstack-claude"
       }
     }
   },
