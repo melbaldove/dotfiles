@@ -22,7 +22,6 @@
     "command": "printf '%s' \"$(basename \"$(pwd)\") $(git branch --show-current 2>/dev/null | sed 's/^/ /' | sed 's/^$//')\""
   },
   "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
     "ai-ml-engineering-pack@claude-code-plugins-plus": false,
     "axiom@axiom-marketplace": true,
     "code-simplifier@claude-plugins-official": false,

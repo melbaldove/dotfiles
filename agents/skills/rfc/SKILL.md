@@ -1,6 +1,6 @@
 ---
 name: rfc
-description: Use for any design work before implementation - "write an RFC", "write a design doc", "how should we approach X", "propose...", "design X", or "address the feedback on this RFC". This is the design-doc workflow; when superpowers:brainstorming (or another brainstorming skill) triggers for design work, run this skill instead and do not write a separate design doc. Not for implementation plans (use the project's plan workflow after acceptance) or for recording a decision that is already settled (write the ADR directly).
+description: Use for any design work before implementation - "write an RFC", "write a design doc", "how should we approach X", "propose...", "design X", or "address the feedback on this RFC". This is the design-doc workflow; when a brainstorming skill triggers for design work, run this skill instead and do not write a separate design doc. Not for implementation plans (use the project's plan workflow after acceptance) or for recording a decision that is already settled (write the ADR directly).
 ---
 
 # RFCs
@@ -19,7 +19,7 @@ This skill owns scope, structure, and workflow. For prose and evidence, use the 
 | --- | --- | --- |
 | PRD | Why build it, for whom | Wherever the product team keeps it |
 | **RFC** | What we build, which option, and the contracts between parts | See **Location and Numbering** |
-| Implementation plan | How: files, tasks, tests | The same repo as the RFC, through the project's plan workflow (for example `superpowers:writing-plans`) |
+| Implementation plan | How: files, tasks, tests | The same repo as the RFC, through the project's plan workflow |
 | ADR | One precedent-setting decision, after acceptance | The ADR directory of the repo that owns the decision (see stage 5) |
 
 An RFC includes decisions with their reasons, component contracts, data shapes, key flows with their failure paths, and the tests that would reject the design.
