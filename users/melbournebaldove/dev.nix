@@ -145,6 +145,18 @@ in
     };
   };
 
+  home.activation.codexPstack = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    codex_bin="${config.home.homeDirectory}/.local/bin/codex"
+    if [ -x "$codex_bin" ]; then
+      export PATH="${pkgs.git}/bin:$PATH"
+      run "$codex_bin" plugin marketplace add michael-denyer/pstack-claude \
+        && run "$codex_bin" plugin add pstack@pstack-claude \
+        || warnEcho "Could not install the pstack Codex plugin"
+    else
+      warnEcho "Codex is not installed; skipping the pstack Codex plugin"
+    fi
+  '';
+
   # Create glibtool wrapper for vterm compilation on macOS
   home.file.".local/bin/glibtool" = lib.mkIf pkgs.stdenv.isDarwin {
     executable = true;
