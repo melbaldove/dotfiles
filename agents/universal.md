@@ -18,7 +18,7 @@ These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md
 - In Org, write a named block, `#+begin_src d2 :file <name>.svg :cache yes`, that holds structure only. Emacs prepends `~/.dotfiles/d2/style.d2` when it renders the block, so do not put style in a document.
 - Prefer one top-to-bottom flow for a diagram in a document.
 - Commit the rendered SVG next to the document, and link it under `#+RESULTS:`, because GitHub renders neither D2 nor a diagram in Org.
-- Render every diagram you draw, and show it to the user. Do not leave rendering to the user. Run `d2-render <name>.d2`, which prepends the style, writes `<name>.svg` beside the source, and opens it. For an Org block, pipe the block body: `d2-render - <name>.svg`.
+- Render every diagram you draw, and show it to the user. Do not leave rendering to the user. Run `d2-render <name>.d2`, which prepends the style, writes `<name>.svg` beside the source, and opens it in Preview. For an Org block, pipe the block body: `d2-render - <name>.svg`.
 - Over SSH, `d2-render` does not open the SVG. Send the file with the agent's file-sharing tool if it has one. If it has none, give the user the path.
 
 ## Explanations

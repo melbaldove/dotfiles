@@ -90,7 +90,7 @@ let
       cat "${config.home.homeDirectory}/.dotfiles/d2/style.d2" "$input" | d2 - "$output"
 
       if [ -z "''${SSH_CONNECTION:-}" ] && command -v open >/dev/null; then
-        open "$output"
+        open -a Preview "$output"
       else
         echo "Rendered $output; open it from the user's machine"
       fi
