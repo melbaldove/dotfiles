@@ -1,10 +1,11 @@
 # Universal Agent Rules
 
-These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.gemini/AGENTS.md` use them. Repository rules belong in that repository's `AGENTS.md` and take precedence.
+A repository's `AGENTS.md` takes precedence over these rules.
 
 ## Agent Configuration
 
 - Change managed agent configuration in `~/.dotfiles`, not in generated home-directory files or Nix store links.
+- To change these rules, edit `~/.dotfiles/agents/universal.md`. Nix generates `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.gemini/AGENTS.md` from it.
 
 ## Documents
 
