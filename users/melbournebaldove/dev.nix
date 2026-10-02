@@ -71,6 +71,31 @@ let
         | CODEX_INSTALL_DIR="$install_dir" CODEX_NON_INTERACTIVE=1 /bin/sh
     '';
   };
+  d2Render = pkgs.writeShellApplication {
+    name = "d2-render";
+    runtimeInputs = [ pkgs.d2 ];
+    text = ''
+      if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+        echo "usage: d2-render <diagram.d2|-> [output.svg]" >&2
+        exit 2
+      fi
+
+      input="$1"
+      if [ "$input" = "-" ] && [ "$#" -ne 2 ]; then
+        echo "d2-render: reading stdin needs an output path" >&2
+        exit 2
+      fi
+      output="''${2:-''${input%.d2}.svg}"
+
+      cat "${config.home.homeDirectory}/.dotfiles/d2/style.d2" "$input" | d2 - "$output"
+
+      if [ -z "''${SSH_CONNECTION:-}" ] && command -v open >/dev/null; then
+        open "$output"
+      else
+        echo "Rendered $output; open it from the user's machine"
+      fi
+    '';
+  };
 in
 {
   imports = [
@@ -99,6 +124,7 @@ in
       fzf
       gleam
       d2
+      d2Render
       librsvg
       playwright-test
       opencode
