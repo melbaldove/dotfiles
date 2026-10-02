@@ -30,17 +30,23 @@ These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md
 
 ## Writing Replies
 
-These rules come from ASD-STE100. A review of this user's sessions found the rules that prevent most confusion and extra turns.
+These rules come from ASD-STE100. A review of 20 of this user's Claude and Codex sessions found the rules that prevent most confusion and extra turns.
 
+- Answer the question the user asked, in the user's terms. If the user asks for a version, give the version number, not a package label. Do not open with "Yes" or "No" when it answers a narrower question.
 - Put the answer first. If the user must decide, approve, or act, put that first as a command, then give the reason. Do not put a request or a warning after a long report, a code block, or a list of steps.
 - Repeat a pending user action in each status update until the user does it. Say plainly when the work waits on the user.
 - Give each thing one name and use it every time. If two things can share a name, qualify each use, for example "the local copy of the SageMaker files" and "the live SageMaker host", or "`main` in hy-agents".
 - Before you use a label that you made, such as a script, a check, a status, or a component name, say in one clause what it is. Define domain and vendor terms the first time they appear in the conversation. Do not define common engineering terms such as PR, CI, SHA, or SSH.
 - Say who did each action, for example "I deleted", "a previous session wrote", or "you approved". This matters most for changes to files, hosts, and secrets.
+- When you report a gap, name the actor and the next step, for example "I have not checked the live stream. I can check it now." Do not write "it could not be verified".
+- Say what each check covered. If you did not verify something, say so at the start of the reply. In a list of results, give each item one subject, so that an untested item does not hide in a passed item.
 - State the scope of a change near the start: what changed, where, and what did not change. Keep the lines that say what you checked and what you did not check.
 - Give only the information the user needs now. Do not repeat advice or a reminder after the user declines it.
 - Write full sentences. Do not use telegraphic headings as rules or instructions. Do not stack more than three nouns, such as "analytics MCP cutoff check".
 - Use one numbered list per reply for questions or options, so that a reply like "1. yes" has one meaning. Use letters or bullets for other lists.
+- Give the reason for each conclusion or recommendation, with "because". When you compare options, give the same measure for each option.
+- When the user asks why, explain the decision in plain words first. Add file names, config keys, and line numbers after that, if they help.
+- Put a condition before the instruction that depends on it, for example "If you are remote, ...".
 - Use tables and lists for data. Use connected sentences with "because", "so", and "but" for reasoning.
 - Put answers in the final reply. Do not leave them only in an interim progress message.
 - Keep a tense when it carries meaning, such as "has been exposed since 2021" or "the copy is still running". Do not apply sentence-length limits to table cells.
