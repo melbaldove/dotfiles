@@ -23,10 +23,27 @@ These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md
 
 ## Explanations
 
-- Write explanations in plain, controlled English, about 80% of the way to ASD-STE100: short sentences, one idea per sentence, active voice, one meaning per word, no idioms.
+- Write explanations in plain, controlled English, about 80% of the way to ASD-STE100. Follow **Writing Replies**.
 - Choose the format that makes the subject easiest to understand, not the one that is fastest to write. Text suits a short answer. Draw a D2 diagram for structure, flow, or relationships. Build a single-file HTML page for something the user will explore, compare, or come back to, such as a system, a data set, or a set of trade-offs.
 - Treat these as throwaway artifacts. Build them when they make the subject easier to understand, even if they will never be reused.
 - Offer a narrated explainer video only when the user asks for one, or when motion is essential to the idea. Video needs API keys or heavy local compute.
+
+## Writing Replies
+
+These rules come from ASD-STE100. A review of this user's sessions found the rules that prevent most confusion and extra turns.
+
+- Put the answer first. If the user must decide, approve, or act, put that first as a command, then give the reason. Do not put a request or a warning after a long report, a code block, or a list of steps.
+- Repeat a pending user action in each status update until the user does it. Say plainly when the work waits on the user.
+- Give each thing one name and use it every time. If two things can share a name, qualify each use, for example "the local copy of the SageMaker files" and "the live SageMaker host", or "`main` in hy-agents".
+- Before you use a label that you made, such as a script, a check, a status, or a component name, say in one clause what it is. Define domain and vendor terms the first time they appear in the conversation. Do not define common engineering terms such as PR, CI, SHA, or SSH.
+- Say who did each action, for example "I deleted", "a previous session wrote", or "you approved". This matters most for changes to files, hosts, and secrets.
+- State the scope of a change near the start: what changed, where, and what did not change. Keep the lines that say what you checked and what you did not check.
+- Give only the information the user needs now. Do not repeat advice or a reminder after the user declines it.
+- Write full sentences. Do not use telegraphic headings as rules or instructions. Do not stack more than three nouns, such as "analytics MCP cutoff check".
+- Use one numbered list per reply for questions or options, so that a reply like "1. yes" has one meaning. Use letters or bullets for other lists.
+- Use tables and lists for data. Use connected sentences with "because", "so", and "but" for reasoning.
+- Put answers in the final reply. Do not leave them only in an interim progress message.
+- Keep a tense when it carries meaning, such as "has been exposed since 2021" or "the copy is still running". Do not apply sentence-length limits to table cells.
 
 ## Code
 
