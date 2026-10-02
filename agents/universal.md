@@ -30,8 +30,6 @@ These rules apply to coding agents on this user's machines. `~/.claude/CLAUDE.md
 
 ## Writing Replies
 
-These rules come from ASD-STE100. A review of 20 of this user's Claude and Codex sessions found the rules that prevent most confusion and extra turns.
-
 - Answer the question the user asked, in the user's terms. If the user asks for a version, give the version number, not a package label. Do not open with "Yes" or "No" when it answers a narrower question.
 - Put the answer first. If the user must decide, approve, or act, put that first as a command, then give the reason. Do not put a request or a warning after a long report, a code block, or a list of steps.
 - Repeat a pending user action in each status update until the user does it. Say plainly when the work waits on the user.
