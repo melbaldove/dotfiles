@@ -52,6 +52,7 @@ A repository's `AGENTS.md` takes precedence over these rules.
 
 ## Code
 
+- Before implementing or reviewing behavior with correctness obligations, apply the `principle-intent-to-law` skill in `~/.agents/skills/principle-intent-to-law/SKILL.md`. Apply it alongside pstack when pstack is available. Repository-specific law workflows supply the local mechanics.
 - Use "Melbourne Baldove" when code author attribution is required.
 - Do not add code comments. Use names, small functions, types, and tests to make code clear. Keep existing comments unless the code contradicts them. Tool directives, shebangs, and license identifiers are allowed.
 
