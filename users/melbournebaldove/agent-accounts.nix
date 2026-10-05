@@ -31,7 +31,7 @@ let
     '';
   };
   claudeShared = pkgs.writeShellApplication {
-    name = "cc-shared";
+    name = "claude";
     text = ''
       unset CLAUDE_CONFIG_DIR CLAUDE_SECURESTORAGE_CONFIG_DIR
       unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN
@@ -105,5 +105,6 @@ let
   };
 in
 {
-  home.packages = [ claudeSwap claudeShared codexShared codexSharedLogin agentAccounts ];
+  home.packages = [ claudeSwap codexShared codexSharedLogin agentAccounts ];
+  home.shellAliases.claude = "${claudeShared}/bin/claude";
 }

@@ -4,9 +4,7 @@ Use Herdr GPUI for Claude Code and Codex CLI sessions. Switching is shared withi
 
 * Launch agents
 
-Run =claude= or =cc-shared= in a Herdr terminal to launch Claude with the selected subscription login. The =claude= alias uses =cc-shared=, which selects the default shared profile and clears authentication environment overrides.
-
-Run =cc-personal=, =cc-sphere=, or =cc-sphere-2= to select that saved login once and then launch Claude. These commands use the shared default profile. They change the login for other shared Claude sessions too. The =personal= alias selects the personal account, =sphere= selects the primary Sphere account, and =sphere-2= selects the second Sphere account.
+Run =claude= in a Herdr terminal to launch Claude with the selected subscription login. This is the only managed Claude launcher. It selects the default shared profile and clears authentication environment overrides. Select the login separately in the Accounts tab. The =personal= alias selects the personal account, =sphere= selects the primary Sphere account, and =sphere-2= selects the second Sphere account.
 
 Run =codex-shared= in a Herdr terminal. This command starts the native shared server and connects to its explicit endpoint. It refuses transport overrides so it cannot silently start an independent session.
 
