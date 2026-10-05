@@ -23,6 +23,7 @@ in
     claude = "cc-shared";
     cc-personal = "agent-accounts claude personal && cc-shared";
     cc-sphere = "agent-accounts claude sphere && cc-shared";
+    cc-sphere-2 = "agent-accounts claude sphere-2 && cc-shared";
   };
 
   # Claude AI assistant configurations

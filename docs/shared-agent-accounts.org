@@ -6,7 +6,7 @@ Use Herdr GPUI for Claude Code and Codex CLI sessions. Switching is shared withi
 
 Run =claude= or =cc-shared= in a Herdr terminal to launch Claude with the selected subscription login. The =claude= alias uses =cc-shared=, which selects the default shared profile and clears authentication environment overrides.
 
-Run =cc-personal= or =cc-sphere= to select that saved login once and then launch Claude. These commands now use the shared default profile. They change the login for other shared Claude sessions too.
+Run =cc-personal=, =cc-sphere=, or =cc-sphere-2= to select that saved login once and then launch Claude. These commands use the shared default profile. They change the login for other shared Claude sessions too. The =personal= alias selects the personal account, =sphere= selects the primary Sphere account, and =sphere-2= selects the second Sphere account.
 
 Run =codex-shared= in a Herdr terminal. This command starts the native shared server and connects to its explicit endpoint. It refuses transport overrides so it cannot silently start an independent session.
 
@@ -14,7 +14,7 @@ Existing Codex Desktop sessions use a separate server and do not participate in 
 
 * Switch accounts
 
-Run =agent-accounts claude sphere= or =agent-accounts claude personal= in one Herdr terminal. Shared Claude sessions keep their conversations. Later requests are expected to pick up the new login after the macOS credential cache expires, usually about 30 seconds. A request already in flight may finish using the previous login. Live pickup must be checked against the installed Claude version.
+Run =agent-accounts claude personal=, =agent-accounts claude sphere=, or =agent-accounts claude sphere-2= in one Herdr terminal. Shared Claude sessions keep their conversations. Later requests are expected to pick up the new login after the macOS credential cache expires, usually about 30 seconds. A request already in flight may finish using the previous login. Live pickup must be checked against the installed Claude version.
 
 Run =agent-accounts codex= to open one browser sign-in on the shared Codex server. Later requests from Codex CLI sessions attached to that server use the selected login. A request already in flight may finish using the previous login. Run =agent-accounts codex status= to check its account.
 
