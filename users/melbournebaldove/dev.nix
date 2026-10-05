@@ -6,6 +6,52 @@
   ...
 }:
 let
+  herdr =
+    if pkgs.stdenv.hostPlatform.isDarwin then
+      pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
+        pname = "herdr";
+        version = "0.9.3";
+        src = pkgs.fetchurl {
+          url = "https://github.com/herdrdev/herdr/releases/download/v${finalAttrs.version}/herdr-macos-${pkgs.stdenv.hostPlatform.parsed.cpu.name}";
+          hash = {
+            aarch64-darwin = "sha256-UXOj4K5C1dGrfr+l1eYyn3w9I/jho2d8fOMjHaKIQVc=";
+            x86_64-darwin = "sha256-22LVSP8+gysIepaxiUoI0mvjkF8YMDCc1VZ4PyFdQFQ=";
+          }.${pkgs.stdenv.hostPlatform.system};
+        };
+        dontUnpack = true;
+        dontBuild = true;
+        dontFixup = true;
+        installPhase = ''
+          runHook preInstall
+          install -Dm755 "$src" "$out/bin/herdr"
+          runHook postInstall
+        '';
+        meta.mainProgram = "herdr";
+      })
+    else
+      pkgs.herdr;
+  herdrGpui = pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
+    pname = "herdr-gpui";
+    version = "20261005.1";
+    src = pkgs.fetchurl {
+      url = "https://github.com/penso/herdr-gpui/releases/download/v${finalAttrs.version}/herdr-gpui-${finalAttrs.version}-macos-universal.app.tar.gz";
+      hash = "sha256-Cu8C3fnpAQ9dLGLORXFRNY13yvMsk6Ny/hbbMg9M0cg=";
+    };
+    sourceRoot = ".";
+    dontBuild = true;
+    dontFixup = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/Applications" "$out/bin"
+      cp -R Herdr.app "$out/Applications/"
+      ln -s "$out/Applications/Herdr.app/Contents/MacOS/Herdr" "$out/bin/herdr-gpui"
+      runHook postInstall
+    '';
+    meta = {
+      mainProgram = "herdr-gpui";
+      platforms = lib.platforms.darwin;
+    };
+  });
   tex = (
     pkgs.texlive.combine {
       inherit (pkgs.texlive)
@@ -128,6 +174,7 @@ in
       librsvg
       playwright-test
       opencode
+      herdr
       openComputerUse
       codexUpdater
       (pkgs.writeShellScriptBin "qwen-code" ''
@@ -140,6 +187,7 @@ in
       inputs.agenix.packages.${pkgs.system}.default
     ]
     ++ lib.optionals pkgs.stdenv.isDarwin [
+      herdrGpui
       # go-ios removed: has Linux dependencies (iproute2) that prevent it from building on Darwin
     ];
 
@@ -147,6 +195,13 @@ in
   home.shellAliases = {
     sg = "ast-grep";
   };
+
+  home.activation.herdrGpui = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin (
+    lib.hm.dag.entryAfter [ "copyApps" ] ''
+      run ${pkgs.coreutils}/bin/chmod a-w \
+        "${config.home.homeDirectory}/Applications/Home Manager Apps/Herdr.app/Contents/MacOS/Herdr"
+    ''
+  );
 
   # Development-specific bash aliases and setup
   programs.bash.bashrcExtra = ''
