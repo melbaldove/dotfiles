@@ -239,6 +239,8 @@ in
     fi
   '';
 
+  home.file.".local/bin/herdr".source = "${herdr}/bin/herdr";
+
   # Create glibtool wrapper for vterm compilation on macOS
   home.file.".local/bin/glibtool" = lib.mkIf pkgs.stdenv.isDarwin {
     executable = true;
