@@ -1,0 +1,31 @@
+#+title: Shared agent accounts in Herdr
+
+Use Herdr GPUI for Claude Code and Codex CLI sessions. Switching is shared within each provider. It changes the login for every participating session, including work and personal projects.
+
+* Launch agents
+
+Run =claude= or =cc-shared= in a Herdr terminal to launch Claude with the selected subscription login. The =claude= alias uses =cc-shared=, which selects the default shared profile and clears authentication environment overrides.
+
+Run =cc-personal= or =cc-sphere= to select that saved login once and then launch Claude. These commands now use the shared default profile. They change the login for other shared Claude sessions too.
+
+Run =codex-shared= in a Herdr terminal. This command starts the native shared server and connects to its explicit endpoint. It refuses transport overrides so it cannot silently start an independent session.
+
+Existing Codex Desktop sessions use a separate server and do not participate in this switch. A Codex CLI launched with another command may also use a separate server.
+
+* Switch accounts
+
+Run =agent-accounts claude sphere= or =agent-accounts claude personal= in one Herdr terminal. Shared Claude sessions keep their conversations. Later requests are expected to pick up the new login after the macOS credential cache expires, usually about 30 seconds. A request already in flight may finish using the previous login. Live pickup must be checked against the installed Claude version.
+
+Run =agent-accounts codex= to open one browser sign-in on the shared Codex server. Later requests from Codex CLI sessions attached to that server use the selected login. A request already in flight may finish using the previous login. Run =agent-accounts codex status= to check its account.
+
+Run =agent-accounts= to open the saved Claude account dashboard in Herdr.
+
+* Enrollment and limits
+
+The setup uses existing subscription logins. Each extra Claude account needs one initial enrollment. The raw =cswap= command preserves profile environment variables for enrollment. The shared controller and launcher unset those variables and authentication environment overrides.
+
+The Codex command uses native subscription sign-in. It does not save a separate collection of Codex credentials. Selecting another account therefore needs one browser sign-in per switch, without a separate login command in every session.
+
+Background rotation is off. Existing isolated Sphere files remain available. New managed Claude launchers use the shared default profile. Do not register a separate profile while Claude processes still refresh its credentials.
+
+If every saved subscription has reached its usage limit, switching cannot provide more allowance. A provider may revoke a saved login and require sign-in again.

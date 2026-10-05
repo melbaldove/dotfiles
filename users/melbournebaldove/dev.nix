@@ -145,6 +145,7 @@ let
 in
 {
   imports = [
+    ./agent-accounts.nix
     ./claude.nix
     ./openclaw.nix
   ];
