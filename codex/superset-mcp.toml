@@ -1,0 +1,5 @@
+[mcp_servers.heyyou-superset]
+command = "/nix/var/nix/profiles/default/bin/nix"
+args = ["develop", "/Users/melbournebaldove/hy-ai-workspace#superset", "--command", "uv", "run", "--python", "python3", "--with", "boto3", "--with", "fastmcp==3.4.7", "--with", "httpx==0.28.1", "--with", "PyJWT==2.10.1", "--with", "cryptography==46.0.5", "python", "/Users/melbournebaldove/.dotfiles/scripts/superset-mcp.py", "--workspace", "/Users/melbournebaldove/hy-ai-workspace", "--profile", "heyyou-power", "--private-key", "/Users/melbournebaldove/.local/state/hy-superset-upgrade/runtime-runs/20261005T124856Z/mcp-private-key.pem"]
+startup_timeout_sec = 120
+tool_timeout_sec = 90
