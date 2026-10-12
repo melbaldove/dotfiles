@@ -1,0 +1,25 @@
+name: Worker supervision
+on:
+  push:
+    paths:
+      - agents/worker-supervise.py
+      - agents/worker-supervision-guard.py
+      - agents/test_worker_supervise.py
+      - agents/worker-supervision-transcript-fixtures.json
+      - .github/workflows/worker-supervision.yml
+  pull_request:
+    paths:
+      - agents/worker-supervise.py
+      - agents/worker-supervision-guard.py
+      - agents/test_worker_supervise.py
+      - agents/worker-supervision-transcript-fixtures.json
+      - .github/workflows/worker-supervision.yml
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: python3 agents/test_worker_supervise.py

@@ -1,0 +1,138 @@
+{
+  "parent_session": "054b50d4-fae7-4ed0-bb68-109ad8a2f391",
+  "commands": [
+    {
+      "source": "agent-ad54c21a890aa7890.jsonl",
+      "line": 89,
+      "sha256": "2eac9fa936a6f9e9cb143d6e8375924e65fb4990894ab1b870830a952f7be050",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; cd $S/worker-worktree && (bash -c \"codex exec -m gpt-6.1-sol -c model_reasoning_effort='\\\"xhigh\\\"' --sandbox workspace-write -C $S/worker-worktree -o $S/worker-task-result.md \\\"\\$(cat $S/worker-task.md)\\\" < /dev/null > $S/worker-task.log 2>&1\" &); sleep 5; pgrep -f worker-task >/dev/null && echo running",
+        "description": "Historical worker lifecycle command."
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels.",
+        "Remove the private task-brief heredoc; retain the actual detached launch command."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-ad54c21a890aa7890.jsonl",
+      "line": 114,
+      "sha256": "84539fe9d370bafe773c5ecda69445d8a161a7fd7b475d9f5e0f9bcd3009bb4f",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; until ! pgrep -f worker-task >/dev/null; do sleep 30; done; ls -la $S/worker-task-result.md; tail -c 300 $S/worker-task.log",
+        "description": "Historical worker lifecycle command.",
+        "run_in_background": true
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-ad54c21a890aa7890.jsonl",
+      "line": 163,
+      "sha256": "4abd9e3327bf5a0dda320699e01bd53b8beee65a766ce7f6de085c49dc211846",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; until ! pgrep -f 'codex exec resume fixture-session' >/dev/null; do sleep 30; done; ls -la $S/worker-task-result.md; tail -c 300 $S/worker-task-2.log",
+        "description": "Historical worker lifecycle command.",
+        "run_in_background": true
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-ad54c21a890aa7890.jsonl",
+      "line": 270,
+      "sha256": "de2bd638e25a088c4d35059ebc143d263a0fc984982c83520bebb7a40eb796fc",
+      "tool_input": {
+        "command": "until ! pgrep -f 'codex exec resume fixture-session' >/dev/null; do sleep 30; done; ls -la /tmp/worker-fixture/worker-task-result2.md",
+        "description": "Historical worker lifecycle command.",
+        "run_in_background": true
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-ad54c21a890aa7890.jsonl",
+      "line": 2530,
+      "sha256": "d1bb1205a25b961ddc9af0a17e7f14866163a16d23577ed7cdaaab2d5ddb31fc",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; L=$S/worker-task-18.log; sleep 30; end=$(( $(date +%s) + 1170 )); while [ $(date +%s) -lt $end ]; do if ! ps -axo args | grep -v grep | grep -q 'codex exec resume fixture-session'; then echo \"worker exited\"; break; fi; if tail -c 300 $L | grep -q 'waiting for network'; then sleep 120; tail -c 300 $L | grep -q 'waiting for network' && { echo \"worker stuck on network\"; break; }; fi; if ps -axo args | grep -v grep | grep -q 'decision-sweep example_set --jobs 1'; then echo \"worker started a local sweep\"; break; fi; sleep 30; done; date; wc -c $L; tail -c 300 $L | tr -cd '[:print:]\\n' | tail -4; uptime",
+        "description": "Historical worker lifecycle command.",
+        "run_in_background": true
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-a6c1bfa6aaacc15c7.jsonl",
+      "line": 86,
+      "sha256": "8accc8c6d87a00446ac5a28d12adb8682b8dddf2209ac584ca66c8d82c324d90",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; cat > $S/stepc/watch.sh <<'EOF'\n#!/usr/bin/env bash\nlog=$1; pat=$2; wt=$3\nlast=$(wc -c < \"$log\"); lastt=$(date +%s)\nwhile true; do\n  sleep 60\n  if ! pgrep -f \"$pat\" >/dev/null; then echo \"WORKER EXITED\"; tail -c 1500 \"$log\"; exit 0; fi\n  cur=$(wc -c < \"$log\"); now=$(date +%s)\n  if [ \"$cur\" != \"$last\" ] || [ -n \"$(find \"$wt\" -path \"$wt/.git\" -prune -o -type f -newermt '-20 minutes' -print 2>/dev/null | head -1)\" ]; then last=$cur; lastt=$now; fi\n  if [ $((now - lastt)) -ge 1200 ]; then echo \"STALL: no log growth or file change for 20 min\"; tail -c 1500 \"$log\"; exit 0; fi\n  df -k / | awk 'NR==2 && $4 < 5*1024*1024 {print \"DISK LOW: \" $4 \" KB free\"; exit 1}' || exit 0\ndone\nEOF\nchmod +x $S/stepc/watch.sh; echo ok",
+        "description": "Historical worker lifecycle command."
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-a6c1bfa6aaacc15c7.jsonl",
+      "line": 90,
+      "sha256": "2c492cf1190639f546400b19244451b399960c4a2011193c736dc6235cb8bd1a",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; $S/stepc/watch.sh $S/lane-stepc1.log \"codex exec.*worker-worktree\" $S/worker-worktree",
+        "description": "Historical worker lifecycle command.",
+        "run_in_background": true
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    },
+    {
+      "source": "agent-a6c1bfa6aaacc15c7.jsonl",
+      "line": 132,
+      "sha256": "0290352bac3b4901e5361a847e74790a52911949a939401c16e00c8b00e14cbd",
+      "tool_input": {
+        "command": "S=/tmp/worker-fixture; until ! pgrep -f \"codex exec.*worker-worktree\" >/dev/null; do sleep 120; done; echo \"worker done\"; tail -c 3000 $S/stepc/result-c1.md 2>/dev/null",
+        "description": "Historical worker lifecycle command.",
+        "run_in_background": true
+      },
+      "transformations": [
+        "Replace local project and worktree paths with neutral fixture paths.",
+        "Replace private task and module labels with neutral labels."
+      ],
+      "tool_input_provenance": "Normalized and redacted from the identified private source line."
+    }
+  ],
+  "blocked_report": {
+    "source": "agent-ad54c21a890aa7890.jsonl",
+    "line": 415,
+    "sha256": "512d9bc95efcdeeae414c88ab9c5bdcf67199bed464c465e8ba1a88b572b0faa",
+    "text": "Blocked by sandbox access to the shared Git index.\n\nfatal: Unable to create '/tmp/worker-fixture/worker-worktree/index.lock': Operation not permitted\n\nNo requested checks ran. Work remains unfinished.",
+    "exit_code_fixture": 0,
+    "exit_code_provenance": "Synthetic. The transcript does not independently record the CLI exit code.",
+    "transformations": [
+      "Retain the leading blocked marker and Git-index permission error.",
+      "Normalize the path and remove private code, ledger, merge, and task details."
+    ],
+    "text_provenance": "Redacted excerpt from the identified private source line."
+  },
+  "fixture_policy": "Public fixtures normalize paths and redact private task content. Source-line hashes identify the original private evidence. Published tool inputs are normalized, not exact copies."
+}

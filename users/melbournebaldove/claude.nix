@@ -34,6 +34,7 @@ in
     ".agents/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/agents/skills";
 
     ".codex/AGENTS.md".text = agentInstructions;
+    ".codex/hooks.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/codex/hooks.json";
     ".gemini/AGENTS.md".text = agentInstructions;
   };
 }
