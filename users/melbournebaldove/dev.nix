@@ -117,6 +117,15 @@ let
         | CODEX_INSTALL_DIR="$install_dir" CODEX_NON_INTERACTIVE=1 /bin/sh
     '';
   };
+  # OpenCode 2 releases faster than nixpkgs. Use the official installer.
+  opencodeUpdater = pkgs.writeShellApplication {
+    name = "update-opencode";
+    runtimeInputs = [ pkgs.curl pkgs.gnutar ];
+    text = ''
+      export PATH="${config.home.homeDirectory}/.opencode/bin:$PATH"
+      curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path
+    '';
+  };
   d2Render = pkgs.writeShellApplication {
     name = "d2-render";
     runtimeInputs = [ pkgs.d2 ];
@@ -174,7 +183,6 @@ in
       d2Render
       librsvg
       playwright-test
-      opencode
       herdr
       openComputerUse
       codexUpdater
@@ -224,6 +232,23 @@ in
       ProcessType = "Background";
       StandardOutPath = "${config.home.homeDirectory}/Library/Logs/codex-update.log";
       StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/codex-update-error.log";
+    };
+  };
+
+  launchd.agents.opencode-update = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+    enable = true;
+    config = {
+      ProgramArguments = [ "${opencodeUpdater}/bin/update-opencode" ];
+      RunAtLoad = true;
+      StartCalendarInterval = [
+        {
+          Hour = 9;
+          Minute = 15;
+        }
+      ];
+      ProcessType = "Background";
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/opencode-update.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/opencode-update-error.log";
     };
   };
 

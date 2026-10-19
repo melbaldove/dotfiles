@@ -15,6 +15,7 @@
   home.sessionPath = [
     "$HOME/.local/bin"
     "$HOME/.npm-global/bin"
+    "$HOME/.opencode/bin"
   ];
 
   home.sessionVariables = {
