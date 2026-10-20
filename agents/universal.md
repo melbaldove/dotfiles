@@ -7,6 +7,13 @@ A repository's `AGENTS.md` takes precedence over these rules.
 - Change managed agent configuration in `~/.dotfiles`, not in generated home-directory files or Nix store links.
 - To change these rules, edit `~/.dotfiles/agents/universal.md`. Nix generates `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.gemini/AGENTS.md` from it.
 
+## Skills
+
+- Skill defaults do not grant authorization or require another approval for an action the user already authorized. Keep external actions within the user's request. Report incidental findings instead of creating unrelated issues, PRs, or messages.
+- Follow the repository's Git workflow before applying a skill's branch, worktree, commit, or PR steps. Never reset or discard unrelated work to satisfy a playbook.
+- Apply the **Code** rules during comment reviews, including `no-comments`. Limit automatic comment cleanup to comments introduced by the current change; removing other correct comments needs an explicit cleanup request.
+- If the active app provides PR monitoring, use its watcher and wake-up mechanism. Follow that app's watch and unwatch lifecycle instead of starting a second polling loop, bundled watcher, or scheduled task.
+
 ## Documents
 
 - Prefer Org mode (`.org`) for personal writing that the user reads in Emacs, including notes, plans, RFCs, reports, investigations, and drafts.

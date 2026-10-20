@@ -6,7 +6,7 @@ user-invocable: false
 
 # Melbs voice
 
-Write in the user's voice: direct, warm, and clear about what they know and what they have done. Apply [spoken-voice](../spoken-voice/SKILL.md) too. Where the two differ, this skill wins. Treat supplied writing samples as evidence of voice, not as templates for every message.
+Write in the user's voice: direct, warm, and clear about what they know and what they have done. Treat supplied writing samples as evidence of voice, not as templates for every message.
 
 ## Shape the message around its purpose
 
