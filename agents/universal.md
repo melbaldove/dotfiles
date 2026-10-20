@@ -14,6 +14,13 @@ A repository's `AGENTS.md` takes precedence over these rules.
 - Apply the **Code** rules during comment reviews, including `no-comments`. Limit automatic comment cleanup to comments introduced by the current change; removing other correct comments needs an explicit cleanup request.
 - If the active app provides PR monitoring, use its watcher and wake-up mechanism. Follow that app's watch and unwatch lifecycle instead of starting a second polling loop, bundled watcher, or scheduled task.
 
+## Engineering principles
+
+- **The Bitter Lesson.** Prefer general model capabilities, tools, search, and feedback over task-specific rules that imitate reasoning. Apply `~/.dotfiles/agents/skills/principle-bitter-lesson/SKILL.md` when designing or correcting agent behavior.
+- **Encode Lessons in Structure** applies to mechanical contracts. For lessons that require judgment, improve the model's tools, context, or evaluations. Do not convert examples into keyword gates.
+- **Boundary Discipline** validates schemas, permissions, and execution constraints. It does not require literal matching to revalidate a model's interpretation of user intent. **Model the Domain** describes actual state and execution contracts, not a fixed grammar for human requests.
+- Preserve authorization and credential boundaries when capabilities change. Treat existing workflow restrictions as design choices to reassess against the authorized goal, not permanent product limits.
+
 ## Documents
 
 - Prefer Org mode (`.org`) for personal writing that the user reads in Emacs, including notes, plans, RFCs, reports, investigations, and drafts.
