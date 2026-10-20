@@ -23,6 +23,21 @@
       ../../users/melbournebaldove/desktop.nix
       ../../users/melbournebaldove/emacs.nix
     ];
+    users.melbournebaldove.launchd.agents.t3-tailnet-proxy = {
+      enable = true;
+      config = {
+        ProgramArguments = [
+          "${pkgs.socat}/bin/socat"
+          "TCP4-LISTEN:3773,bind=100.89.96.77,reuseaddr,fork"
+          "TCP4:127.0.0.1:3773"
+        ];
+        RunAtLoad = true;
+        KeepAlive = true;
+        ThrottleInterval = 10;
+        ProcessType = "Background";
+        StandardErrorPath = "/Users/melbournebaldove/Library/Logs/t3-tailnet-proxy.log";
+      };
+    };
   };
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
