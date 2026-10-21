@@ -3,6 +3,8 @@
 }:
 let
   agentInstructions = builtins.readFile ../../agents/universal.md
+    + lib.optionalString (builtins.elem osConfig.networking.hostName [ "eisenhower" "einstein" ])
+      (builtins.readFile ../../agents/optmem.md)
     + lib.optionalString (osConfig.networking.hostName == "eisenhower") ''
 
       ## Host Context
@@ -11,6 +13,8 @@ let
   '';
 in
 {
+  imports = [ ./optmem.nix ];
+
   home.packages = [
     pkgs.claude-code
   ];
