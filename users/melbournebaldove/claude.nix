@@ -3,7 +3,7 @@
 }:
 let
   agentInstructions = builtins.readFile ../../agents/universal.md
-    + lib.optionalString (builtins.elem osConfig.networking.hostName [ "eisenhower" "einstein" ])
+    + lib.optionalString (builtins.elem osConfig.networking.hostName [ "eisenhower" "einstein" "turing" ])
       (builtins.readFile ../../agents/optmem.md)
     + lib.optionalString (osConfig.networking.hostName == "eisenhower") ''
 

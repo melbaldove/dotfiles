@@ -1,8 +1,9 @@
 { config, pkgs, lib, osConfig, ... }:
 let
   host = osConfig.networking.hostName;
-  enabled = builtins.elem host [ "eisenhower" "einstein" ];
+  enabled = builtins.elem host [ "eisenhower" "einstein" "turing" ];
   server = host == "eisenhower";
+  backupHost = host == "einstein";
   upstream = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/VictorTaelin/OptMem/1fb164cf39028047781f72ac3bb1e5a691c1dcb0/memo";
     hash = "sha256-PcEg0BvjEV72Jn6rQQPnkJ/IMNYie1SfIJkbqZnun/s=";
@@ -24,7 +25,7 @@ let
 in
 {
   config = lib.mkIf enabled {
-    home.packages = [ memo ] ++ lib.optional (!server) backup;
+    home.packages = [ memo ] ++ lib.optional backupHost backup;
     home.file.".optmem/memo".source = "${memo}/bin/memo";
     home.file.".local/bin/memo".source = "${memo}/bin/memo";
     home.file.".optmem/snapshot" = lib.mkIf server { source = snapshot; };
@@ -37,7 +38,7 @@ in
         $DRY_RUN_CMD chmod 700 "$HOME/.optmem/memory"
       ''}
     '';
-    systemd.user.services.optmem-backup = lib.mkIf (!server) {
+    systemd.user.services.optmem-backup = lib.mkIf backupHost {
       Unit.Description = "Back up Eisenhower OptMem through Tailscale";
       Service = {
         Type = "oneshot";
@@ -45,7 +46,7 @@ in
         UMask = "0077";
       };
     };
-    systemd.user.timers.optmem-backup = lib.mkIf (!server) {
+    systemd.user.timers.optmem-backup = lib.mkIf backupHost {
       Unit.Description = "Daily OptMem backup";
       Timer = {
         OnCalendar = "daily";

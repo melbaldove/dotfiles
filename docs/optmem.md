@@ -1,10 +1,11 @@
 # Shared OptMem
 
-Eisenhower owns `~/.optmem/memory`. Einstein forwards `memo` and
+Eisenhower owns `~/.optmem/memory`. Einstein and Turing forward `memo` and
 `~/.optmem/memo` through OpenSSH to `100.89.96.77:22` on Tailscale, as
 `melbournebaldove`. The wrapper ignores SSH configuration files and uses a
 pinned host key. Authentication uses the existing default user SSH keys or
-agent. There is no LAN or offline store fallback. Turing is unchanged.
+agent. There is no LAN or offline store fallback. Turing is a client only;
+backups run only on Einstein.
 
 The Home Manager module `users/melbournebaldove/optmem.nix` pins upstream
 VictorTaelin/OptMem commit `1fb164cf39028047781f72ac3bb1e5a691c1dcb0`
@@ -16,7 +17,7 @@ Upstream's own write lock also protects snapshot creation.
 
 Activation initializes only an absent memory directory. It never imports
 old memories. Existing stores remain intact. Agent instructions come from
-`agents/optmem.md`, appended only on Eisenhower and Einstein. Native memory
+`agents/optmem.md`, appended only on Eisenhower, Einstein, and Turing. Native memory
 systems retain their own policies.
 
 ## Scoped deployment
@@ -28,7 +29,8 @@ nix build --impure --file nix/optmem-deploy.nix --argstr system aarch64-darwin -
 python3 scripts/activate-optmem.py /tmp/optmem-result
 ```
 
-On Einstein, use `x86_64-linux` and `einstein`. Run activation with the Nix
+On Turing, use `aarch64-darwin` and `turing`. On Einstein, use
+`x86_64-linux` and `einstein`. Run activation with the Nix
 Python used by the generated command if Python is not on PATH. This installs
 only the selected OptMem files and generated agent instructions. It does not
 activate a minimal Home Manager generation or rebuild the host system.
@@ -36,7 +38,8 @@ The activation script records previous symlinks under
 `~/.local/state/optmem/deployments/<timestamp>/links.json` and retains the
 deployment closure with a Nix garbage-collection root beside that receipt.
 
-Eisenhower's next full rebuild must use this repository revision or newer.
+Eisenhower and Turing must use this repository revision or newer for their
+next full rebuild.
 Einstein's `nix-infra` flake must pin a dotfiles revision containing this change
 before a full rebuild; an older pin can replace the agent instructions with
 the older version. Reapply the scoped deployment after such a rebuild.
@@ -44,7 +47,7 @@ the older version. Reapply the scoped deployment after such a rebuild.
 ## Use and verify
 
 Run `~/.optmem/memo wake`, `~/.optmem/memo note "a useful fact"`, and
-`~/.optmem/memo recall 'useful'` on either host. Follow `wake` instructions
+`~/.optmem/memo recall 'useful'` on any of the three hosts. Follow `wake` instructions
 for summary creation. Only primary agents use the store. Client `import`
 is rejected because its file paths would refer to Eisenhower.
 

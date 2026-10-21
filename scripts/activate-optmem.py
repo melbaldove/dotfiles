@@ -9,7 +9,7 @@ import sys
 
 def activate(deployment):
     host = socket.gethostname().split('.')[0].lower()
-    if host not in ('einstein', 'eisenhower') or not deployment.name.endswith(f'-optmem-deploy-{host}'):
+    if host not in ('einstein', 'eisenhower', 'turing') or not deployment.name.endswith(f'-optmem-deploy-{host}'):
         raise SystemExit('Deployment does not match this host')
     if not (deployment / '.optmem/memo').is_file():
         raise SystemExit('Build or import the deployment before activation')
@@ -41,7 +41,7 @@ def activate(deployment):
         if not (home / '.optmem/memory').exists():
             subprocess.run([str(home / '.optmem/memo'), 'init'], check=True, stdout=subprocess.DEVNULL)
         (home / '.optmem/memory').chmod(0o700)
-    else:
+    elif host == 'einstein':
         subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True)
         subprocess.run(['systemctl', '--user', 'enable', '--now', 'optmem-backup.timer'], check=True)
     print(f'Rollback links recorded in {receipt}/links.json')

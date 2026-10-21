@@ -13,7 +13,7 @@ let
       ../users/melbournebaldove/claude.nix
       {
         home.username = "melbournebaldove";
-        home.homeDirectory = if host == "eisenhower" then "/Users/melbournebaldove" else "/home/melbournebaldove";
+        home.homeDirectory = if pkgs.stdenv.hostPlatform.isDarwin then "/Users/melbournebaldove" else "/home/melbournebaldove";
         home.stateVersion = "24.11";
       }
     ];
@@ -28,7 +28,7 @@ let
     path = pkgs.writeText (baseNameOf name) (pkgs.lib.generators.toINI { listsAsDuplicateKeys = true; } value);
   };
 in
-assert builtins.elem host [ "eisenhower" "einstein" ];
+assert builtins.elem host [ "eisenhower" "einstein" "turing" ];
 pkgs.linkFarm "optmem-deploy-${host}" (fileLinks ++ pkgs.lib.optionals (host == "einstein") [
   { name = ".local/bin/optmem-backup"; path = "${backup}/bin/optmem-backup"; }
   (unit ".config/systemd/user/optmem-backup.service" home.config.systemd.user.services.optmem-backup)
