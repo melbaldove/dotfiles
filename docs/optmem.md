@@ -59,8 +59,8 @@ argument, canonical routing, snapshot restoration, and failed-backup tests.
 ## Backups and recovery
 
 On Einstein, `optmem-backup` pulls a snapshot over the same Tailscale route.
-The `optmem-backup.timer` user timer runs daily and five minutes after timer
-startup. Persistent scheduling catches missed calendar runs when the user
+The `optmem-backup.timer` user timer runs daily and five minutes after the user
+service manager starts. Persistent scheduling catches missed calendar runs when the user
 manager starts; a failed run waits for the next timer event or manual run.
 The user manager must run for scheduling to operate.
 
