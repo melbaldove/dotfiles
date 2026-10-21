@@ -13,7 +13,7 @@ end):start()
 
 -- Application bindings
 local apps = {
-    a = "ChatGPT",
+    a = "T3 Code (Beta)",
     s = "Safari",
     e = "Emacs",
     t = "Ghostty",
