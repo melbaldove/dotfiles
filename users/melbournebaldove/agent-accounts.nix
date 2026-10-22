@@ -11,6 +11,7 @@ let
     };
     build-system = [ pkgs.python313Packages.hatchling ];
     dependencies = with pkgs.python313Packages; [ textual truststore ];
+    pythonRelaxDeps = [ "textual" ];
     doCheck = false;
     meta = {
       description = "Switch saved Claude Code subscription accounts";

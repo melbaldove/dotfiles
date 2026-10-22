@@ -29,7 +29,7 @@ let
         meta.mainProgram = "herdr";
       })
     else
-      pkgs.herdr;
+      pkgs.herdr or null;
   herdrGpui = pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
     pname = "herdr-gpui";
     version = "20261005.1";
@@ -183,7 +183,6 @@ in
       d2Render
       librsvg
       playwright-test
-      herdr
       openComputerUse
       codexUpdater
       (pkgs.writeShellScriptBin "qwen-code" ''
@@ -195,6 +194,7 @@ in
 
       inputs.agenix.packages.${pkgs.system}.default
     ]
+    ++ lib.optional (herdr != null) herdr
     ++ lib.optionals pkgs.stdenv.isDarwin [
       herdrGpui
       # go-ios removed: has Linux dependencies (iproute2) that prevent it from building on Darwin
@@ -264,7 +264,9 @@ in
     fi
   '';
 
-  home.file.".local/bin/herdr".source = "${herdr}/bin/herdr";
+  home.file.".local/bin/herdr" = lib.mkIf (herdr != null) {
+    source = "${herdr}/bin/herdr";
+  };
 
   # Create glibtool wrapper for vterm compilation on macOS
   home.file.".local/bin/glibtool" = lib.mkIf pkgs.stdenv.isDarwin {
