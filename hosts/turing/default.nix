@@ -44,6 +44,11 @@
 
   services.openssh.enable = true;
 
+  users.users.melbournebaldove.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIKzco47R/VfSeaEfMQu144S0iIOlFWmuTVLkc+J4dkx melbournebaldove@eisenhower"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJuJUmdNbq46Ge0V0ZnU9dwspG7ge9CNEeBcNFZWSKVK melbournebaldove@einstein"
+  ];
+
   nixpkgs.config.allowUnfree = true;
 
   # Turing-specific packages

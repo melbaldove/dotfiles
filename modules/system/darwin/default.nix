@@ -25,6 +25,10 @@
     shell = pkgs.zsh;
   };
 
+  security.sudo.extraConfig = ''
+    melbournebaldove ALL=(ALL) NOPASSWD: ALL
+  '';
+
   # NOTE: These system modifications have been moved to a manual setup script
   # Run setup.sh after initial nix-darwin installation
 }

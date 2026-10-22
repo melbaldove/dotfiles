@@ -1,9 +1,23 @@
 {
   config,
+  lib,
   pkgs,
   inputs,
   ...
 }:
+let
+  tailnetHostKeys = {
+    einstein = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJbSfyESdV7Wr9zSHDbjLt2+/Fql3uEOEdxjhHvDDdmc";
+    eisenhower = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHvL84a8GO4rz/8EqVVh6kcXpw6iFtYdHf9JPeYYRjn5";
+    turing = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMCiKsrI2BuWAEH0q1+oNzPnE/c6l5Vs5WdsoFPVOebI";
+  };
+  tailnetHostname = name: "${name}.tail141ab8.ts.net";
+  tailnetKnownHosts = pkgs.writeText "tailnet-known-hosts" (
+    lib.concatStrings (
+      lib.mapAttrsToList (name: key: "${tailnetHostname name} ${key}\n") tailnetHostKeys
+    )
+  );
+in
 {
   home.username = "melbournebaldove";
   home.homeDirectory =
@@ -230,19 +244,14 @@
           identityFile = "~/.ssh/ios-certificates-deploy-key";
           identitiesOnly = true;
         };
-        "einstein" = {
-          hostname = "einstein.tail141ab8.ts.net";
-          user = "melbournebaldove";
-          identityFile = "~/.ssh/id_ed25519";
-          identitiesOnly = true;
-        };
-        "eisenhower" = {
-          hostname = "eisenhower.tail141ab8.ts.net";
-          user = "melbournebaldove";
-          identityFile = "~/.ssh/id_ed25519";
-          identitiesOnly = true;
-        };
-      };
+      }
+      // lib.mapAttrs (name: _: {
+        hostname = tailnetHostname name;
+        user = "melbournebaldove";
+        identityFile = "~/.ssh/id_ed25519";
+        identitiesOnly = true;
+        userKnownHostsFile = "~/.ssh/known_hosts ${tailnetKnownHosts}";
+      }) tailnetHostKeys;
     };
 
     tmux = {
