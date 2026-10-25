@@ -197,7 +197,7 @@
     "atlassian@claude-plugins-official": true,
     "aws-core@claude-plugins-official": true,
     "data@knowledge-work-plugins": true,
-    "pstack@pstack-claude": true
+    "mstack@mstack": true
   },
   "extraKnownMarketplaces": {
     "knowledge-work-plugins": {
@@ -206,10 +206,10 @@
         "repo": "anthropics/knowledge-work-plugins"
       }
     },
-    "pstack-claude": {
+    "mstack": {
       "source": {
         "source": "github",
-        "repo": "michael-denyer/pstack-claude"
+        "repo": "melbaldove/mstack"
       }
     }
   },

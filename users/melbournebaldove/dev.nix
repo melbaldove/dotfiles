@@ -252,15 +252,19 @@ in
     };
   };
 
-  home.activation.codexPstack = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.codexMstack = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     codex_bin="${config.home.homeDirectory}/.local/bin/codex"
     if [ -x "$codex_bin" ]; then
       export PATH="${pkgs.git}/bin:$PATH"
-      run "$codex_bin" plugin marketplace add michael-denyer/pstack-claude \
-        && run "$codex_bin" plugin add pstack@pstack-claude \
-        || warnEcho "Could not install the pstack Codex plugin"
+      if "$codex_bin" plugin marketplace list 2>/dev/null | grep -q '^pstack-claude '; then
+        run "$codex_bin" plugin remove pstack@pstack-claude || true
+        run "$codex_bin" plugin marketplace remove pstack-claude || true
+      fi
+      run "$codex_bin" plugin marketplace add melbaldove/mstack \
+        && run "$codex_bin" plugin add mstack@mstack \
+        || warnEcho "Could not install the mstack Codex plugin"
     else
-      warnEcho "Codex is not installed; skipping the pstack Codex plugin"
+      warnEcho "Codex is not installed; skipping the mstack Codex plugin"
     fi
   '';
 
