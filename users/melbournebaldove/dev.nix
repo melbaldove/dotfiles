@@ -260,9 +260,14 @@ in
         run "$codex_bin" plugin remove pstack@pstack-claude || true
         run "$codex_bin" plugin marketplace remove pstack-claude || true
       fi
-      run "$codex_bin" plugin marketplace add melbaldove/mstack \
-        && run "$codex_bin" plugin add mstack@mstack \
-        || warnEcho "Could not install the mstack Codex plugin"
+      if "$codex_bin" plugin marketplace list 2>/dev/null | grep -q '^mstack '; then
+        run "$codex_bin" plugin marketplace upgrade mstack || warnEcho "Could not upgrade the mstack marketplace"
+      else
+        run "$codex_bin" plugin marketplace add melbaldove/mstack || warnEcho "Could not add the mstack marketplace"
+      fi
+      run "$codex_bin" plugin add mstack@mstack \
+        && run ${pkgs.python3}/bin/python3 -I "${config.home.homeDirectory}/.dotfiles/agents/codex-trust-mstack.py" "$codex_bin" \
+        || warnEcho "Could not install or trust the mstack Codex plugin"
     else
       warnEcho "Codex is not installed; skipping the mstack Codex plugin"
     fi
