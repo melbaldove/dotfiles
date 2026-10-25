@@ -7,11 +7,12 @@ description: Use when the user runs /shape, or brings a raw idea, request, or pr
 
 Shape a raw idea the way Part 1 of Ryan Singer's [Shape Up](https://basecamp.com/shapeup) describes. Text passed with `/shape` is the raw idea. If none is given, ask for it.
 
-Only three things change from the book:
+Only four things change from the book:
 
 - **The builders are agents.** The user is the shaper, and also makes the bet.
 - **Appetites are smaller.** They're usually hours or days instead of two or six weeks.
 - **The pitch is a file.**
+- **Breadboards cover work without a UI.** The book's breadboard is for interfaces. Here it also maps commands, APIs, jobs, and agent tools.
 
 Everything else follows the book. Don't add steps it doesn't have.
 
@@ -48,7 +49,9 @@ Sketch with a breadboard in text:
 - **Affordances:** things the user can act on there.
 - **Connection lines:** "how the affordances take the user from place to place."
 
-When the solution is visual, describe a fat marker sketch, meaning a sketch too coarse to show detail. The elements you find are the output. They're "not deliverable yet": the builders still design and build them.
+For work without a UI, keep the same three parts and read "the user" as whatever drives the system: a person at a command line, an agent, or another program. Places are where it can be, such as a command, an endpoint, a running job, or a state the system is in. Affordances are what it can act on there, such as subcommands, flags, calls, events, and the data it reads or writes. Connection lines show where each action takes it. The book's breadboard has "all the components and wiring of a real device but no industrial design", so leave out names, schemas, and types the same way the book leaves out visual design.
+
+When the arrangement of the parts is itself the problem, describe a fat marker sketch, meaning a sketch too coarse to show detail. For work without a UI, that's a coarse diagram of the parts and how they connect. The elements you find are the output. They're "not deliverable yet": the builders still design and build them.
 
 ## 3. Find the risks and rabbit holes
 
