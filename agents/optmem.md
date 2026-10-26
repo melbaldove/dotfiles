@@ -1,9 +1,9 @@
 
 ## Shared OptMem memory
 
-This host uses one OptMem store on Eisenhower. Run `~/.optmem/memo wake` at the start of a primary agent session. Read every part it requests. When it requests summaries, use `~/.optmem/memo nap` and follow the printed instructions, then resume the original task. Use `~/.optmem/memo help` for command syntax.
+This host uses one OptMem store on Eisenhower. Run `~/.optmem/memo wake` at the start of a primary agent session. Read every part it requests. When it requests summaries, use `~/.optmem/memo nap` and follow the printed instructions, then resume the original task. Run `~/.optmem/memo` with no arguments for command syntax.
 
-The user authorized this shared memory installation and ongoing OptMem note-taking. Save concise useful decisions, preferences, corrections, and lessons with `~/.optmem/memo note "..."`. Do not save secrets. This applies only to OptMem; preserve native memory systems and obey their separate write restrictions. Do not import past conversation histories or existing memory stores automatically.
+The user authorized this shared memory installation and ongoing OptMem note-taking. Save concise useful decisions, preferences, corrections, and lessons with `~/.optmem/memo note "..."`. Do not save secrets. `note` saves the line before it prints anything else; `Saved as #N` confirms it. Any compression prompt that follows is upkeep, not a condition for saving: the store merges neighbouring notes by position, so unrelated notes share a summary by design, and each prompt widens the range until the chain ends (at most log2 of the note count). Finish the chain before your next action. Do not pipe `memo` output through `tail` or `head`; that hides `Saved as #N`. This applies only to OptMem; preserve native memory systems and obey their separate write restrictions. Do not import past conversation histories or existing memory stores automatically.
 
 Search with `~/.optmem/memo recall <regex>` and expand summaries with `~/.optmem/memo zoom <range>` when details matter. Verify facts that may have changed. Only the primary agent uses OptMem; delegated subagents must not run memory commands.
 
