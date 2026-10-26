@@ -151,6 +151,23 @@ let
       fi
     '';
   };
+  airshipMcp = pkgs.writeShellApplication {
+    name = "airship-mcp";
+    runtimeInputs = [ pkgs.uv ];
+    text = ''
+      keychain() {
+        /usr/bin/security find-generic-password -s "$1" -w
+      }
+
+      AIRSHIP_APP_KEY="''${AIRSHIP_APP_KEY:-$(keychain AIRSHIP_APP_KEY)}"
+      AIRSHIP_CLIENT_ID="''${AIRSHIP_CLIENT_ID:-$(keychain AIRSHIP_CLIENT_ID)}"
+      AIRSHIP_CLIENT_SECRET="''${AIRSHIP_CLIENT_SECRET:-$(keychain AIRSHIP_CLIENT_SECRET)}"
+      AIRSHIP_REGION="''${AIRSHIP_REGION:-us}"
+      export AIRSHIP_APP_KEY AIRSHIP_CLIENT_ID AIRSHIP_CLIENT_SECRET AIRSHIP_REGION
+
+      exec uvx --from "git+https://github.com/urbanairship/agent-tools@1.2.0" airship-mcp
+    '';
+  };
 in
 {
   imports = [
@@ -181,6 +198,7 @@ in
       gleam
       d2
       d2Render
+      airshipMcp
       librsvg
       playwright-test
       openComputerUse
