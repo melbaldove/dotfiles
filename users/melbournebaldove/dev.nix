@@ -179,7 +179,7 @@ let
           "lookup_named_user", "list_segments", "get_segment_info"
         ];
         (.tool_name | sub("^mcp__airship__"; "")) as $tool
-        | ((.tool_input.method // "") | ascii_upcase) as $method
+        | (.tool_input.method | if type == "string" then ascii_upcase else "" end) as $method
         | if (read_only_tools | index($tool)) != null then empty
           elif $tool == "call_airship_api" and $method == "GET" then empty
           else {
@@ -190,7 +190,10 @@ let
             }
           }
           end
-      '
+      ' || {
+        echo "Airship read-only guard failed, so the call is denied." >&2
+        exit 2
+      }
     '';
   };
 in
