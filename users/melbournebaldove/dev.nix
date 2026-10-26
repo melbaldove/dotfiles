@@ -168,6 +168,31 @@ let
       exec uvx --from "git+https://github.com/urbanairship/agent-tools@1.2.0" airship-mcp
     '';
   };
+  airshipMcpReadOnlyGuard = pkgs.writeShellApplication {
+    name = "airship-mcp-read-only-guard";
+    runtimeInputs = [ pkgs.jq ];
+    text = ''
+      jq -c '
+        def read_only_tools: [
+          "start", "list_skills", "get_skill",
+          "lookup_channel", "get_channel_tags", "get_channel_attributes",
+          "lookup_named_user", "list_segments", "get_segment_info"
+        ];
+        (.tool_name | sub("^mcp__airship__"; "")) as $tool
+        | ((.tool_input.method // "") | ascii_upcase) as $method
+        | if (read_only_tools | index($tool)) != null then empty
+          elif $tool == "call_airship_api" and $method == "GET" then empty
+          else {
+            hookSpecificOutput: {
+              hookEventName: "PreToolUse",
+              permissionDecision: "deny",
+              permissionDecisionReason: "Airship access is read-only: only GET calls and lookup tools are allowed."
+            }
+          }
+          end
+      '
+    '';
+  };
 in
 {
   imports = [
@@ -199,6 +224,7 @@ in
       d2
       d2Render
       airshipMcp
+      airshipMcpReadOnlyGuard
       librsvg
       playwright-test
       openComputerUse

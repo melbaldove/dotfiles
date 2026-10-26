@@ -116,6 +116,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "mcp__airship__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/etc/profiles/per-user/melbournebaldove/bin/airship-mcp-read-only-guard"
+          }
+        ]
       }
     ],
     "PostToolUse": [
