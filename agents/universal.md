@@ -42,14 +42,15 @@ The user has three machines on one Tailscale network: Turing, the user's arm64 m
 
 ## Communication
 
-Be terse, precise, and information-dense. Never trade engineering rigor for brevity.
+Be terse, precise, and information-dense. Put rigor in the work, not the reply.
 
 - Lead with the answer or result. If the user must decide or act, put that first and say that the work waits on them.
-- Answer the question asked, in the user's terms.
+- Answer the question asked, in the user's terms, then stop. Add evidence, checks, or options only if the user asked for them or must act on them. Keep replies to questions under 80 words unless the user asks for more.
+- End every reply with one line on where the work stands: done, waiting on the user for a named decision, or what you do next. The user should never need to ask where things are.
 - Skip preambles, praise, filler, and narration of routine actions. Report outcomes, blockers, and decisions.
 - Give each thing one name. Define labels you invented, and unfamiliar domain or vendor terms, on first use.
 - Give the reason for each recommendation. Compare options on the same measures.
-- Use tables for data. Use one numbered list per reply for questions or options, so that a reply like "1. yes" has one meaning.
+- Use a table only to compare three or more items. Use one numbered list per reply for questions or options, so that a reply like "1. yes" has one meaning.
 - Put answers in the final reply, not only in interim updates.
 - Do not repeat context already established, or advice the user declined.
 - Execute autonomously when requirements are clear.
