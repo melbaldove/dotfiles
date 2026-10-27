@@ -20,30 +20,6 @@ old memories. Existing stores remain intact. Agent instructions come from
 `agents/optmem.md`, appended only on Eisenhower, Einstein, and Turing. Native memory
 systems retain their own policies.
 
-## Scoped deployment
-
-Build on the matching host from this repository:
-
-```sh
-nix build --impure --file nix/optmem-deploy.nix --argstr system aarch64-darwin --argstr host eisenhower --out-link /tmp/optmem-result
-python3 scripts/activate-optmem.py /tmp/optmem-result
-```
-
-On Turing, use `aarch64-darwin` and `turing`. On Einstein, use
-`x86_64-linux` and `einstein`. Run activation with the Nix
-Python used by the generated command if Python is not on PATH. This installs
-only the selected OptMem files and generated agent instructions. It does not
-activate a minimal Home Manager generation or rebuild the host system.
-The activation script records previous symlinks under
-`~/.local/state/optmem/deployments/<timestamp>/links.json` and retains the
-deployment closure with a Nix garbage-collection root beside that receipt.
-
-Eisenhower and Turing must use this repository revision or newer for their
-next full rebuild.
-Einstein's `nix-infra` flake must pin a dotfiles revision containing this change
-before a full rebuild; an older pin can replace the agent instructions with
-the older version. Reapply the scoped deployment after such a rebuild.
-
 ## Use and verify
 
 Run `~/.optmem/memo wake`, `~/.optmem/memo note "a useful fact"`, and
@@ -84,8 +60,3 @@ Rollback removes the OptMem module import and host-scoped instruction block,
 then activates the managed configuration. It removes wrappers and the backup
 timer while preserving the writable memory store and backups. Do not delete
 those data directories as part of rollback.
-
-To roll back a scoped deployment without a host rebuild, run
-`python3 scripts/activate-optmem.py --rollback <receipt>/links.json` on that
-host. It refuses to overwrite links changed since that deployment. On Einstein
-it stops the backup timer and service before restoring the previous links.
